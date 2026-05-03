@@ -1,0 +1,47 @@
+# Build et publication automatique du Triskell Lanceur sur GitHub Releases.
+# Declenche par un push de tag (v0.1.0, v0.1.1, ...).
+#
+# Le workflow :
+#   1. Installe Node + npm
+#   2. Installe les dependances
+#   3. Lance electron-builder en mode "publish always"
+#   4. electron-builder cree l'installeur NSIS et le pousse comme asset de
+#      la release GitHub correspondant au tag.
+#
+# La release sert ensuite :
+#   - de fichier de download pour la landing app.triskell-studio.fr
+#   - de feed pour electron-updater (auto-update du Lanceur)
+
+name: Release Triskell Lanceur
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:   # bouton manuel "Run workflow" dans l'UI GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build & publish (NSIS + Releases)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win nsis --x64 --publish always
