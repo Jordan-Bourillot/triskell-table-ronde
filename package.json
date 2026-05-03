@@ -16,6 +16,7 @@
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
+    "@sentry/electron": "^5.5.0",
     "electron-updater": "^6.3.0"
   },
   "build": {

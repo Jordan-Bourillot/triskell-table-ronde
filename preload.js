@@ -11,10 +11,11 @@ contextBridge.exposeInMainWorld('triskell', {
 
   // Auth (compte Triskell)
   auth: {
-    getSession:  ()                 => ipcRenderer.invoke('auth:get-session'),
-    login:       (email)            => ipcRenderer.invoke('auth:login', email),
-    verify:      (email, code)      => ipcRenderer.invoke('auth:verify', { email, code }),
-    logout:      ()                 => ipcRenderer.invoke('auth:logout')
+    getSession:    ()             => ipcRenderer.invoke('auth:get-session'),
+    login:         (email)        => ipcRenderer.invoke('auth:login', email),
+    verify:        (email, code)  => ipcRenderer.invoke('auth:verify', { email, code }),
+    logout:        ()             => ipcRenderer.invoke('auth:logout'),
+    deleteAccount: (confirmEmail) => ipcRenderer.invoke('auth:delete-account', confirmEmail)
   },
 
   // Licences (ce que l'utilisateur possede)
@@ -61,6 +62,11 @@ contextBridge.exposeInMainWorld('triskell', {
     setTelemetry:   (enabled)  => ipcRenderer.invoke('prefs:set-telemetry', enabled),
     setLastUsed:    (productId)=> ipcRenderer.invoke('prefs:set-last-used', productId),
     setDisplayName: (name)     => ipcRenderer.invoke('prefs:set-display-name', name)
+  },
+
+  // Interet sur un produit pas encore en vente (Studio PDF, Bobeez, ...)
+  interest: {
+    notifyMe: (productKey) => ipcRenderer.invoke('interest:notify-me', productKey)
   },
 
   // Lancement d'un produit installe

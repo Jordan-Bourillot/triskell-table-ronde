@@ -13,6 +13,27 @@ const store = require('./src/store');
 // dossier userData ne doit jamais bouger sinon la session est perdue).
 app.setName('Triskell Lanceur');
 
+// =============================================================================
+// Sentry : monitoring des erreurs en prod (main process + renderer).
+// Si SENTRY_DSN est absent ou en dev, on no-op proprement.
+// =============================================================================
+try {
+  const Sentry = require('@sentry/electron/main');
+  const dsn = process.env.SENTRY_DSN || ''; // a configurer cote build/CI
+  if (dsn && dsn.startsWith('https://')) {
+    Sentry.init({
+      dsn,
+      release: `triskell-table-ronde@${require('./package.json').version}`,
+      environment: process.env.TRISKELL_DEV === '1' ? 'development' : 'production',
+      // On evite d'envoyer des breadcrumbs trop verbeux et on coupe la
+      // capture automatique du contenu IPC (peut contenir le JWT user).
+      sendDefaultPii: false,
+      tracesSampleRate: 0.0
+    });
+    console.log('Sentry main initialise');
+  }
+} catch (_) { /* @sentry/electron pas installe — on ignore */ }
+
 // electron-updater est seulement requis dans une appli packagee. En dev, on
 // l'ignore pour ne pas planter quand le module manque ou que app n'est pas
 // signee.
@@ -217,6 +238,49 @@ ipcMain.handle('auth:verify', async (_evt, { email, code }) => {
 ipcMain.handle('auth:logout', async () => {
   store.clearSession();
   return { ok: true };
+});
+
+ipcMain.handle('interest:notify-me', async (_evt, productKey) => {
+  const session = store.getSession();
+  if (!session) return { ok: false, error: 'not-authenticated' };
+  try {
+    const res = await fetch(`${API_BASE}/api/interest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.token}`
+      },
+      body: JSON.stringify({ productKey })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: data.error || 'server-error' };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'network', message: err.message };
+  }
+});
+
+ipcMain.handle('auth:delete-account', async (_evt, confirmEmail) => {
+  const session = store.getSession();
+  if (!session) return { ok: false, error: 'not-authenticated' };
+  try {
+    const res = await fetch(`${API_BASE}/api/delete-account`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.token}`
+      },
+      body: JSON.stringify({ confirmEmail })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: data.error || 'server-error' };
+    // Toute trace locale du compte degage : session, cache licenses, installs.
+    store.clearSession();
+    store.setCachedLicenses([]);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'network', message: err.message };
+  }
 });
 
 // =============================================================================

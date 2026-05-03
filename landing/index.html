@@ -50,6 +50,9 @@
         <p class="reassurance muted">
           Pas de spyware. Pas de pub. Pas de paiement caché.
         </p>
+        <p class="smartscreen-hint">
+          <a href="#smartscreen">⚠ Windows va probablement afficher un avertissement</a>
+        </p>
       </div>
 
       <div class="hero-screenshot" aria-hidden="true">
@@ -116,6 +119,58 @@
           <p>Chaque nouveau compagnon Triskell apparaît à ta Table, automatiquement.</p>
         </article>
       </div>
+    </section>
+
+    <!-- SMARTSCREEN — rassurance sur l'avertissement Windows -->
+    <section class="section section-smartscreen" id="smartscreen">
+      <div class="ss-grid">
+        <div class="ss-text">
+          <span class="badge badge-warn">Avant de paniquer</span>
+          <h2>Windows va dire « Éditeur inconnu » — c'est <span class="accent">normal</span>.</h2>
+          <p class="ss-lede">
+            La Table Ronde est un nouveau logiciel développé par un studio indépendant français.
+            Pour qu'un logiciel Windows soit reconnu sans avertissement, il faut acheter un
+            <strong>certificat de signature de code</strong> (~250 €/an). On préfère pour l'instant
+            réinvestir cet argent dans le produit plutôt que dans un sticker Microsoft.
+          </p>
+          <p class="ss-lede">
+            <strong>L'écran rouge SmartScreen ne veut PAS dire que l'app est dangereuse</strong> —
+            il veut juste dire « cet éditeur n'a pas encore payé ». Voilà comment passer outre :
+          </p>
+        </div>
+
+        <ol class="ss-steps">
+          <li>
+            <span class="ss-num">1</span>
+            <div>
+              <strong>Au lancement de l'installeur</strong>
+              <p class="muted small">Windows affiche : « Windows a protégé votre PC »</p>
+            </div>
+          </li>
+          <li>
+            <span class="ss-num">2</span>
+            <div>
+              <strong>Clique sur « Informations complémentaires »</strong>
+              <p class="muted small">Le petit lien gris en bas du message d'avertissement.</p>
+            </div>
+          </li>
+          <li>
+            <span class="ss-num">3</span>
+            <div>
+              <strong>Puis « Exécuter quand même »</strong>
+              <p class="muted small">Le bouton apparaît une fois les infos déroulées.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <p class="ss-trust">
+        Encore un doute ?
+        <a href="https://www.virustotal.com/gui/home/upload" target="_blank" rel="noopener">
+          Tu peux scanner l'.exe sur VirusTotal
+        </a>
+        — 70+ antivirus le valideront proprement.
+      </p>
     </section>
 
     <!-- COMMENT ÇA MARCHE -->

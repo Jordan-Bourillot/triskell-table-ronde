@@ -5,6 +5,31 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 
+// --- Sentry (no-op si SENTRY_DSN absent ou @sentry/node pas installe) ---
+let _Sentry = null;
+(function initSentry() {
+  try {
+    const dsn = process.env.SENTRY_DSN || '';
+    if (!dsn.startsWith('https://')) return;
+    const Sentry = require('@sentry/node');
+    Sentry.init({
+      dsn,
+      environment: process.env.NETLIFY_ENV || 'production',
+      tracesSampleRate: 0.0,
+      sendDefaultPii: false,
+      release: process.env.COMMIT_REF || undefined
+    });
+    _Sentry = Sentry;
+  } catch (_) { /* @sentry/node absent — on ignore */ }
+})();
+
+// Wrapper pour envoyer une erreur a Sentry sans planter si Sentry est absent.
+function captureException(err, context) {
+  try {
+    if (_Sentry) _Sentry.captureException(err, { extra: context || {} });
+  } catch (_) { /* noop */ }
+}
+
 // --- Supabase singleton ---
 let _sb = null;
 function supabase() {
@@ -93,5 +118,6 @@ module.exports = {
   signSession,
   verifySession,
   authFromHeaders,
-  normalizeEmail
+  normalizeEmail,
+  captureException
 };

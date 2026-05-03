@@ -36,4 +36,18 @@ create table if not exists licenses (
 create index if not exists licenses_user_id_idx on licenses (user_id);
 create index if not exists licenses_product_key_idx on licenses (product_key);
 
+-- Interets clients sur les produits qui ne sont pas encore en vente
+-- (capture de leads qualifies pour la sortie de chaque tunnel Stripe).
+create table if not exists product_interest (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references users(id) on delete cascade,
+  product_key text not null,
+  source      text default 'launcher',
+  created_at  timestamptz default now()
+);
+create unique index if not exists product_interest_user_product_idx
+  on product_interest (user_id, product_key);
+create index if not exists product_interest_product_idx
+  on product_interest (product_key);
+
 -- Pas de RLS : on accede uniquement avec la SERVICE_KEY cote backend.

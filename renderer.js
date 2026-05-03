@@ -349,6 +349,22 @@
           <button class="ghost-btn" id="check-updates-btn" type="button">Vérifier les mises à jour</button>
           ${updateLine}
         </div>
+
+        <div class="account-section">
+          <button class="ghost-btn account-link-btn" id="invoices-btn" type="button">
+            <span>Mes factures</span>
+            <span class="muted small">→ ${escapeHtml(state.user.email)}</span>
+          </button>
+          <p class="muted small" style="margin:6px 0 0;">Demande tes factures par email — réponse sous 24 h ouvrées.</p>
+        </div>
+
+        <div class="account-section danger-zone">
+          <details>
+            <summary class="danger-summary">Zone sensible</summary>
+            <p class="muted small" style="margin:8px 0 6px;">Supprimer ton compte efface ton email, ton historique de licences, et te déconnecte de tous tes appareils. Tes paiements Stripe restent conservés (obligation légale), mais Triskell ne peut plus relier l'historique à toi.</p>
+            <button class="ghost-btn danger-btn" id="delete-account-btn" type="button">Supprimer mon compte Triskell</button>
+          </details>
+        </div>
       `,
       ctaLabel: 'Me déconnecter',
       ctaKind: 'danger',
@@ -388,6 +404,56 @@
     if (tl) tl.addEventListener('change', async (e) => {
       await window.triskell.prefs.setTelemetry(e.target.checked);
       state.prefs.telemetry = e.target.checked;
+    });
+
+    // Bouton "Mes factures" : ouvre un mailto pre-rempli (V1, en attendant
+    // un vrai customer portal Stripe).
+    const invBtn = document.getElementById('invoices-btn');
+    if (invBtn) invBtn.addEventListener('click', () => {
+      const subject = encodeURIComponent('Demande de factures Triskell');
+      const body = encodeURIComponent(
+        `Bonjour,\n\nMerci de bien vouloir m'envoyer mes factures pour les achats effectues avec l'email ${state.user.email}.\n\nMerci !\n`
+      );
+      window.triskell.openExternal(`mailto:contact@triskell-studio.fr?subject=${subject}&body=${body}`);
+    });
+
+    // Bouton "Supprimer mon compte" : double confirmation par mot-typage.
+    const delBtn = document.getElementById('delete-account-btn');
+    if (delBtn) delBtn.addEventListener('click', async () => {
+      const confirmed = confirm(
+        `Supprimer définitivement le compte ${state.user.email} ?\n\n` +
+        `Cette action est IRREVERSIBLE. Tu perdras l'accès à tes licences ` +
+        `via le Lanceur (les paiements Stripe restent valides côté Stripe).`
+      );
+      if (!confirmed) return;
+      delBtn.disabled = true;
+      delBtn.textContent = 'Suppression en cours...';
+      const res = await window.triskell.auth.deleteAccount(state.user.email);
+      if (!res.ok) {
+        delBtn.disabled = false;
+        delBtn.textContent = 'Supprimer mon compte Triskell';
+        showToast({
+          kind: 'error',
+          title: 'Suppression échouée',
+          message: res.error === 'email-mismatch'
+            ? 'Ton email ne correspond pas à la session.'
+            : (res.message || 'Erreur serveur, réessaie.'),
+          timeout: 9000
+        });
+        return;
+      }
+      // Compte supprime — on revient au login et on affiche un toast de fin.
+      state.user = null;
+      state.licenses = {};
+      state.installs = {};
+      closeModal();
+      showLogin();
+      showToast({
+        kind: 'success',
+        title: 'Compte supprimé',
+        message: 'Tes données Triskell ont été effacées. À bientôt si tu reviens.',
+        timeout: 12000
+      });
     });
 
     // Champ "prenom" : sauvegarde debounce + petit feedback "Enregistre".
@@ -845,7 +911,12 @@
       }
       case 'not-owned':
       default: {
-        if (app.buyUrl) {
+        // Tunnel Stripe pas encore en place : on capture l'interet au lieu
+        // d'envoyer le user vers une landing placeholder qui le perdra.
+        if (app.buyUrlPlaceholder || app.pendingTunnel) {
+          host.appendChild(makeBtn('M\'intéresser', 'btn-buy',
+            () => onInterest(app)));
+        } else if (app.buyUrl) {
           host.appendChild(makeBtn('Recruter', 'btn-buy',
             () => onBuy(app)));
         } else {
@@ -954,6 +1025,38 @@
           });
         }
       });
+    });
+  }
+
+  // Capture l'interet d'un user pour un produit pas encore en vente.
+  // Appelle le backend (idempotent) puis affiche une modale de confirmation
+  // claire ("On te previent en avant-premiere + early-bird discount").
+  async function onInterest(app) {
+    const res = await window.triskell.interest.notifyMe(app.id);
+    if (!res.ok) {
+      showToast({
+        kind: 'error',
+        title: 'Erreur',
+        message: res.message || 'Impossible d\'enregistrer ton intérêt. Réessaie.',
+        timeout: 8000
+      });
+      return;
+    }
+    openModal({
+      title: `${app.name} arrive bientôt`,
+      bodyHtml: `
+        <p style="font-size:15px;line-height:1.6;">
+          Tu seras parmi les <strong style="color:var(--gold);">premiers prévenus</strong> au lancement,
+          avec une <strong style="color:var(--gold);">remise early-bird</strong> en exclu pour les compagnons
+          qui ont attendu.
+        </p>
+        <p class="muted small" style="margin-top:14px;">
+          Notification envoyée à <strong>${escapeHtml(state.user.email)}</strong>.
+          Pas de spam — un seul email à la sortie, c'est tout.
+        </p>
+      `,
+      ctaLabel: 'Parfait',
+      onCta: closeModal
     });
   }
 

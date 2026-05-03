@@ -408,3 +408,112 @@ a:hover { color: var(--accent-hot); }
   .cta-row { flex-direction: column; align-items: stretch; }
   .btn-primary, .btn-ghost { justify-content: center; }
 }
+
+/* ============== SECTION SMARTSCREEN ============== */
+.smartscreen-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.smartscreen-hint a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: rgba(154, 160, 171, 0.3);
+  text-underline-offset: 3px;
+}
+.smartscreen-hint a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.section-smartscreen {
+  background: linear-gradient(180deg,
+    rgba(201, 169, 97, 0.05) 0%,
+    transparent 60%);
+  border-top: 1px solid rgba(201, 169, 97, 0.22);
+  border-bottom: 1px solid rgba(201, 169, 97, 0.22);
+}
+
+.badge-warn {
+  background: rgba(201, 169, 97, 0.18);
+  color: var(--accent);
+  border: 1px solid rgba(201, 169, 97, 0.40);
+}
+
+.ss-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 50px;
+  align-items: start;
+  margin-bottom: 30px;
+}
+
+.ss-text h2 {
+  font-size: 28px;
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+
+.ss-lede {
+  font-size: 15px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.ss-lede strong { color: var(--text); }
+
+.ss-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ss-steps li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.ss-num {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-shadow);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ss-steps li strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.ss-trust {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+}
+.ss-trust a {
+  color: var(--accent);
+}
+
+@media (max-width: 920px) {
+  .ss-grid { grid-template-columns: 1fr; gap: 24px; }
+  .ss-text h2 { font-size: 22px; }
+}
