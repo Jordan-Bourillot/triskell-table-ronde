@@ -771,7 +771,7 @@ input, button { outline: none; }
    au loin. Trait blanc fin a basse opacite, pointer-events: none pour ne pas
    gener les interactions. */
 .empty-decor {
-  margin-top: 60px;
+  margin-top: 18px;     /* etait 60px : on colle l'illustration sous les apps */
   padding: 0 20px;
   display: flex;
   justify-content: center;
@@ -781,25 +781,23 @@ input, button { outline: none; }
      clair pale, sur fond clair = trait gris fonce. On ne touche pas a
      `color: var(--text)` mais on ajuste l'opacite via le theme. */
   color: var(--text);
-  /* Illustration "chateau.png" : trait fin gris très clair sur blanc.
-     Une fois inversée + blend screen, le trait reste subtil. On monte
-     un peu l'opacité (vs ancienne illustration épaisse) pour qu'elle
-     soit perceptible sans dominer. */
-  opacity: 0.55;
+  /* Trait blanc sur fond sombre apres filter brightness(0) invert(1).
+     Opacite basse pour rester decoratif (Excalibur en filigrane), pas
+     dominer la grille. */
+  opacity: 0.18;
   transition: opacity 0.4s;
 }
 .empty-decor:hover {
-  opacity: 0.75;
+  opacity: 0.30;
 }
 
-/* Theme clair : trait noir sur fond blanc (filtre identité) avec blend
-   multiply -> transparent sur les blancs. Opacité un peu réduite car le
-   trait noir contraste plus fort sur fond clair. */
-:root[data-theme='light'] .empty-decor { opacity: 0.45; }
-:root[data-theme='light'] .empty-decor:hover { opacity: 0.60; }
+/* Theme clair : trait foncé sur fond clair, contraste plus fort donc
+   opacité encore réduite. */
+:root[data-theme='light'] .empty-decor { opacity: 0.22; }
+:root[data-theme='light'] .empty-decor:hover { opacity: 0.35; }
 @media (prefers-color-scheme: light) {
-  :root[data-theme='auto'] .empty-decor { opacity: 0.45; }
-  :root[data-theme='auto'] .empty-decor:hover { opacity: 0.60; }
+  :root[data-theme='auto'] .empty-decor { opacity: 0.22; }
+  :root[data-theme='auto'] .empty-decor:hover { opacity: 0.35; }
 }
 .empty-decor svg {
   width: 100%;
@@ -808,30 +806,20 @@ input, button { outline: none; }
   display: block;
 }
 
-/* Image PNG (empty-decor.png) — trait noir sur fond blanc d'origine.
-   On veut que le PNG s'intègre avec le fond du lanceur (pas de bloc
-   rectangulaire visible). Astuce blend-mode :
-   - Dark : on inverse (trait blanc sur fond noir) puis screen → les noirs
-     deviennent transparents, seul le trait blanc reste.
-   - Light : telle quelle (trait noir sur fond blanc) puis multiply → les
-     blancs deviennent transparents, seul le trait noir reste. */
+/* Image PNG (chateau.png) — trait gris foncé sur fond TRANSPARENT.
+   En dark : `brightness(0) invert(1)` force tout pixel non-transparent
+   en blanc (en respectant l'alpha) → trait blanc propre, pas de rectangle.
+   En light : pas de filtre, le trait gris se voit bien sur fond clair. */
 .empty-decor img {
   width: 100%;
   max-width: 1400px;
   height: auto;
   display: block;
-  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.1);
-  mix-blend-mode: screen;
+  filter: brightness(0) invert(1);
 }
-:root[data-theme='light'] .empty-decor img {
-  filter: none;
-  mix-blend-mode: multiply;
-}
+:root[data-theme='light'] .empty-decor img { filter: none; }
 @media (prefers-color-scheme: light) {
-  :root[data-theme='auto'] .empty-decor img {
-    filter: none;
-    mix-blend-mode: multiply;
-  }
+  :root[data-theme='auto'] .empty-decor img { filter: none; }
 }
 
 .empty-decor.hidden { display: none; }

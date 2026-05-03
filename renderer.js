@@ -539,7 +539,7 @@
     openModal({
       title: '',
       bodyHtml: `
-        <div style="display:flex;align-items:center;gap:14px;margin:-6px 0 20px;">
+        <div style="display:flex;align-items:center;gap:14px;margin:4px 0 20px;">
           <img src="assets/triskell_mark.png" alt="Triskell" style="width:52px;height:52px;border-radius:12px;flex-shrink:0;" />
           <div style="flex:1;min-width:0;">
             <h2 style="margin:0;color:#fff;font-size:20px;font-weight:600;letter-spacing:0.3px;">Mon compte Triskell</h2>
@@ -1499,7 +1499,7 @@
     `).join('');
 
     const bodyHtml = `
-      <p class="muted small" style="margin:0 0 14px;">
+      <p style="margin:0 0 14px;color:var(--text-dim);font-size:13px;line-height:1.5;">
         Coche les outils que tu veux ajouter à ta Table. Le prix bundle se
         recalcule selon le nombre coché.
       </p>
@@ -1550,10 +1550,22 @@
           ids.length, ids, calc ? calc.bundle : null
         );
         if (r && !r.ok) {
-          const msg = r.error === 'discount-not-configured' || r.error === 'stripe-not-configured'
-            ? 'Le pack n\'est pas encore activé côté paiement. Notre équipe est prévenue, on revient vers toi vite.'
-            : 'Impossible de lancer le paiement. Réessaie dans un instant.';
-          showToast({ kind: 'error', title: 'Compléter ma Table', message: msg, timeout: 8000 });
+          let msg;
+          if (r.error === 'discount-not-configured' || r.error === 'stripe-not-configured') {
+            msg = 'Le pack n\'est pas encore activé côté paiement. Notre équipe est prévenue, on revient vers toi vite.';
+          } else if (r.error === 'not-authenticated') {
+            msg = 'Session expirée. Reconnecte-toi pour finaliser ton achat.';
+          } else if (r.error === 'invalid-product-list') {
+            msg = 'Sélection invalide (produits inconnus côté serveur). Recharge l\'app et réessaie.';
+          } else if (r.error === 'no-url') {
+            msg = 'Le serveur n\'a pas renvoyé de lien Stripe. Réessaie dans un instant.';
+          } else if (r.error === 'stripe-failed') {
+            msg = `Erreur Stripe : ${r.message || 'inconnue'}.`;
+          } else {
+            msg = `Erreur (${r.error || 'inconnue'}) — réessaie dans un instant.`;
+          }
+          showToast({ kind: 'error', title: 'Compléter ma Table', message: msg, timeout: 9000 });
+          console.error('[completion-checkout] error:', r);
           return;
         }
         closeModal();

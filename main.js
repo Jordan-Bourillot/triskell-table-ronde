@@ -64,7 +64,7 @@ function createWindow() {
     minHeight: 680,
     backgroundColor: '#0f1218',
     title: 'Triskell Lanceur',
-    icon: path.join(__dirname, 'assets', 'triskell_mark.png'),
+    icon: path.join(__dirname, 'assets', 'triskell_mark_taskbar.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -412,7 +412,7 @@ function showSystemNotification(title, body) {
     new Notification({
       title,
       body,
-      icon: path.join(__dirname, 'assets', 'triskell_mark.png'),
+      icon: path.join(__dirname, 'assets', 'triskell_mark_taskbar.png'),
       silent: false
     }).show();
   } catch (_) { /* best-effort */ }
@@ -707,6 +707,11 @@ ipcMain.handle('purchase:completion', async (_evt, { count, productIds, expected
       if (/\/success\b/i.test(u) || /session_id=/i.test(u)) {
         const m = u.match(/session_id=([^&]+)/);
         success(m ? decodeURIComponent(m[1]) : null);
+      } else if (/\/cancel\b/i.test(u)) {
+        // User a annule sur Stripe : on ferme la fenetre proprement (sans
+        // declencher purchase:completed) plutot que de lui laisser une 404
+        // si app.triskell-studio.fr/cancel n'a pas de page deployee.
+        if (!win.isDestroyed()) win.close();
       }
     };
     win.webContents.on('did-navigate', (_e, u) => inspectUrl(u));
