@@ -693,12 +693,22 @@ input, button { outline: none; }
 
 .tile-actions button {
   flex: 1;
-  padding: 7px 10px;
+  padding: 9px 12px;
   font-size: 12px;
   border-radius: var(--radius-sm);
   font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
   transition: all 0.15s;
 }
+
+/* Le primaire prend ~1.6x la place du secondaire pour un rythme propre.
+   Le secondaire reste accessible mais ne tire pas l'oeil. */
+.tile-actions .btn-launch,
+.tile-actions .btn-buy,
+.tile-actions .btn-update,
+.tile-actions .btn-installing,
+.tile-actions .btn-disabled { flex: 1.6; }
 
 .btn-launch {
   background: var(--accent);
@@ -713,12 +723,24 @@ input, button { outline: none; }
 }
 .btn-install:hover { background: var(--accent-shadow); }
 
+/* Secondaire 'Details' : fond legerement teinte (au lieu de outline pur)
+   pour un look moderne, evite l'effet 'bordure cramee'. */
 .btn-info {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-dim);
   border: 1px solid var(--border);
 }
-.btn-info:hover { color: var(--text); border-color: var(--border-strong); }
+.btn-info:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+:root[data-theme='light'] .btn-info {
+  background: rgba(20, 23, 31, 0.04);
+}
+:root[data-theme='light'] .btn-info:hover {
+  background: rgba(20, 23, 31, 0.07);
+}
 
 .btn-disabled {
   background: var(--bg-3);
