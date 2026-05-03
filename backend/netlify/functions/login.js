@@ -91,7 +91,7 @@ Ton code de connexion : ${code}
 
 Recopie-le dans le Lanceur Triskell. Le code expire dans 15 minutes.
 
-Si tu n'as rien demande, ignore cet email.
+Si tu n'as rien demandé, ignore cet email.
 
 — Triskell Studio
 `;
@@ -106,7 +106,7 @@ function emailHtml(code) {
     <div style="font-size:36px;font-weight:700;letter-spacing:8px;text-align:center;color:#c9a961;background:#0d0f12;border:1px solid #c9a961;padding:18px;border-radius:8px;font-family:Menlo,Consolas,monospace;">
       ${code}
     </div>
-    <p style="color:#6b7280;font-size:12px;margin:24px 0 0;">Valable 15 minutes. Si tu n'as rien demande, ignore cet email.</p>
+    <p style="color:#6b7280;font-size:12px;margin:24px 0 0;">Valable 15 minutes. Si tu n'as rien demandé, ignore cet email.</p>
   </div>
 </body></html>`;
 }

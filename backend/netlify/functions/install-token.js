@@ -33,6 +33,14 @@ const PRODUCT_CONFIG = {
     validityHours: 24,
     expectedExePath: 'C:\\Users\\<USER>\\AppData\\Local\\Programs\\Le Studio PDF\\Le Studio PDF.exe'
   },
+  'bobeez': {
+    kind: 'exe-installer',
+    downloadHost: SUITE_HOST,
+    assetPath: '/_dl/bobeez-setup.exe',
+    version: '0.1.4',
+    validityHours: 24,
+    expectedExePath: 'C:\\Users\\<USER>\\AppData\\Local\\Programs\\Bobeez\\Bobeez.exe'
+  },
   'delinote': {
     kind: 'exe-installer',
     downloadHost: 'https://delinote.triskell-studio.fr',

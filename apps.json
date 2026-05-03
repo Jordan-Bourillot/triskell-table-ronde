@@ -89,13 +89,20 @@
     {
       "id": "bobeez",
       "name": "Bobeez",
-      "tagline": "Bientôt — l'outil signature de Triskell Studio",
+      "tagline": "L'outil signature de Triskell Studio — assistant productivité tout-en-un",
       "category": "productivite",
       "tier": "premium",
       "icon": "assets/apps/bobeez.png",
+      "price": 39,
+      "priceNote": "Paiement unique · à vie",
       "installed": false,
       "exePath": null,
-      "comingSoon": true
+      "buyUrl": "https://triskell-studio.fr",
+      "buyUrlPlaceholder": true,
+      "installer": {
+        "kind": "exe-installer",
+        "productKey": "bobeez"
+      }
     },
     {
       "id": "pirate-life-mail",

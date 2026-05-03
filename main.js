@@ -112,7 +112,11 @@ function setupAutoUpdate() {
   autoUpdater.on('error', (err) => {
     console.error('updater:', err.message);
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('updates:status', { phase: 'error', message: err.message });
+      const raw = err && err.message ? err.message : '';
+      let friendly = 'Vérification impossible. Réessaie plus tard.';
+      if (/404/.test(raw)) friendly = 'Aucune mise à jour publiée pour le moment.';
+      else if (/ENOTFOUND|ETIMEDOUT|ECONNRESET|getaddrinfo|ENETUNREACH/i.test(raw)) friendly = 'Pas de connexion. Vérifie ton réseau.';
+      mainWindow.webContents.send('updates:status', { phase: 'error', message: friendly });
     }
   });
 
@@ -436,6 +440,7 @@ ipcMain.handle('purchase:open', async (_evt, { url, productId }) => {
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false }
   });
+  win.maximize();
 
   const success = (sessionId) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -486,6 +491,7 @@ ipcMain.handle('purchase:completion', async (_evt, { tier, productIds }) => {
       backgroundColor: '#0f1218', autoHideMenuBar: true,
       webPreferences: { contextIsolation: true, nodeIntegration: false }
     });
+    win.maximize();
     const success = (sessionId) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('purchase:completed', {
