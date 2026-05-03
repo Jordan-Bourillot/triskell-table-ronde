@@ -33,9 +33,11 @@ Var DesktopShortcutCheckbox
 ; pendant la passe uninstaller fait planter le build (warning treated as error).
 !ifndef BUILD_UNINSTALLER
 Function shortcutsPageCreate
-  ; Si on est dans un update auto (electron-updater), on ne re-pose pas la
-  ; question : on garde le raccourci tel qu'il etait. Skip la page entiere.
-  ${If} ${isUpdated}
+  ; Detection update : si l'executable est deja dans $INSTDIR, c'est une
+  ; reinstall/update, pas une 1ere install. On ne re-pose pas la question
+  ; et on respecte le raccourci tel qu'il etait. (Pas de ${isUpdated} ici
+  ; car ca depend de StdUtils qui n'est pas garanti charge a ce stade.)
+  ${If} ${FileExists} "$INSTDIR\${APP_FILENAME}.exe"
     Abort
   ${EndIf}
 
@@ -75,10 +77,12 @@ FunctionEnd
 ; lors de la 1ere installation, on respecte son choix).
 ; ==============================================================================
 !macro customInstall
-  ${IfNot} ${isUpdated}
-    ${If} $WantDesktopShortcut == 1
-      CreateShortCut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${APP_EXECUTABLE_FILENAME}" "" "$INSTDIR\${APP_EXECUTABLE_FILENAME}" 0
-    ${EndIf}
+  ; Sur un update (raccourci bureau deja decide a la 1ere install),
+  ; on ne touche pas a celui qui existe — on ne le recree que si la
+  ; case etait cochee ET qu'aucun raccourci n'existe deja.
+  ${If} $WantDesktopShortcut == 1
+  ${AndIfNot} ${FileExists} "$DESKTOP\${PRODUCT_FILENAME}.lnk"
+    CreateShortCut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${APP_FILENAME}.exe" "" "$INSTDIR\${APP_FILENAME}.exe" 0
   ${EndIf}
 !macroend
 
