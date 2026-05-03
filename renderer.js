@@ -308,12 +308,17 @@
     const telemetry = !!state.prefs.telemetry;
 
     const displayName = state.prefs.displayName || '';
+    const version = (document.getElementById('brand-version')?.textContent || '').trim();
 
     openModal({
-      title: 'Mon compte Triskell',
+      title: '',
       bodyHtml: `
-        <div style="display:flex;justify-content:center;margin:8px 0 20px;">
-          <img src="assets/triskell_mark.png" alt="Triskell" style="width:72px;height:72px;border-radius:16px;" />
+        <div style="display:flex;align-items:center;gap:14px;margin:-6px 0 20px;">
+          <img src="assets/triskell_mark.png" alt="Triskell" style="width:52px;height:52px;border-radius:12px;flex-shrink:0;" />
+          <div style="flex:1;min-width:0;">
+            <h2 style="margin:0;color:#fff;font-size:20px;font-weight:600;letter-spacing:0.3px;">Mon compte Triskell</h2>
+            <p class="muted small" style="margin:2px 0 0;">Lanceur ${escapeHtml(version)}</p>
+          </div>
         </div>
         <p style="text-align:center;color:var(--text);margin:0 0 6px;">Connecté avec <strong style="color:var(--triskell-violet);">${escapeHtml(state.user.email)}</strong></p>
         <p class="muted" style="text-align:center;">Tu possèdes <strong style="color:var(--text);">${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
@@ -1136,7 +1141,9 @@
   }
 
   function openModal({ title, body, bodyHtml, ctaLabel, ctaKind, onCta }) {
-    els.modalTitle.textContent = title;
+    els.modalTitle.textContent = title || '';
+    // Si le titre est vide, on cache la barre H2 pour pas laisser un trou.
+    els.modalTitle.style.display = title ? '' : 'none';
     if (bodyHtml) {
       els.modalBody.innerHTML = bodyHtml;
     } else {
