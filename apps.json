@@ -51,6 +51,19 @@
         "productKey": "suite-des-heros",
         "installPath": "Triskell/SuiteDesHeros"
       },
+      "screenshots": [
+        { "src": "assets/screenshots/suite-des-heros/rangeur.png",      "caption": "Le Maître Trieur — range tes fichiers" },
+        { "src": "assets/screenshots/suite-des-heros/renommeur.png",    "caption": "Le Baptiseur — renomme en masse" },
+        { "src": "assets/screenshots/suite-des-heros/doublons.png",     "caption": "Le Chasseur — traque les doublons" },
+        { "src": "assets/screenshots/suite-des-heros/pomodoro.png",     "caption": "Le Métronome — Pomodoro avec stats" },
+        { "src": "assets/screenshots/suite-des-heros/coffre.png",       "caption": "Le Gardien — coffre-fort AES-256" },
+        { "src": "assets/screenshots/suite-des-heros/desinstalleur.png","caption": "L'Épurateur — désinstalle proprement" },
+        { "src": "assets/screenshots/suite-des-heros/trancheur.png",    "caption": "Le Trancheur — découpe les gros fichiers" },
+        { "src": "assets/screenshots/suite-des-heros/archiviste.png",   "caption": "L'Archiviste — crée et ouvre les archives" },
+        { "src": "assets/screenshots/suite-des-heros/distillateur.png", "caption": "Le Distillateur — compresse vidéo / audio" },
+        { "src": "assets/screenshots/suite-des-heros/scribe.png",       "caption": "Le Scribe — fusionne et découpe les PDF" },
+        { "src": "assets/screenshots/suite-des-heros/convertisseur.png","caption": "L'Alchimiste — convertit tes images" }
+      ],
       "tools": [
         { "id": "le-maitre-trieur",  "name": "Le Maître Trieur",  "exe": "LeMaitreTrieur.exe",  "tagline": "Range tes fichiers en un clic" },
         { "id": "le-baptiseur",      "name": "Le Baptiseur",      "exe": "LeBaptiseur.exe",     "tagline": "Renomme 200 fichiers d'un coup" },
@@ -91,7 +104,12 @@
       "installer": {
         "kind": "exe-installer",
         "productKey": "delinote"
-      }
+      },
+      "screenshots": [
+        { "src": "assets/screenshots/delinote/04-editor-hero.png",  "caption": "Éditeur Markdown avec aperçu en direct" },
+        { "src": "assets/screenshots/delinote/02-home-rich.png",    "caption": "Vue d'ensemble — toutes tes notes" },
+        { "src": "assets/screenshots/delinote/03-command-bar.png",  "caption": "Recherche instantanée Ctrl+K" }
+      ]
     },
     {
       "id": "studio-pdf",

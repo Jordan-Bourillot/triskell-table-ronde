@@ -77,6 +77,7 @@
     productStatus:    $('product-status'),
     productPriceBlock:$('product-price-block'),
     productActions:   $('product-actions'),
+    productMedia:     $('product-media'),
     productDescription: $('product-description'),
     productFeaturesSection: $('product-features-section'),
     productFeatures:  $('product-features'),
@@ -1620,6 +1621,10 @@
       if (txt === 'infos' || txt === 'en savoir plus') btn.remove();
     });
 
+    // Galerie de screenshots (remplace le placeholder quand l'app a des
+    // visuels). On ouvre une lightbox au clic pour zoomer.
+    renderProductMedia(app);
+
     // Description
     els.productDescription.textContent = app.description || app.tagline || '';
 
@@ -1664,6 +1669,98 @@
     } else {
       els.productLinksSection.classList.add('hidden');
     }
+  }
+
+  // Galerie de screenshots de la fiche produit. Si l'app a un champ
+  // `screenshots: [{ src, caption }, ...]`, on remplace le placeholder par
+  // une grille thumbnail. Sinon on remet le placeholder par defaut.
+  function renderProductMedia(app) {
+    const shots = Array.isArray(app.screenshots) ? app.screenshots : [];
+    const host = els.productMedia;
+    if (shots.length === 0) {
+      host.classList.remove('product-media-gallery');
+      host.innerHTML = `
+        <div class="product-media-empty">
+          <span class="product-media-icon" aria-hidden="true">&#x1F4F8;</span>
+          <p class="product-media-title">Captures d'écran</p>
+          <p class="muted small">Bientôt visibles ici — on prépare les visuels.</p>
+        </div>`;
+      return;
+    }
+    host.classList.add('product-media-gallery');
+    host.innerHTML = shots.map((s, i) => `
+      <button class="product-screenshot" data-index="${i}" type="button"
+              aria-label="${escapeHtml(s.caption || 'Capture decran')}">
+        <img src="${escapeHtml(s.src)}" alt="${escapeHtml(s.caption || '')}" loading="lazy" />
+        ${s.caption ? `<span class="product-screenshot-caption">${escapeHtml(s.caption)}</span>` : ''}
+      </button>
+    `).join('');
+    host.querySelectorAll('.product-screenshot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openLightbox(shots, parseInt(btn.dataset.index, 10));
+      });
+    });
+  }
+
+  // ============================================================================
+  // LIGHTBOX (zoom screenshots fiche produit)
+  // ============================================================================
+  let lightboxState = { shots: [], index: 0 };
+
+  function openLightbox(shots, index) {
+    lightboxState = { shots, index: index || 0 };
+    let lb = document.getElementById('lightbox');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'lightbox';
+      lb.className = 'lightbox';
+      lb.innerHTML = `
+        <button class="lightbox-close" type="button" aria-label="Fermer">&times;</button>
+        <button class="lightbox-prev" type="button" aria-label="Précédent">&larr;</button>
+        <button class="lightbox-next" type="button" aria-label="Suivant">&rarr;</button>
+        <img class="lightbox-img" alt="" />
+        <p class="lightbox-caption"></p>
+      `;
+      document.body.appendChild(lb);
+      lb.addEventListener('click', (e) => {
+        if (e.target === lb) closeLightbox();
+      });
+      lb.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+      lb.querySelector('.lightbox-prev').addEventListener('click', () => stepLightbox(-1));
+      lb.querySelector('.lightbox-next').addEventListener('click', () => stepLightbox(1));
+      document.addEventListener('keydown', (e) => {
+        if (!document.getElementById('lightbox') || lb.classList.contains('hidden')) return;
+        if (e.key === 'Escape')      closeLightbox();
+        if (e.key === 'ArrowLeft')   stepLightbox(-1);
+        if (e.key === 'ArrowRight')  stepLightbox(1);
+      });
+    }
+    updateLightbox();
+    lb.classList.remove('hidden');
+  }
+
+  function updateLightbox() {
+    const lb = document.getElementById('lightbox');
+    if (!lb) return;
+    const s = lightboxState.shots[lightboxState.index];
+    if (!s) return;
+    lb.querySelector('.lightbox-img').src = s.src;
+    lb.querySelector('.lightbox-caption').textContent = s.caption || '';
+    const total = lightboxState.shots.length;
+    lb.querySelector('.lightbox-prev').style.visibility = total > 1 ? '' : 'hidden';
+    lb.querySelector('.lightbox-next').style.visibility = total > 1 ? '' : 'hidden';
+  }
+
+  function stepLightbox(delta) {
+    const total = lightboxState.shots.length;
+    if (total <= 1) return;
+    lightboxState.index = (lightboxState.index + delta + total) % total;
+    updateLightbox();
+  }
+
+  function closeLightbox() {
+    const lb = document.getElementById('lightbox');
+    if (lb) lb.classList.add('hidden');
   }
 
   // ============================================================================

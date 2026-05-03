@@ -210,7 +210,6 @@ input, button { outline: none; }
   color: var(--text);
   font-size: 24px;
 }
-.main-head h1::first-letter { color: var(--gold); }
 
 .muted { color: var(--text-muted); font-size: 12px; }
 
@@ -263,8 +262,14 @@ input, button { outline: none; }
   width: 52px;
   height: 52px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #20243088 0%, #181c2788 100%);
+  /* Fond solide (avant : gradient semi-transparent qui laissait apparaitre
+     une bande claire sous les PNG transparents). Halo dore subtil autour
+     du logo, coherent avec le brand-logo du header. */
+  background: var(--bg);
   border: 1px solid var(--border-strong);
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.18),
+    0 0 12px rgba(212, 179, 90, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -274,12 +279,19 @@ input, button { outline: none; }
   flex-shrink: 0;
   letter-spacing: 0.5px;
   overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.tile:hover .tile-icon {
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.35),
+    0 0 18px rgba(212, 179, 90, 0.30);
 }
 
 .tile-icon img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -1504,12 +1516,26 @@ details[open] .danger-summary::before {
 .tile { cursor: pointer; }
 .tile-actions button { cursor: pointer; }
 
-/* Indice de cliquabilite "Voir la fiche →" : retire de toutes les tuiles
-   parce qu'il chevauche le bouton "Infos" / "En savoir plus" qui se trouve
-   au meme endroit (bas-droite des tile-actions) et fait deja le meme job.
-   La tuile reste cliquable (cursor: pointer), et le bouton Infos signale
-   explicitement qu'on peut ouvrir la fiche produit. */
-.tile-hint { display: none; }
+/* Indice de cliquabilite : petite fleche en haut-droite de la tuile.
+   Discrete au repos, plus visible au hover. Position absolute pour eviter
+   tout chevauchement avec les actions du bas. */
+.tile-hint {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.45;
+  transition: opacity 0.18s, color 0.18s, transform 0.18s;
+  pointer-events: none;
+  z-index: 1;
+}
+.tile:hover .tile-hint {
+  opacity: 1;
+  color: var(--accent);
+  transform: translateX(3px);
+}
 
 .product-page {
   /* Occupe la meme rangee que <main> dans le grid de .app pour que le
@@ -1594,8 +1620,14 @@ details[open] .danger-summary::before {
   width: 112px;
   height: 112px;
   border-radius: 22px;
-  background: linear-gradient(135deg, #20243088 0%, #181c2788 100%);
+  /* Fond solide + halo dore plus marque que sur la tuile (la fiche produit
+     est l'occasion de mettre le logo en valeur). */
+  background: var(--bg);
   border: 1px solid var(--border-strong);
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.30),
+    0 0 24px rgba(212, 179, 90, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1608,7 +1640,7 @@ details[open] .danger-summary::before {
 .product-hero-icon img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .product-hero-text {
@@ -1634,7 +1666,6 @@ details[open] .danger-summary::before {
   color: var(--text);
   line-height: 1.15;
 }
-.product-name::first-letter { color: var(--gold); }
 
 .product-tagline {
   margin: 0;
@@ -1732,6 +1763,123 @@ details[open] .danger-summary::before {
   font-size: 14px;
 }
 
+/* Galerie de screenshots — quand l'app a des visuels, on remplace le
+   placeholder par un grid cliquable. La classe .product-media-gallery est
+   ajoutee dynamiquement en JS pour overrider le min-height/center du
+   placeholder par defaut. */
+.product-media.product-media-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  min-height: 0;
+  border-style: solid;
+  background: var(--bg-card);
+  align-items: stretch;
+}
+.product-screenshot {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0;
+  cursor: zoom-in;
+  overflow: hidden;
+  transition: all 0.18s;
+  display: flex;
+  flex-direction: column;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+}
+.product-screenshot:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.product-screenshot img {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  background: #000;
+}
+.product-screenshot-caption {
+  display: block;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+.product-screenshot:hover .product-screenshot-caption {
+  color: var(--text);
+}
+
+/* Lightbox — overlay plein ecran pour zoomer un screenshot.
+   Hors flux normal, ajoutee a body en JS. */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 40px;
+  cursor: zoom-out;
+  animation: lightbox-fade 0.18s ease;
+}
+.lightbox.hidden { display: none; }
+@keyframes lightbox-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  cursor: default;
+}
+.lightbox-caption {
+  color: var(--text);
+  margin: 16px 0 0;
+  font-size: 14px;
+  text-align: center;
+  max-width: 80vw;
+}
+.lightbox-close,
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-close:hover,
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.05);
+}
+.lightbox-close { top: 20px; right: 20px; }
+.lightbox-prev  { left: 24px; top: 50%; transform: translateY(-50%); }
+.lightbox-next  { right: 24px; top: 50%; transform: translateY(-50%); }
+.lightbox-prev:hover { transform: translateY(-50%) scale(1.05); }
+.lightbox-next:hover { transform: translateY(-50%) scale(1.05); }
+
 /* Sections de contenu */
 .product-body {
   display: flex;
@@ -1752,7 +1900,6 @@ details[open] .danger-summary::before {
   letter-spacing: 0.3px;
   color: var(--text);
 }
-.product-section-title::first-letter { color: var(--gold); }
 
 .product-description {
   margin: 0;
