@@ -321,6 +321,7 @@
     state.bundles = cat.bundles || [];
     state.completionBundle = cat.completionBundle || null;
     state.promoNote = cat.promoNote || '';
+    state.announcement = cat.announcement || null;
     state.versions = (cat.apps || []).reduce((acc, a) => {
       if (a.latestVersion) acc[a.id] = a.latestVersion;
       return acc;
@@ -1126,8 +1127,100 @@
       });
     });
 
+    // Annonce dynamique (mise à jour, nouveau produit, promo...).
+    renderAnnouncement();
     // Onboarding : bandeau extra pour les nouveaux comptes (0 licence + 0 install)
     renderOnboardingHint(ownedCount, installedCount);
+  }
+
+  // Bandeau d'annonce edite par Triskell dans apps.json. Affiche la derniere
+  // annonce non dismissee par cet utilisateur. Bouton X pour la cacher
+  // definitivement (l'id est stocke dans prefs.dismissedAnnouncements).
+  // Pour pousser une nouvelle annonce, changer l'id dans apps.json.
+  function renderAnnouncement() {
+    const homeBanner = document.getElementById('home-banner');
+    let host = document.getElementById('announcement-banner');
+    const a = state.announcement;
+    const dismissed = (state.prefs.dismissedAnnouncements || []);
+
+    if (!a || !a.id || dismissed.includes(a.id)) {
+      if (host) host.remove();
+      return;
+    }
+
+    // Insere dans #home-banner pour combler le vide a droite du "Salut X 👋"
+    // au lieu d'un bandeau separe empile dessous (etait redondant et coupait
+    // la verticalite de la page).
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'announcement-banner';
+      if (homeBanner) homeBanner.appendChild(host);
+      else {
+        const main = document.querySelector('.main');
+        if (main) main.appendChild(host);
+      }
+    } else if (homeBanner && host.parentElement !== homeBanner) {
+      // Si l'annonce a ete creee ailleurs (ancien comportement), on la rapatrie
+      homeBanner.appendChild(host);
+    }
+
+    const KIND_META = {
+      new:    { icon: '🎉', label: 'Nouveauté', cls: 'announcement-new' },
+      update: { icon: '↻',  label: 'Mise à jour', cls: 'announcement-update' },
+      promo:  { icon: '💰', label: 'Promo',     cls: 'announcement-promo' },
+      info:   { icon: '📣', label: 'Info',      cls: 'announcement-info' }
+    };
+    const meta = KIND_META[a.kind] || KIND_META.info;
+    host.className = `announcement-banner ${meta.cls}`;
+
+    const ctaHtml = a.cta && a.cta.label
+      ? `<button class="announcement-cta">${escapeHtml(a.cta.label)} <span class="announcement-cta-arrow">→</span></button>`
+      : '';
+
+    host.innerHTML = `
+      <span class="announcement-icon" aria-hidden="true">${meta.icon}</span>
+      <div class="announcement-body">
+        <div class="announcement-title">
+          <span class="announcement-kind">${meta.label}</span>
+          <strong>${escapeHtml(a.title || '')}</strong>
+        </div>
+        <p class="announcement-message">${escapeHtml(a.message || '')}</p>
+      </div>
+      <div class="announcement-actions">
+        ${ctaHtml}
+        <button class="announcement-dismiss" title="Masquer cette annonce" aria-label="Masquer">×</button>
+      </div>
+    `;
+
+    const dismissBtn = host.querySelector('.announcement-dismiss');
+    dismissBtn.addEventListener('click', () => {
+      // Optimistic dismiss : on cache tout de suite + on persiste asynchrone.
+      state.prefs.dismissedAnnouncements = [
+        ...(state.prefs.dismissedAnnouncements || []), a.id
+      ];
+      host.remove();
+      window.triskell.prefs.dismissAnnouncement(a.id).catch(err => {
+        console.error('dismissAnnouncement failed', err);
+      });
+    });
+
+    const ctaBtn = host.querySelector('.announcement-cta');
+    if (ctaBtn && a.cta) {
+      ctaBtn.addEventListener('click', () => {
+        const { action, value } = a.cta;
+        if (action === 'open-product' && value) {
+          const app = state.apps.find(x => x.id === value);
+          if (app) showProductPage(app);
+        } else if (action === 'open-url' && value) {
+          window.triskell.openExternal?.(value);
+        } else if (action === 'open-completion') {
+          const missing = missingPremiumApps();
+          if (missing.length >= 2 && state.completionBundle?.discounts) {
+            openCompletionPickerModal(missing, state.completionBundle.discounts);
+          }
+        }
+      });
+    }
   }
 
   // Onboarding pour les nouveaux comptes : affiche un guide rapide quand
@@ -1299,39 +1392,40 @@
     }
   }
 
-  // Carte dynamique "Compléter ta Table" : pricing par tier base sur le nombre
-  // d'apps qu'il manque a l'utilisateur (4/3/2). Sous 2 manquants, on cache
-  // (autant acheter en individuel). A 0 manquant (collection complete), on
-  // cache aussi.
+  // Calcule le prix bundle pour une selection donnee.
+  // Formule : somme des prix individuels × (1 - discount/100).
+  // discounts = { "2": 15, "3": 25, "4": 35 } depuis apps.json.
+  // Renvoie null si pas de discount configure pour ce count (< 2 par ex).
+  function computeBundlePrice(apps, discounts) {
+    const count = apps.length;
+    const discount = discounts && discounts[String(count)];
+    if (typeof discount !== 'number') return null;
+    const total = apps.reduce((s, a) => s + (a.price || 0), 0);
+    const bundle = Math.round(total * (1 - discount / 100));
+    return { count, total, discount, bundle, savings: total - bundle };
+  }
+
+  // Carte dynamique "Compléter ta Table" : reduction progressive selon le
+  // nombre d'outils restants (-15% pour 2, -25% pour 3, -35% pour 4).
+  // Toujours proportionnel : plus de cas ou le bundle revient plus cher
+  // que la somme separee, et marges previsibles pour Triskell.
   function renderCompletionBundle(host) {
     const cb = state.completionBundle;
-    if (!cb || !cb.tiers) return;
+    if (!cb || !cb.discounts) return;
 
     const missing = missingPremiumApps();
     const count = missing.length;
     if (count < 2) return;
 
-    const tier = cb.tiers[String(count)];
-    if (!tier) return;
-
-    // Calcul DYNAMIQUE du prix de reference : on additionne les prix des
-    // apps que l'utilisateur n'a pas encore. Ca donne la vraie economie en
-    // fonction de SA config (et pas un chiffre marketing arbitraire).
-    const actualOriginal = missing.reduce((s, a) => s + (a.price || 0), 0);
-    const savings = actualOriginal - tier.price;
-
-    // Si le bundle revient plus cher (cas rare avec des apps a faible prix
-    // par ex. Suite + Bobeez = 54€ < bundle 55€), on ne montre pas le bundle.
-    if (savings <= 0) return;
+    const calc = computeBundlePrice(missing, cb.discounts);
+    if (!calc) return;
 
     const card = document.createElement('article');
     card.className = 'bundle-card bundle-completion' + (cb.comingSoon ? ' bundle-soon' : '');
 
-    // Pourcentage d'economie pour highlight visuel
-    const savingsPercent = Math.round((savings / actualOriginal) * 100);
-
-    const original = `<span class="price-old">${actualOriginal} €</span>`;
-    const dynamicNote = `Économise ${savings} € (-${savingsPercent} %) par rapport aux achats séparés`;
+    const savingsPercent = Math.round((calc.savings / calc.total) * 100);
+    const original = `<span class="price-old">${calc.total} €</span>`;
+    const dynamicNote = `Économise ${calc.savings} € (-${savingsPercent} %) par rapport aux achats séparés`;
     const note = `<p class="bundle-note">${escapeHtml(dynamicNote)}</p>`;
     const missingNames = missing.map(a => a.name).join(', ');
 
@@ -1347,7 +1441,7 @@
         <p class="bundle-tagline">${escapeHtml(cb.tagline || '')}</p>
         <p class="bundle-missing muted small">Il te manque : <strong>${escapeHtml(missingNames)}</strong></p>
         <div class="bundle-price">
-          <span class="price-current">${tier.price} €</span>
+          <span class="price-current">${calc.bundle} €</span>
           ${original}
         </div>
         ${note}
@@ -1365,8 +1459,6 @@
     if (cb.comingSoon) {
       actions.appendChild(makeBtn('Bientôt', 'btn-disabled', null, true));
     } else {
-      // Bouton CTA enrichi : titre + sous-texte pour signaler que c'est
-      // une selection a la carte (et pas un achat aveugle de tout le pack).
       const btn = document.createElement('button');
       btn.className = 'btn-completion';
       btn.innerHTML = `
@@ -1374,7 +1466,7 @@
         <span class="btn-completion-sub">Sélection à la carte</span>
       `;
       btn.addEventListener('click',
-        () => openCompletionPickerModal(missing, cb.tiers));
+        () => openCompletionPickerModal(missing, cb.discounts));
       actions.appendChild(btn);
     }
     host.appendChild(card);
@@ -1387,7 +1479,7 @@
   // ouvre une modale avec une checkbox par outil, et on recalcule le prix
   // bundle en temps reel selon le nombre coche. Sous 2 outils coches, plus
   // de tier bundle valide -> on bascule l'UX vers l'achat individuel.
-  function openCompletionPickerModal(missing, tiers) {
+  function openCompletionPickerModal(missing, discounts) {
     const selected = new Set(missing.map(a => a.id));
 
     const rowsHtml = missing.map(a => `
@@ -1448,9 +1540,17 @@
         }
         if (ids.length < 2) return; // CTA disabled
 
-        const r = await window.triskell.purchase.openCompletion(ids.length, ids);
+        // On envoie aussi le prix calcule cote client pour affichage cohérent ;
+        // le serveur le RECALCULE pour ne pas faire confiance au client.
+        const calc = computeBundlePrice(
+          missing.filter(a => selected.has(a.id)),
+          discounts
+        );
+        const r = await window.triskell.purchase.openCompletion(
+          ids.length, ids, calc ? calc.bundle : null
+        );
         if (r && !r.ok) {
-          const msg = r.error === 'tier-not-configured' || r.error === 'stripe-not-configured'
+          const msg = r.error === 'discount-not-configured' || r.error === 'stripe-not-configured'
             ? 'Le pack n\'est pas encore activé côté paiement. Notre équipe est prévenue, on revient vers toi vite.'
             : 'Impossible de lancer le paiement. Réessaie dans un instant.';
           showToast({ kind: 'error', title: 'Compléter ma Table', message: msg, timeout: 8000 });
@@ -1469,14 +1569,12 @@
     const $hint = els.modalBody.querySelector('.picker-hint');
 
     function refresh() {
-      const count = selected.size;
-      const individualTotal = missing
-        .filter(a => selected.has(a.id))
-        .reduce((s, a) => s + (a.price || 0), 0);
+      const selectedApps = missing.filter(a => selected.has(a.id));
+      const count = selectedApps.length;
+      const individualTotal = selectedApps.reduce((s, a) => s + (a.price || 0), 0);
 
       $individual.textContent = `${individualTotal} €`;
 
-      const tier = tiers[String(count)];
       if (count === 0) {
         $bundleLabel.textContent = 'Bundle';
         $bundle.textContent = '—';
@@ -1485,44 +1583,38 @@
         els.modalCta.disabled = true;
         els.modalCta.classList.add('btn-disabled');
         els.modalCta.textContent = 'Acheter';
-      } else if (count === 1) {
+        return;
+      }
+      if (count === 1) {
         $bundleLabel.textContent = 'Bundle';
         $bundle.textContent = '— (min. 2)';
         $savingsRow.style.display = 'none';
         $hint.textContent = 'Avec 1 seul outil, autant l\'acheter directement (le bundle ne s\'active qu\'à partir de 2).';
         els.modalCta.disabled = false;
         els.modalCta.classList.remove('btn-disabled');
-        const only = missing.find(a => a.id === [...selected][0]);
-        els.modalCta.textContent = only
-          ? `Acheter ${only.name} — ${only.price || 0} €`
-          : 'Acheter';
-      } else if (!tier) {
+        const only = selectedApps[0];
+        els.modalCta.textContent = `Acheter ${only.name} — ${only.price || 0} €`;
+        return;
+      }
+      const calc = computeBundlePrice(selectedApps, discounts);
+      if (!calc) {
         $bundleLabel.textContent = 'Bundle';
         $bundle.textContent = '—';
         $savingsRow.style.display = 'none';
-        $hint.textContent = 'Aucun tarif bundle configuré pour cette quantité.';
+        $hint.textContent = 'Aucune remise configurée pour cette quantité.';
         els.modalCta.disabled = true;
         els.modalCta.classList.add('btn-disabled');
-      } else {
-        const savings = individualTotal - tier.price;
-        $bundleLabel.textContent = `Bundle (${count} outil${count > 1 ? 's' : ''})`;
-        $bundle.textContent = `${tier.price} €`;
-
-        if (savings > 0) {
-          const pct = Math.round((savings / individualTotal) * 100);
-          $savingsRow.style.display = '';
-          $savings.textContent = `−${savings} € (−${pct} %)`;
-          $hint.textContent = '';
-        } else {
-          // Edge case : 2 outils peu chers -> bundle plus cher que la
-          // somme. On signale sans bloquer.
-          $savingsRow.style.display = 'none';
-          $hint.textContent = 'Le bundle revient plus cher que l\'achat séparé pour ces outils. Tu peux quand même prendre le bundle, ou décocher pour acheter à l\'unité.';
-        }
-        els.modalCta.disabled = false;
-        els.modalCta.classList.remove('btn-disabled');
-        els.modalCta.textContent = `Acheter ${count} outil${count > 1 ? 's' : ''} — ${tier.price} €`;
+        return;
       }
+      const pct = Math.round((calc.savings / calc.total) * 100);
+      $bundleLabel.textContent = `Bundle (${count} outil${count > 1 ? 's' : ''} · −${calc.discount} %)`;
+      $bundle.textContent = `${calc.bundle} €`;
+      $savingsRow.style.display = '';
+      $savings.textContent = `−${calc.savings} € (−${pct} %)`;
+      $hint.textContent = '';
+      els.modalCta.disabled = false;
+      els.modalCta.classList.remove('btn-disabled');
+      els.modalCta.textContent = `Acheter ${count} outil${count > 1 ? 's' : ''} — ${calc.bundle} €`;
     }
 
     checks.forEach(cb => {

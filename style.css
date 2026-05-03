@@ -780,19 +780,30 @@ input, button { outline: none; }
   display: block;
 }
 
-/* Image PNG (castle.png) — image noir-sur-blanc d'origine.
-   En dark theme on inverse les couleurs pour avoir blanc-sur-fond-sombre.
-   En light theme, image telle quelle (deja noire sur blanc). */
+/* Image PNG (empty-decor.png) — trait noir sur fond blanc d'origine.
+   On veut que le PNG s'intègre avec le fond du lanceur (pas de bloc
+   rectangulaire visible). Astuce blend-mode :
+   - Dark : on inverse (trait blanc sur fond noir) puis screen → les noirs
+     deviennent transparents, seul le trait blanc reste.
+   - Light : telle quelle (trait noir sur fond blanc) puis multiply → les
+     blancs deviennent transparents, seul le trait noir reste. */
 .empty-decor img {
   width: 100%;
   max-width: 1400px;
   height: auto;
   display: block;
   filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.1);
+  mix-blend-mode: screen;
 }
-:root[data-theme='light'] .empty-decor img { filter: none; }
+:root[data-theme='light'] .empty-decor img {
+  filter: none;
+  mix-blend-mode: multiply;
+}
 @media (prefers-color-scheme: light) {
-  :root[data-theme='auto'] .empty-decor img { filter: none; }
+  :root[data-theme='auto'] .empty-decor img {
+    filter: none;
+    mix-blend-mode: multiply;
+  }
 }
 
 .empty-decor.hidden { display: none; }
