@@ -489,9 +489,11 @@ input, button { outline: none; }
 
 .bundle-card {
   display: grid;
-  grid-template-columns: 72px 1fr auto;
+  /* Body avec une max-width raisonnable : sur grand ecran le bouton reste
+     pres du texte au lieu de partir loin a droite. */
+  grid-template-columns: 72px minmax(auto, 720px) auto;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
   padding: 16px 20px;
   background: linear-gradient(135deg,
     rgba(99, 102, 241, 0.10),
@@ -501,6 +503,9 @@ input, button { outline: none; }
   border-radius: var(--radius);
   position: relative;
   overflow: hidden;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .bundle-card::before {
@@ -568,6 +573,32 @@ input, button { outline: none; }
   border-color: rgba(212, 179, 90, 0.30);
 }
 .bundle-completion .bundle-title { color: var(--gold-soft); }
+
+/* En mode clair, gold-soft est presque illisible sur fond clair :
+   on bascule sur un titre dore plus dense (var(--gold)). Et on
+   solidifie aussi l'icone du bundle (rgba dark devient invisible
+   sur fond clair). */
+:root[data-theme='light'] .bundle-completion .bundle-title {
+  color: var(--gold);
+}
+:root[data-theme='light'] .bundle-icon {
+  background: var(--bg-3);
+  border-color: var(--border-strong);
+}
+:root[data-theme='light'] .bundle-card {
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.06),
+    rgba(167, 139, 250, 0.05) 50%,
+    rgba(249, 115, 22, 0.05) 100%);
+  border-color: rgba(124, 127, 233, 0.35);
+}
+:root[data-theme='light'] .bundle-completion {
+  background: linear-gradient(135deg,
+    rgba(212, 179, 90, 0.14),
+    rgba(124, 127, 233, 0.06) 60%,
+    rgba(167, 139, 250, 0.05) 100%);
+  border-color: rgba(212, 179, 90, 0.45);
+}
 
 .bundle-actions {
   display: flex;
@@ -778,8 +809,42 @@ input, button { outline: none; }
   padding: 26px 28px 22px;
   max-width: 460px;
   width: 90%;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow);
   z-index: 1;
+}
+
+/* Le corps scrolle si le contenu depasse la hauteur dispo. Le titre et
+   les boutons d'action (footer) restent fixes en haut et en bas. */
+.modal-card > #modal-body,
+.modal-card > .modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  /* On laisse un petit gutter pour que la scrollbar n'ecrase pas le contenu */
+  margin-right: -8px;
+  padding-right: 8px;
+  /* Petit fade haut/bas pour signaler qu'il y a du contenu cache au scroll */
+  mask-image: linear-gradient(to bottom,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0,
+    #000 12px,
+    #000 calc(100% - 12px),
+    transparent 100%);
+}
+
+/* Sur mobile, prendre quasiment tout l'ecran pour ne plus avoir de coupures */
+@media (max-height: 720px), (max-width: 600px) {
+  .modal-card {
+    max-height: calc(100vh - 16px);
+    width: 96%;
+    padding: 20px 22px 18px;
+  }
 }
 
 .modal-close {
@@ -798,13 +863,17 @@ input, button { outline: none; }
 
 .modal-close:hover { background: var(--bg-3); color: var(--text); }
 
-.modal-card h2 { margin: 0 0 8px; font-size: 18px; color: var(--accent); }
+.modal-card h2 { margin: 0 0 8px; font-size: 18px; color: var(--accent); flex-shrink: 0; }
 .modal-card p  { margin: 0 0 20px; color: var(--text-dim); line-height: 1.5; font-size: 13px; }
 
 .modal-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  flex-shrink: 0;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
 }
 
 /* SCROLLBAR */
@@ -2577,4 +2646,103 @@ details[open] .danger-summary::before {
   margin: 8px 0 0;
   font-style: italic;
   line-height: 1.4;
+}
+
+/* ============================================================================
+   Animation de succès post-install
+   ============================================================================
+   La classe .tile-just-installed est ajoutée 1.8s sur la card freshly
+   installée. Pulse vert autour + grand ✓ qui apparaît, scale, fade out.
+   But : signal visuel localisé pour que l'œil voie immédiatement quelle
+   card vient de basculer en "installed" (en plus du toast en bas-droite). */
+.tile-just-installed {
+  animation: tile-success-pulse 1.5s ease-out;
+  border-color: var(--green);
+}
+.tile-just-installed::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 110px;
+  font-weight: 800;
+  color: var(--green);
+  background: radial-gradient(circle at center,
+    rgba(74, 222, 128, 0.18) 0%,
+    rgba(74, 222, 128, 0.08) 40%,
+    transparent 75%);
+  text-shadow:
+    0 0 20px rgba(74, 222, 128, 0.55),
+    0 0 40px rgba(74, 222, 128, 0.35);
+  pointer-events: none;
+  z-index: 5;
+  animation: tile-checkmark 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes tile-success-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7),  0 0 0 0 rgba(74, 222, 128, 0); }
+  35%  { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0.18), 0 10px 32px rgba(74, 222, 128, 0.45); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0),    0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+@keyframes tile-checkmark {
+  0%   { opacity: 0; transform: scale(0.4); }
+  25%  { opacity: 1; transform: scale(1.15); }
+  45%  { transform: scale(1); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-just-installed,
+  .tile-just-installed::after { animation: none; }
+}
+
+/* ============================================================================
+   Mention "Garantie 14 jours" sous le bouton Acheter
+   ============================================================================
+   Diminue la friction d'achat : info rassurante visible AVANT le clic et
+   pas seulement enterrée dans les CGV. Apparaît uniquement sur les states
+   avec un vrai tunnel d'achat (.tile-actions injecte ce span seulement
+   quand isRealBuyButton). flex-basis 100% : passe à la ligne pour ne pas
+   bousculer les boutons côte à côte. */
+.tile-guarantee {
+  flex-basis: 100%;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+.tile-guarantee-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.18);
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* Sur la fiche produit (plein écran), on grossit un peu pour rester
+   lisible avec les CTA plus gros. */
+.product-actions .tile-guarantee {
+  margin-top: 14px;
+  font-size: 13px;
+  opacity: 1;
+  font-weight: 600;
+}
+.product-actions .tile-guarantee-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
 }
