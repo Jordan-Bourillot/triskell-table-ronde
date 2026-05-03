@@ -548,6 +548,25 @@ ipcMain.handle('prefs:set-last-seen-version', async (_evt, version) => {
   return { ok: true };
 });
 
+// Avatar : data URL base64 (PNG/JPEG), tronque a 200 KB pour ne pas faire
+// gonfler prefs.json. Une chaine vide = pas d'avatar (on retombe sur les
+// initiales).
+ipcMain.handle('prefs:set-avatar', async (_evt, dataUrl) => {
+  const v = String(dataUrl || '');
+  if (!v) {
+    store.setPref('avatar', '');
+    return { ok: true, avatar: '' };
+  }
+  if (!v.startsWith('data:image/')) {
+    return { ok: false, error: 'invalid-data-url' };
+  }
+  if (v.length > 250000) {
+    return { ok: false, error: 'too-large', message: 'Image > 200 Ko, redimensionne avant upload.' };
+  }
+  store.setPref('avatar', v);
+  return { ok: true, avatar: v };
+});
+
 // =============================================================================
 // Changelog : recupere les release notes depuis l'API GitHub. Le main process
 // fait le fetch (la CSP du renderer bloque api.github.com).
@@ -580,6 +599,14 @@ ipcMain.handle('changelog:fetch', async (_evt, version) => {
 ipcMain.handle('prefs:set-onboarding-dismissed', async (_evt, yes) => {
   store.setPref('onboardingDismissed', !!yes);
   return { ok: true };
+});
+
+// Theme : 'dark' | 'light' | 'auto' (suit l'OS). Persiste localement et le
+// renderer applique data-theme=... sur <html> au boot.
+ipcMain.handle('prefs:set-theme', async (_evt, theme) => {
+  const t = ['dark', 'light', 'auto'].includes(theme) ? theme : 'auto';
+  store.setPref('theme', t);
+  return { ok: true, theme: t };
 });
 
 // =============================================================================

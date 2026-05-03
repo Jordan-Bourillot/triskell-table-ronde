@@ -74,7 +74,9 @@ contextBridge.exposeInMainWorld('triskell', {
     setLastUsed:             (productId)=> ipcRenderer.invoke('prefs:set-last-used', productId),
     setDisplayName:          (name)     => ipcRenderer.invoke('prefs:set-display-name', name),
     setOnboardingDismissed:  (yes)      => ipcRenderer.invoke('prefs:set-onboarding-dismissed', yes),
-    setLastSeenVersion:      (v)        => ipcRenderer.invoke('prefs:set-last-seen-version', v)
+    setLastSeenVersion:      (v)        => ipcRenderer.invoke('prefs:set-last-seen-version', v),
+    setAvatar:               (dataUrl)  => ipcRenderer.invoke('prefs:set-avatar', dataUrl),
+    setTheme:                (theme)    => ipcRenderer.invoke('prefs:set-theme', theme)
   },
 
   // Changelog : release notes GitHub (fetched par le main pour passer la CSP)

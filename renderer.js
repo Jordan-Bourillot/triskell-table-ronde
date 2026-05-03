@@ -50,7 +50,9 @@
     empty:        $('empty-state'),
     loading:      $('loading-state'),
     accountBtn:   $('account-btn'),
-    accountEmail: $('account-email'),
+    accountAvatar: $('account-avatar'),
+    accountName:   $('account-name'),
+    accountStatus: $('account-status'),
     metaText:     $('meta-text'),
     // modal generique
     modal:        $('modal'),
@@ -102,6 +104,10 @@
     bindUpdateStatus();
     bindPurchaseCompleted();
 
+    // Theme : lit la pref (dark/light/auto) et l'applique sur <html>
+    // AVANT le 1er render pour eviter le flash de theme.
+    await applyThemeFromPrefs();
+
     const meta = await window.triskell.getMeta();
     els.loginVersion.textContent = `Triskell Studio · v${meta.version}`;
     els.metaText.textContent = `Triskell Studio · v${meta.version}`;
@@ -116,6 +122,34 @@
       showLogin();
     }
   }
+
+  // ============================================================================
+  // THEME (dark / light / auto)
+  // ============================================================================
+  // 'auto' suit prefers-color-scheme du systeme. 'dark'/'light' overrident.
+  async function applyThemeFromPrefs() {
+    let theme = 'auto';
+    try {
+      const prefs = window.triskell.prefs ? await window.triskell.prefs.get() : {};
+      if (prefs && ['dark', 'light', 'auto'].includes(prefs.theme)) {
+        theme = prefs.theme;
+      }
+    } catch (_) { /* dev */ }
+    setTheme(theme, /*persist*/ false);
+  }
+
+  function setTheme(theme, persist = true) {
+    const t = ['dark', 'light', 'auto'].includes(theme) ? theme : 'auto';
+    document.documentElement.setAttribute('data-theme', t);
+    state.prefs = state.prefs || {};
+    state.prefs.theme = t;
+    if (persist && window.triskell.prefs && window.triskell.prefs.setTheme) {
+      window.triskell.prefs.setTheme(t).catch(() => {});
+    }
+  }
+
+  // Quand l'OS bascule (sombre/clair) et qu'on est en 'auto', le CSS
+  // gere deja via @media (prefers-color-scheme). Rien a faire en JS.
 
   // ============================================================================
   // ECRAN DE LOGIN
@@ -313,8 +347,7 @@
     state.offline = !!(licRes && licRes.fromCache);
     state.installs = installs || {};
 
-    els.accountEmail.textContent = state.user.email;
-    els.accountBtn.title = state.user.email;
+    renderAccountPill();
 
     bindHeader();
     render();
@@ -516,6 +549,25 @@
 
         ${statsHtml}
 
+        <div class="avatar-section">
+          <div class="avatar-large" id="profile-avatar-preview">${
+            state.prefs.avatar
+              ? `<img src="${escapeHtml(state.prefs.avatar)}" alt="">`
+              : escapeHtml(accountInitials())
+          }</div>
+          <div style="flex:1;min-width:0;">
+            <p style="margin:0 0 6px;font-weight:600;color:var(--text);font-size:13px;">Photo de profil</p>
+            <p class="muted small" style="margin:0 0 10px;">PNG, JPG ou WebP. Auto-redimensionné à 256 × 256.</p>
+            <div class="avatar-actions">
+              <button class="ghost-btn" id="avatar-upload-btn" type="button">Choisir une image…</button>
+              ${state.prefs.avatar
+                ? `<button class="ghost-btn" id="avatar-remove-btn" type="button">Retirer</button>`
+                : ''}
+            </div>
+            <input type="file" id="avatar-file-input" accept="image/png,image/jpeg,image/webp" style="display:none" />
+          </div>
+        </div>
+
         <div class="account-section profile-section">
           <label class="profile-field">
             <span class="profile-label">Comment veux-tu que je t'appelle ?</span>
@@ -524,7 +576,7 @@
                    value="${escapeHtml(displayName)}" />
             <span class="profile-saved muted small hidden" id="pref-display-name-saved">Enregistré ✓</span>
           </label>
-          <p class="muted small profile-hint">Apparaîtra dans le bandeau d'accueil ("Salut <span id="profile-preview">${escapeHtml(displayName || 'Compagnon')}</span> 👋"). Laisse vide pour rester anonyme.</p>
+          <p class="muted small profile-hint">Apparaîtra dans le bandeau et le pill compte. Laisse vide pour rester anonyme.</p>
         </div>
 
         <div class="account-section">
@@ -536,6 +588,14 @@
             <span><strong>Statistiques anonymes</strong><br><span class="muted small">Aide Triskell à savoir ce qui est utilisé. Aucune donnée perso, aucun tracker.</span></span>
             <input type="checkbox" id="pref-telemetry" ${telemetry ? 'checked' : ''}>
           </label>
+          <div class="pref-row pref-row-stack">
+            <span><strong>Apparence</strong><br><span class="muted small">Choisis ton thème — "Auto" suit ton système.</span></span>
+            <div class="theme-toggle" role="group" aria-label="Thème">
+              <button type="button" class="theme-toggle-btn ${(state.prefs.theme || 'auto') === 'auto' ? 'active' : ''}" data-theme="auto">🖥 Auto</button>
+              <button type="button" class="theme-toggle-btn ${state.prefs.theme === 'light' ? 'active' : ''}" data-theme="light">☀ Clair</button>
+              <button type="button" class="theme-toggle-btn ${state.prefs.theme === 'dark' ? 'active' : ''}" data-theme="dark">🌙 Sombre</button>
+            </div>
+          </div>
         </div>
 
         <div class="account-section">
@@ -605,6 +665,18 @@
     if (tl) tl.addEventListener('change', async (e) => {
       await window.triskell.prefs.setTelemetry(e.target.checked);
       state.prefs.telemetry = e.target.checked;
+    });
+
+    // Theme toggle (Auto / Clair / Sombre)
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.getAttribute('data-theme');
+        setTheme(theme, /*persist*/ true);
+        // Met a jour visuellement les 3 boutons
+        document.querySelectorAll('.theme-toggle-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-theme') === theme);
+        });
+      });
     });
 
     // Bouton "Mes factures" : tente d'ouvrir le Stripe Customer Portal,
@@ -710,12 +782,115 @@
               dnSaved.classList.remove('hidden');
               setTimeout(() => dnSaved.classList.add('hidden'), 1800);
             }
-            // Repeint le bandeau pour reflechir la salutation immediatement
+            // Repeint le bandeau + le pill compte (nom maj live partout)
             renderHomeBanner();
+            renderAccountPill();
           }
         }, 500);
       });
     }
+
+    // ===== Avatar : upload + retrait =====
+    const avatarBtn   = document.getElementById('avatar-upload-btn');
+    const avatarInput = document.getElementById('avatar-file-input');
+    const avatarRem   = document.getElementById('avatar-remove-btn');
+    const avatarPrev  = document.getElementById('profile-avatar-preview');
+
+    if (avatarBtn && avatarInput) {
+      avatarBtn.addEventListener('click', () => avatarInput.click());
+      avatarInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+          showToast({
+            kind: 'error',
+            title: 'Format non supporté',
+            message: 'PNG, JPEG ou WebP uniquement.',
+            timeout: 6000
+          });
+          return;
+        }
+        try {
+          const dataUrl = await resizeImageToDataUrl(file, 256, 0.85);
+          const r = await window.triskell.prefs.setAvatar(dataUrl);
+          if (!r || !r.ok) {
+            showToast({
+              kind: 'error',
+              title: 'Upload impossible',
+              message: r?.message || 'Réessaie avec une image plus petite.',
+              timeout: 7000
+            });
+            return;
+          }
+          state.prefs.avatar = r.avatar;
+          // Live update : preview dans la modale + pill du header
+          if (avatarPrev) {
+            avatarPrev.innerHTML = `<img src="${r.avatar}" alt="">`;
+          }
+          renderAccountPill();
+          // Re-render le ribbon "Retirer" si pas encore présent
+          if (!avatarRem) {
+            const actions = document.querySelector('.avatar-actions');
+            if (actions) {
+              const btn = document.createElement('button');
+              btn.className = 'ghost-btn';
+              btn.id = 'avatar-remove-btn';
+              btn.type = 'button';
+              btn.textContent = 'Retirer';
+              btn.addEventListener('click', removeAvatarHandler);
+              actions.appendChild(btn);
+            }
+          }
+        } catch (err) {
+          showToast({
+            kind: 'error',
+            title: 'Image illisible',
+            message: err.message || 'Impossible de lire ce fichier.',
+            timeout: 6000
+          });
+        }
+      });
+    }
+
+    async function removeAvatarHandler() {
+      const r = await window.triskell.prefs.setAvatar('');
+      if (r && r.ok) {
+        state.prefs.avatar = '';
+        if (avatarPrev) avatarPrev.innerHTML = escapeHtml(accountInitials());
+        renderAccountPill();
+        const btn = document.getElementById('avatar-remove-btn');
+        if (btn) btn.remove();
+      }
+    }
+    if (avatarRem) avatarRem.addEventListener('click', removeAvatarHandler);
+  }
+
+  // Resize une image en dataURL via canvas. Garde le ratio, max 'size'×'size',
+  // qualite 'quality' (jpeg). Renvoie 'data:image/jpeg;base64,...'.
+  function resizeImageToDataUrl(file, size, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Lecture du fichier échouée'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Décodage de l\'image échoué'));
+        img.onload = () => {
+          const ratio = Math.min(size / img.width, size / img.height, 1);
+          const w = Math.round(img.width  * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#0f1218';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   // Quand un achat in-app aboutit (page success Stripe atteinte) on rafraichit
@@ -824,6 +999,69 @@
     if (s === 'not-owned')           return 4;
     if (s === 'coming-soon')         return 5;   // bottom
     return 6;
+  }
+
+  // ============================================================================
+  // ACCOUNT PILL (avatar + nom dans le header)
+  // ============================================================================
+  function accountInitials() {
+    const name = (state.prefs.displayName || '').trim();
+    const email = state.user?.email || '';
+    if (name) {
+      const parts = name.split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return name.slice(0, 2).toUpperCase();
+    }
+    return (email.split('@')[0].slice(0, 2) || '?').toUpperCase();
+  }
+
+  function renderAccountPill() {
+    if (!els.accountAvatar || !els.accountName) return;
+    const name = (state.prefs.displayName || '').trim();
+    const email = state.user?.email || '';
+    const display = name || email.split('@')[0] || 'Compagnon';
+
+    els.accountName.textContent = display;
+    els.accountBtn.title = email ? `${display} · ${email}` : display;
+
+    // Avatar : photo si on en a une, sinon initiales colorees
+    const avatar = state.prefs.avatar;
+    els.accountAvatar.innerHTML = '';
+    els.accountAvatar.style.background = '';
+    if (avatar && avatar.startsWith('data:image/')) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = avatar;
+      els.accountAvatar.appendChild(img);
+    } else {
+      els.accountAvatar.textContent = accountInitials();
+      const seed = hashStr(email || display);
+      const hue = seed % 360;
+      els.accountAvatar.style.background =
+        `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${(hue + 50) % 360}, 65%, 50%))`;
+    }
+
+    // Statut sous le nom : "X adoubé(s)" ou "Visiteur"
+    const owned = Object.keys(state.licenses || {}).length;
+    if (els.accountStatus) {
+      if (owned > 0) {
+        els.accountStatus.textContent = `${owned} adoubé${owned > 1 ? 's' : ''}`;
+        els.accountStatus.style.color = 'var(--gold)';
+      } else {
+        els.accountStatus.textContent = 'Visiteur';
+        els.accountStatus.style.color = 'var(--text-muted)';
+      }
+    }
+  }
+
+  // FNV-1a 32-bit — couleur d'avatar stable par email
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return Math.abs(h);
   }
 
   // Construit la salutation. Priorite : displayName personnalise > prenom
