@@ -318,23 +318,140 @@ input, button { outline: none; }
   font-size: 24px;
 }
 
+.main-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.main-subtitle {
+  margin: 0;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  opacity: 0.85;
+}
+
+/* ========== ONGLETS DE CATEGORIES ========================================= */
+/* Barre d'onglets en haut du contenu : "Les outils du quotidien" /
+   "L'Atelier des Pros". Visible seulement si plus d'une catégorie. */
+.main-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  margin: 0 0 18px;
+  padding: 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: max-content;
+  max-width: 100%;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18) inset;
+}
+.main-tabs.hidden { display: none; }
+
+.main-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-quest);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.main-tab:hover {
+  color: var(--text);
+  background: var(--bg-card-hover);
+}
+
+.main-tab.is-active {
+  background: linear-gradient(180deg,
+    rgba(212, 179, 90, 0.18) 0%,
+    rgba(212, 179, 90, 0.08) 100%);
+  color: var(--gold-soft);
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.35),
+    0 6px 16px -10px var(--gold-shadow);
+}
+
+.main-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.main-tab.is-active .main-tab-count {
+  color: var(--gold);
+  border-color: rgba(212, 179, 90, 0.4);
+  background: rgba(212, 179, 90, 0.10);
+}
+
+/* ========== TUILE PRODUIT-SERVICE ========================================= */
+/* Sur la grille, les services (Triskell Studio agence, Eliks Studio) sont
+   visuellement distincts : un voile doré subtil, pour qu'on voie qu'on n'est
+   plus sur un logiciel à installer mais sur une offre humaine. */
+.tile.is-service {
+  border-color: rgba(212, 179, 90, 0.32);
+  background: linear-gradient(180deg,
+    rgba(212, 179, 90, 0.04) 0%,
+    var(--bg-card) 60%);
+}
+.tile.is-service .tile-title {
+  color: var(--gold-soft);
+}
+
+.price-block-service {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.price-current-service {
+  font-size: 15px;
+  font-family: var(--font-quest);
+  letter-spacing: 0.3px;
+  color: var(--gold-soft);
+}
+
 .muted { color: var(--text-muted); font-size: 12px; }
 
 .grid {
   display: grid;
-  /* auto-fit (au lieu de auto-fill) collapse les colonnes vides ;
-     minmax(220px, 320px) permet aux 5 cards Triskell actuelles de tenir
-     sur 1 seule ligne sur écran large (5 × 320 + 4 × 18 = ~1672px). Sur
-     écran plus étroit ça wrappe et la dernière ligne est centrée. */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 320px));
-  justify-content: center;
+  /* Layout asymétrique : 4 colonnes sur grand écran. La tile featured
+     prend 2x2 (= un Hero) et les autres se rangent autour en 1x1.
+     Avec 5 apps (1 hero + 4 normales) → 2 lignes parfaites. */
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 220px;        /* hauteur fixe par "cellule" pour cohérence */
   gap: 18px;
-  /* max-width relevé de 1100 → 1750 pour laisser de la place aux 5 cards.
-     L'alignement visuel avec bundle-card / fiche produit (cappés à 1100)
-     reste OK car ils sont cappés indépendamment. */
-  max-width: 1750px;
+  max-width: 1500px;
   margin-left: auto;
   margin-right: auto;
+}
+@media (max-width: 1280px) {
+  .grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: auto;       /* en mobile/etroit, hauteur libre */
+  }
 }
 
 /* TILE */
@@ -415,9 +532,13 @@ input, button { outline: none; }
 
 .tile-title-block { flex: 1; min-width: 0; }
 .tile-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0 0 3px 0;
+  /* Cinzel : typo "blasonnée" Triskell, sous-utilisée jusqu'ici → on
+     l'applique a tous les titres de card pour renforcer l'identite. */
+  font-family: var(--font-quest);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin: 0 0 4px 0;
   color: var(--text);
 }
 
@@ -1626,9 +1747,99 @@ input, button { outline: none; }
 }
 
 /* Tuile "Populaire" — petit ruban en haut à droite, halo discret */
+/* HERO TILE : la tuile featured prend 2×2 dans la grille → layout interne
+   plus généreux (icône XL, titre Cinzel grand, tagline visible en entier,
+   boutons larges). Donne une vraie hiérarchie visuelle. */
 .tile.is-featured {
-  border-color: rgba(167, 139, 250, 0.35);
-  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.10);
+  grid-column: span 2;
+  grid-row: span 2;
+  border-color: rgba(212, 179, 90, 0.40);
+  background: linear-gradient(135deg,
+    rgba(212, 179, 90, 0.08),
+    rgba(167, 139, 250, 0.05) 60%,
+    rgba(99, 102, 241, 0.04) 100%);
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.30);
+  padding: 28px;
+  gap: 16px;
+}
+
+.tile.is-featured .tile-head {
+  align-items: center;
+  gap: 22px;
+}
+
+.tile.is-featured .tile-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  font-size: 32px;
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.20),
+    0 8px 24px rgba(0, 0, 0, 0.40);
+}
+
+.tile.is-featured .tile-title {
+  font-family: var(--font-quest);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--gold-soft);
+  margin-bottom: 6px;
+}
+
+.tile.is-featured .tile-tagline {
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-line-clamp: 3;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.tile.is-featured .tile-tags {
+  margin-top: 4px;
+}
+
+.tile.is-featured .tile-actions {
+  margin-top: auto;
+}
+
+.tile.is-featured .tile-actions button {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Le bouton "Recruter" du hero plus présent : plus grand + ombre dorée */
+.tile.is-featured .btn-buy {
+  background: linear-gradient(135deg, var(--accent-hot), var(--triskell-violet));
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.30),
+    0 6px 18px rgba(124, 127, 233, 0.40);
+}
+.tile.is-featured .btn-buy:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.50),
+    0 10px 24px rgba(124, 127, 233, 0.55);
+}
+
+/* Bandeau prix plus généreux dans le hero */
+.tile.is-featured .price-block {
+  font-size: 16px;
+}
+
+@media (max-width: 900px) {
+  /* En etroit, le hero redevient une card normale pour ne pas etre
+     ecrase. La hierarchie visuelle reste via le ribbon "Populaire". */
+  .tile.is-featured {
+    grid-column: span 2;
+    grid-row: auto;
+    padding: 20px;
+  }
+  .tile.is-featured .tile-icon { width: 64px; height: 64px; font-size: 22px; }
+  .tile.is-featured .tile-title { font-size: 18px; }
 }
 
 .tile-ribbon {
@@ -2956,3 +3167,304 @@ details[open] .danger-summary::before {
 
 .announcement-info .announcement-kind   { background: rgba(167, 139, 250, 0.18); color: var(--triskell-violet); }
 .announcement-info                      { border-color: rgba(167, 139, 250, 0.35); }
+
+/* ============================================================================
+   PHASE 2 — Plus de caractère + animations
+   ============================================================================ */
+
+/* --- HERO : bloc "outils inclus" + watermark --- */
+.tile-hero-block {
+  margin-top: 4px;
+}
+.tile-hero-count {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+.tile-hero-count strong {
+  color: var(--gold-soft);
+  font-family: var(--font-quest);
+  font-size: 18px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+.tile-hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.tile-hero-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dim);
+  border: 1px solid rgba(212, 179, 90, 0.18);
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.tile.is-featured:hover .tile-hero-pill {
+  background: rgba(212, 179, 90, 0.10);
+  color: var(--text);
+  border-color: rgba(212, 179, 90, 0.32);
+}
+.tile-hero-pill-more {
+  background: rgba(212, 179, 90, 0.15);
+  color: var(--gold-soft);
+  font-weight: 700;
+}
+
+/* Watermark mark Triskell en bas-droite du hero, très subtil */
+.tile-hero-watermark {
+  position: absolute;
+  right: -40px;
+  bottom: -40px;
+  width: 220px;
+  height: 220px;
+  background-image: url('assets/triskell_mark.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.4s, transform 0.6s;
+}
+.tile.is-featured:hover .tile-hero-watermark {
+  opacity: 0.12;
+  transform: rotate(-12deg) scale(1.05);
+}
+/* On remonte le contenu au-dessus du watermark */
+.tile.is-featured > *:not(.tile-hero-watermark) { position: relative; z-index: 1; }
+
+/* --- CARDS NORMALES : liseré gold au hover + lift plus marqué --- */
+.tile {
+  /* position: relative existe déjà, on ajoute juste un pseudo pour le liseré */
+  animation: tile-enter 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation-delay: calc(var(--tile-index, 0) * 60ms);
+}
+
+.tile::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold-soft), var(--triskell-violet));
+  border-radius: var(--radius) 0 0 var(--radius);
+  opacity: 0;
+  transform: scaleY(0.2);
+  transform-origin: center;
+  transition: opacity 0.22s ease, transform 0.32s cubic-bezier(0.34, 1.5, 0.64, 1);
+  pointer-events: none;
+}
+.tile:hover::after {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* Hover plus marqué sur cards normales */
+.tile:not(.is-featured):hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.25),
+    0 16px 40px rgba(0, 0, 0, 0.45);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+/* Hover hero : lift + glow doré plus prononcé */
+.tile.is-featured:hover {
+  transform: translateY(-3px);
+  border-color: rgba(212, 179, 90, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.30),
+    0 18px 50px rgba(212, 179, 90, 0.18),
+    0 18px 50px rgba(0, 0, 0, 0.40);
+}
+
+/* --- ANIMATION D'ENTREE EN CASCADE --- */
+@keyframes tile-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile { animation: none; }
+}
+
+/* --- BOUTON CTA "polish shine" : reflet qui passe au hover --- */
+.btn-buy {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-buy::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+  z-index: -1;
+}
+.btn-buy:hover::before {
+  left: 130%;
+}
+
+/* Variante hero : si l'app n'a ni tools ni features, on affiche sa
+   description courte. Style plus aere pour qu'elle respire. */
+.tile-hero-description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+/* ============================================================================
+   SPLASH SCREEN — boot de l'app, ~1.2s avec fadeOut
+   ============================================================================ */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 35%,
+    #1a1f2e 0%,
+    #0f1218 60%,
+    #08090d 100%);
+  /* Apparait instantanement, fadeOut au signal 'ready' (cf classe .is-leaving) */
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.splash.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash.hidden { display: none; }
+
+.splash-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+}
+
+.splash-logo-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.splash-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 22px;
+  /* Animation d'entree : scale + fade + leger flot vertical */
+  animation: splash-logo-in 0.9s cubic-bezier(0.34, 1.5, 0.64, 1) both,
+             splash-logo-float 3.5s ease-in-out 0.9s infinite;
+  filter: drop-shadow(0 8px 24px rgba(124, 127, 233, 0.30))
+          drop-shadow(0 0 30px rgba(212, 179, 90, 0.18));
+}
+
+/* Halo dore qui pulse derriere le logo */
+.splash-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(212, 179, 90, 0.25) 0%,
+    rgba(167, 139, 250, 0.10) 35%,
+    transparent 70%);
+  animation: splash-glow-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.splash-title {
+  font-family: var(--font-quest);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--gold-soft);
+  margin: 0;
+  opacity: 0;
+  animation: splash-text-in 0.6s ease 0.35s forwards;
+}
+
+.splash-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  animation: splash-text-in 0.6s ease 0.55s forwards;
+}
+
+/* Petite barre de progression decorative (pas reelle - juste evocateur) */
+.splash-bar {
+  width: 180px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 14px;
+  opacity: 0;
+  animation: splash-text-in 0.4s ease 0.7s forwards;
+}
+.splash-bar-fill {
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--gold-soft) 50%,
+    transparent);
+  animation: splash-bar-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes splash-logo-in {
+  from { opacity: 0; transform: scale(0.5) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes splash-logo-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes splash-glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.08); }
+}
+@keyframes splash-text-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes splash-bar-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo,
+  .splash-glow,
+  .splash-bar-fill { animation: none; }
+}

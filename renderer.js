@@ -18,7 +18,9 @@
     updateInfo: '',
     promoNote: '',
     offline: false,    // true si licences viennent du cache
-    prefs: { autoLaunch: false, telemetry: false, lastUsed: [] }
+    prefs: { autoLaunch: false, telemetry: false, lastUsed: [] },
+    categories: [],         // [{ id, label, subtitle, default }]
+    activeCategory: null    // id de la catégorie sélectionnée (onglet actif)
   };
 
   const $ = (id) => document.getElementById(id);
@@ -46,6 +48,8 @@
     appScreen:    $('app-screen'),
     grid:         $('grid'),
     title:        $('main-title'),
+    subtitle:     $('main-subtitle'),
+    tabs:         $('main-tabs'),
     count:        $('main-count'),
     empty:        $('empty-state'),
     loading:      $('loading-state'),
@@ -95,7 +99,19 @@
   // ============================================================================
   // BOOT
   // ============================================================================
-  init().catch(err => showFatalError(err.message));
+  // Splash : on garde une trace du timestamp pour garantir une duree mini
+  // (sinon l'effet flashe sur les machines rapides). 1100ms est un sweet
+  // spot : le user voit le branding mais ne s'agace pas d'attendre.
+  const splashStartedAt = Date.now();
+  const SPLASH_MIN_MS = 1100;
+  cycleSplashMessage();
+
+  init()
+    .then(() => hideSplash())
+    .catch(err => {
+      hideSplash();
+      showFatalError(err.message);
+    });
 
   async function init() {
     bindModal();
@@ -121,6 +137,34 @@
     } else {
       showLogin();
     }
+  }
+
+  // Petite touche : fait defiler 2-3 messages thematiques pendant le splash
+  // (texte change toutes les 500ms tant que l'app charge).
+  function cycleSplashMessage() {
+    const target = document.getElementById('splash-message');
+    if (!target) return;
+    const messages = [
+      'Allumage des chandelles…',
+      'Convocation des compagnons…',
+      'Polissage des sceaux…'
+    ];
+    let i = 0;
+    setInterval(() => {
+      i = (i + 1) % messages.length;
+      target.textContent = messages[i];
+    }, 600);
+  }
+
+  function hideSplash() {
+    const splash = document.getElementById('splash');
+    if (!splash) return;
+    const elapsed = Date.now() - splashStartedAt;
+    const wait = Math.max(0, SPLASH_MIN_MS - elapsed);
+    setTimeout(() => {
+      splash.classList.add('is-leaving');
+      setTimeout(() => splash.classList.add('hidden'), 550); // > transition CSS 0.5s
+    }, wait);
   }
 
   // ============================================================================
@@ -322,6 +366,14 @@
     state.completionBundle = cat.completionBundle || null;
     state.promoNote = cat.promoNote || '';
     state.announcement = cat.announcement || null;
+    state.categories = Array.isArray(cat.categories) ? cat.categories : [];
+
+    // Catégorie active : on prend la première marquée default, sinon la
+    // première de la liste, sinon null (mode "tous les produits").
+    if (state.categories.length > 0) {
+      const def = state.categories.find(c => c.default) || state.categories[0];
+      state.activeCategory = def.id;
+    }
     state.versions = (cat.apps || []).reduce((acc, a) => {
       if (a.latestVersion) acc[a.id] = a.latestVersion;
       return acc;
@@ -945,9 +997,57 @@
   // ============================================================================
   // GRID + BANNERS + SEARCH
   // ============================================================================
+  // Choisit dynamiquement quelle app sera mise en HERO (grande card 2x2).
+  // Logique hybride :
+  //  1) Si DéliNote n'est pas possédée -> DéliNote (priorité commerciale fixe)
+  //  2) Sinon, si l'app marquee `featured: true` dans apps.json n'est pas
+  //     possedee -> on la pousse
+  //  3) Sinon (l'user a tout ce qui est commercial pousse) -> l'app la plus
+  //     recemment convoquee prend la vedette
+  //  4) Fallback : la commercial featured de apps.json meme possedee, ou la
+  //     1ere app premium trouvee.
+  // Le label du ruban en coin s'adapte au contexte de selection.
+  function pickHero() {
+    const owned = (id) => !!state.licenses[id]
+                      || (state.apps.find(a => a.id === id)?.tier === 'free');
+
+    // 1) DéliNote en priorité s'il manque
+    const delinote = state.apps.find(a => a.id === 'delinote');
+    if (delinote && !owned('delinote')) {
+      return { id: 'delinote', label: 'À découvrir', reason: 'commercial-priority' };
+    }
+
+    // 2) App "featured: true" dans apps.json si non possédée
+    const commercial = state.apps.find(a => a.featured);
+    if (commercial && !owned(commercial.id)) {
+      return { id: commercial.id, label: commercial.featuredLabel || 'Populaire', reason: 'commercial' };
+    }
+
+    // 3) Plus récemment utilisée (premium uniquement)
+    const lastUsed = (state.prefs.lastUsed || [])
+      .map(id => state.apps.find(a => a.id === id))
+      .filter(a => a && a.tier === 'premium' && !a.comingSoon);
+    if (lastUsed[0]) {
+      return { id: lastUsed[0].id, label: 'Tu y reviens souvent', reason: 'usage' };
+    }
+
+    // 4) Fallback
+    if (commercial) {
+      return { id: commercial.id, label: commercial.featuredLabel || 'Populaire', reason: 'fallback-commercial' };
+    }
+    const firstPremium = state.apps.find(a => a.tier === 'premium' && !a.comingSoon);
+    return firstPremium
+      ? { id: firstPremium.id, label: 'Populaire', reason: 'fallback-first' }
+      : null;
+  }
+
   function render() {
+    renderTabs();
+    renderSubtitle();
+
     const apps = filteredApps();
     els.count.textContent = `${apps.length} outil${apps.length > 1 ? 's' : ''}`;
+    state.hero = pickHero();
 
     renderHomeBanner();
     renderOfflineBadge();
@@ -964,7 +1064,12 @@
     if (els.emptyDecor) els.emptyDecor.classList.remove('hidden');
 
     const frag = document.createDocumentFragment();
-    for (const app of apps) frag.appendChild(buildTile(app));
+    apps.forEach((app, i) => {
+      const tile = buildTile(app);
+      // Index pour cascade d'entree (CSS animation-delay calcule via var)
+      tile.style.setProperty('--tile-index', i);
+      frag.appendChild(tile);
+    });
     els.grid.appendChild(frag);
 
     // Si une fiche produit est actuellement affichee, on la repaint aussi
@@ -976,14 +1081,62 @@
     }
   }
 
+  // Onglets de catégories ("Les outils du quotidien" / "L'Atelier des Pros").
+  // Source : state.categories chargé depuis apps.json. Si une seule catégorie
+  // (ou aucune), on n'affiche pas la barre d'onglets.
+  function renderTabs() {
+    const host = els.tabs;
+    if (!host) return;
+    const cats = state.categories || [];
+    if (cats.length < 2) { host.innerHTML = ''; host.classList.add('hidden'); return; }
+    host.classList.remove('hidden');
+    host.innerHTML = cats.map(c => {
+      const isActive = c.id === state.activeCategory;
+      // Compteur par catégorie pour aider la lecture
+      const count = state.apps.filter(a => (a.category || '') === c.id).length;
+      return `
+        <button type="button" role="tab"
+                class="main-tab${isActive ? ' is-active' : ''}"
+                data-cat="${escapeHtml(c.id)}"
+                aria-selected="${isActive ? 'true' : 'false'}">
+          <span class="main-tab-label">${escapeHtml(c.label)}</span>
+          <span class="main-tab-count">${count}</span>
+        </button>
+      `;
+    }).join('');
+
+    host.querySelectorAll('.main-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.cat;
+        if (!id || id === state.activeCategory) return;
+        state.activeCategory = id;
+        // On scroll en haut quand on change d'onglet pour ne pas atterrir
+        // au milieu d'une grille plus courte.
+        const main = document.querySelector('.main');
+        if (main) main.scrollTop = 0;
+        render();
+      });
+    });
+  }
+
+  function renderSubtitle() {
+    if (!els.subtitle) return;
+    const cat = (state.categories || []).find(c => c.id === state.activeCategory);
+    els.subtitle.textContent = (cat && cat.subtitle) ? cat.subtitle : '';
+  }
+
   function filteredApps() {
     const q = (state.searchQuery || '').toLowerCase();
-    let list = q
-      ? state.apps.filter(a => {
-          const hay = (a.name + ' ' + (a.tagline || '')).toLowerCase();
-          return hay.includes(q);
-        })
-      : state.apps.slice();
+    const cat = state.activeCategory;
+    let list = state.apps.slice();
+    // Filtre par onglet (catégorie). Si pas de catégorie active, on montre tout.
+    if (cat) list = list.filter(a => (a.category || '') === cat);
+    if (q) {
+      list = list.filter(a => {
+        const hay = (a.name + ' ' + (a.tagline || '')).toLowerCase();
+        return hay.includes(q);
+      });
+    }
     return list.sort(compareAppsByImportance);
   }
 
@@ -999,6 +1152,7 @@
     if (s === 'installed')           return 2;   // a la table, pret
     if (s === 'not-owned' && app.featured) return 3;   // recommande
     if (s === 'not-owned')           return 4;
+    if (s === 'service')             return 4;   // produit-service au meme rang qu'une app a decouvrir
     if (s === 'coming-soon')         return 5;   // bottom
     return 6;
   }
@@ -1218,6 +1372,12 @@
           if (missing.length >= 2 && state.completionBundle?.discounts) {
             openCompletionPickerModal(missing, state.completionBundle.discounts);
           }
+        } else if (action === 'open-category' && value) {
+          // Active l'onglet ciblé et redessine la grille filtrée.
+          state.activeCategory = value;
+          const main = document.querySelector('.main');
+          if (main) main.scrollTop = 0;
+          render();
         }
       });
     }
@@ -1315,11 +1475,15 @@
   }
 
   // Liste des apps payantes manquantes (premium, non possedees, non gratuites).
-  // Sert de base au bundle dynamique "Compléter ta Table".
+  // Sert de base au bundle dynamique "Compléter ta Table". On la cantonne a la
+  // catégorie active : pas question de bundler du Dénicheur (Pro) avec
+  // DéliNote (Quotidien), ce sont deux audiences distinctes.
   function missingPremiumApps() {
+    const cat = state.activeCategory;
     return state.apps.filter(a =>
       a.tier === 'premium'
       && !state.licenses[a.id]
+      && (!cat || (a.category || '') === cat)
     );
   }
 
@@ -1643,6 +1807,10 @@
   // Determine l'etat affiche d'un produit, et donc les actions disponibles.
   function tileStateOf(app) {
     if (app.comingSoon) return 'coming-soon';
+    // Produit "service" (Triskell Studio agence, Eliks Studio) : ce n'est pas un
+    // logiciel à installer, c'est une offre humaine. On a un état dédié pour
+    // afficher des CTA "Voir l'offre" / "Nous écrire" au lieu d'Installer/Acheter.
+    if (app.kind === 'service' || app.tier === 'service') return 'service';
     if (state.installing.has(app.id)) return 'installing';
     const installed = !!state.installs[app.id];
     const owned = app.tier === 'free' || !!state.licenses[app.id];
@@ -1661,10 +1829,13 @@
     const tileState = tileStateOf(app);
     const initials = makeInitials(app.name);
 
-    // Classes d'etat utilisees par le CSS pour donner une hierarchie visuelle
-    // (Adoube/Installé/Coming-soon/Featured ont des styles distincts).
+    // Classes d'etat utilisees par le CSS pour donner une hierarchie visuelle.
+    // is-featured = layout Hero 2×2 dans la grille. Choisi DYNAMIQUEMENT par
+    // pickHero() en fonction de ce que l'user possede et utilise (cf logique
+    // commerciale + usage). state.hero.id contient l'id retenu.
+    const isHeroPick = !!(state.hero && state.hero.id === app.id);
     const stateClass = `is-${tileState}`;
-    const featuredClass = app.featured && tileState === 'not-owned' ? ' is-featured' : '';
+    const featuredClass = isHeroPick ? ' is-featured' : '';
     tile.className = `tile ${stateClass}${featuredClass}`;
     tile.dataset.id = app.id;
 
@@ -1678,8 +1849,12 @@
     const ownedAlready = state.licenses[app.id];
     const priceHtml = renderPriceBlock(app, ownedAlready);
 
-    const featuredRibbon = (app.featured && tileState === 'not-owned')
-      ? `<span class="tile-ribbon">${escapeHtml(app.featuredLabel || 'Populaire')}</span>`
+    // Ruban en coin : on l'affiche uniquement sur la card hero, et le label
+    // s'adapte au contexte (À découvrir / Populaire / Tu y reviens souvent).
+    // On masque sur les apps possédées+installées de la même catégorie pour
+    // ne pas spammer (uniquement la hero pickée affiche le ruban).
+    const featuredRibbon = (isHeroPick && state.hero?.label)
+      ? `<span class="tile-ribbon">${escapeHtml(state.hero.label)}</span>`
       : '';
 
     // Indice de cliquabilite : revele au hover (CSS), masque sur coming-soon.
@@ -1691,8 +1866,61 @@
       ? ''
       : '<span class="tile-hint" aria-hidden="true" title="Voir la fiche">&rarr;</span>';
 
+    // HERO : on remplit la grosse card 2×2 avec ce qui est le plus parlant
+    // selon ce que l'app expose dans apps.json :
+    //  - tools[]    -> "X outils dans ta Suite" + pastilles (Suite des Héros)
+    //  - features[] -> top features en pastilles (DéliNote, Studio PDF…)
+    //  - sinon      -> description tronquee
+    const isHero = isHeroPick;
+    let heroBlockHtml = '';
+    if (isHero) {
+      if (Array.isArray(app.tools) && app.tools.length) {
+        const visible = app.tools.slice(0, 7);
+        const overflow = app.tools.length - visible.length;
+        heroBlockHtml = `
+          <div class="tile-hero-block">
+            <div class="tile-hero-count">
+              <strong>${app.tools.length}</strong> outils dans ta Suite
+            </div>
+            <div class="tile-hero-pills">
+              ${visible.map(t => `<span class="tile-hero-pill">${escapeHtml(t.name)}</span>`).join('')}
+              ${overflow > 0 ? `<span class="tile-hero-pill tile-hero-pill-more">+${overflow}</span>` : ''}
+            </div>
+          </div>
+        `;
+      } else if (Array.isArray(app.features) && app.features.length) {
+        // Top features : on garde les courtes (les longues passent mal en
+        // pastille). On split sur " — " et " :" pour ne garder que le bout
+        // accrocheur de chaque feature ("Markdown natif" plutôt que toute
+        // la phrase explicative).
+        const visible = app.features
+          .filter(f => f.length <= 90)
+          .slice(0, 4);
+        heroBlockHtml = `
+          <div class="tile-hero-block">
+            <div class="tile-hero-count">Ce que tu peux faire</div>
+            <div class="tile-hero-pills">
+              ${visible.map(f =>
+                `<span class="tile-hero-pill">${escapeHtml(f.split(' — ')[0].split(' :')[0].split('(')[0].trim())}</span>`
+              ).join('')}
+            </div>
+          </div>
+        `;
+      } else if (app.description) {
+        const short = app.description.length > 220
+          ? app.description.slice(0, 217) + '…'
+          : app.description;
+        heroBlockHtml = `
+          <div class="tile-hero-block">
+            <p class="tile-hero-description">${escapeHtml(short)}</p>
+          </div>
+        `;
+      }
+    }
+
     tile.innerHTML = `
       ${featuredRibbon}
+      ${isHero ? '<span class="tile-hero-watermark" aria-hidden="true"></span>' : ''}
       <div class="tile-head">
         <div class="tile-icon" aria-hidden="true">${escapeHtml(initials)}</div>
         <div class="tile-title-block">
@@ -1701,6 +1929,7 @@
         </div>
       </div>
       <div class="tile-tags">${tags.join('')}</div>
+      ${heroBlockHtml}
       ${priceHtml}
       <div class="tile-actions"></div>
       ${hintHtml}
@@ -1739,6 +1968,20 @@
     switch (tileState) {
       case 'coming-soon': {
         host.appendChild(makeBtn('En quête...', 'btn-disabled', null, true));
+        break;
+      }
+      case 'service': {
+        // Produit-service (agence, growth) : on offre 2 chemins simples,
+        // visiter le site externe ou écrire à l'équipe par email.
+        const svc = app.service || {};
+        const primaryLabel = svc.ctaPrimaryLabel || 'Voir l\'offre';
+        const secondaryLabel = svc.ctaSecondaryLabel || 'Nous écrire';
+        if (svc.url) {
+          host.appendChild(makeBtn(primaryLabel, 'btn-buy', () => onOpenService(app)));
+        }
+        if (svc.contactEmail) {
+          host.appendChild(makeBtn(secondaryLabel, 'btn-info', () => onContactService(app)));
+        }
         break;
       }
       case 'installing': {
@@ -1802,11 +2045,44 @@
     window.triskell.purchase.open(app.buyUrl, app.id);
   }
 
+  // Produit-service : ouvre l'offre externe dans le navigateur du système (pas
+  // de fenêtre Electron, pas de tunnel Stripe). C'est une page commerciale,
+  // pas un checkout.
+  function onOpenService(app) {
+    const url = app.service && app.service.url;
+    if (!url) return;
+    if (window.triskell && window.triskell.openExternal) {
+      window.triskell.openExternal(url);
+    }
+  }
+
+  // Produit-service : compose un mailto avec un sujet pré-rempli pour démarrer
+  // l'échange par email. Le mailto est traité par l'OS (client mail par défaut).
+  function onContactService(app) {
+    const email = app.service && app.service.contactEmail;
+    if (!email) return;
+    const subject = encodeURIComponent(`Demande ${app.name}`);
+    const url = `mailto:${email}?subject=${subject}`;
+    if (window.triskell && window.triskell.openExternal) {
+      window.triskell.openExternal(url);
+    }
+  }
+
   // Bloc prix d'une tuile : barre l'ancien prix s'il y a une promo, masque tout
   // si le user possede deja le produit ou que c'est gratuit.
   function renderPriceBlock(app, ownedAlready) {
     if (ownedAlready) return '';
     if (app.tier === 'free') return '';
+    // Produit-service : pas de prix unique, on affiche un libellé "à partir de"
+    // (priceFrom) avec la note tarifaire en dessous.
+    if (app.kind === 'service' || app.tier === 'service') {
+      if (!app.priceFrom && !app.priceNote) return '';
+      const fromLabel = app.priceFrom
+        ? `<span class="price-current price-current-service">${escapeHtml(app.priceFrom)}</span>` : '';
+      const note = app.priceNote
+        ? `<span class="price-note">${escapeHtml(app.priceNote)}</span>` : '';
+      return `<div class="price-block price-block-service">${fromLabel}${note}</div>`;
+    }
     if (!app.price) return '';
     const original = app.priceOriginal && app.priceOriginal > app.price
       ? `<span class="price-old">${app.priceOriginal} €</span>` : '';
@@ -2224,13 +2500,20 @@
     els.productName.textContent = app.name;
     els.productTagline.textContent = app.tagline || '';
 
-    // Statut texte
-    let statusBits = [];
-    if (owned)     statusBits.push('<strong style="color:var(--green)">possédé</strong>');
-    else           statusBits.push('non acquis');
-    if (installed) statusBits.push('installé');
-    if (tileState === 'update-available') statusBits.push('mise à jour disponible');
-    els.productStatus.innerHTML = 'Statut : ' + statusBits.join(' · ');
+    // Statut texte (caché pour les services : "non acquis" n'a pas de sens
+    // pour une offre qu'on contracte par email).
+    if (tileState === 'service') {
+      els.productStatus.innerHTML = '';
+      els.productStatus.classList.add('hidden');
+    } else {
+      els.productStatus.classList.remove('hidden');
+      let statusBits = [];
+      if (owned)     statusBits.push('<strong style="color:var(--green)">possédé</strong>');
+      else           statusBits.push('non acquis');
+      if (installed) statusBits.push('installé');
+      if (tileState === 'update-available') statusBits.push('mise à jour disponible');
+      els.productStatus.innerHTML = 'Statut : ' + statusBits.join(' · ');
+    }
 
     // Bloc prix (cache si possede ou gratuit)
     els.productPriceBlock.innerHTML = renderPriceBlock(app, owned);

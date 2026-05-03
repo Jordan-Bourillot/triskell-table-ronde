@@ -1,7 +1,7 @@
 {
   "categories": [
-    { "id": "all", "label": "Tous tes outils" },
-    { "id": "productivite", "label": "Productivité" }
+    { "id": "quotidien", "label": "Les outils du quotidien", "subtitle": "Pour t'aider au jour le jour", "default": true },
+    { "id": "pro",       "label": "L'Atelier des Pros",      "subtitle": "Outils et services pour ton métier" }
   ],
   "bundles": [],
   "completionBundle": {
@@ -18,13 +18,13 @@
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
 
-  "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion', value: <productId|url> }. Mettre announcement à null pour ne rien afficher.",
+  "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion'|'open-category', value: <productId|url|categoryId> }. Mettre announcement à null pour ne rien afficher.",
   "announcement": {
-    "id": "delinote-79-2026-05",
-    "kind": "update",
-    "title": "DéliNote passe à 79 €",
-    "message": "Toujours en paiement unique à vie, sans abonnement. Bundle dispo si tu en as plusieurs sur ta liste !",
-    "cta": { "label": "Voir DéliNote", "action": "open-product", "value": "delinote" }
+    "id": "atelier-des-pros-2026-05",
+    "kind": "new",
+    "title": "Nouvel onglet : L'Atelier des Pros",
+    "message": "Le Dénicheur, Triskell Studio (sites web) et Eliks Studio (Growth Operator) — outils et services pensés pour ton activité.",
+    "cta": { "label": "Visiter l'Atelier", "action": "open-category", "value": "pro" }
   },
 
   "apps": [
@@ -32,7 +32,7 @@
       "id": "suite-des-heros",
       "name": "La Suite des Héros",
       "tagline": "11 outils desktop pour ranger, renommer, compresser et sécuriser tes fichiers",
-      "category": "productivite",
+      "category": "quotidien",
       "tier": "premium",
       "icon": "assets/apps/suite-des-heros.png",
       "featured": true,
@@ -93,7 +93,7 @@
       "id": "delinote",
       "name": "DéliNote",
       "tagline": "Notes synchronisées, markdown natif, recherche instantanée",
-      "category": "productivite",
+      "category": "quotidien",
       "tier": "premium",
       "icon": "assets/apps/delinote.png",
       "price": 79,
@@ -126,7 +126,7 @@
       "id": "studio-pdf",
       "name": "Le Studio PDF",
       "tagline": "Fusion, split, OCR, signature — tout pour tes PDF",
-      "category": "productivite",
+      "category": "quotidien",
       "tier": "premium",
       "icon": "assets/apps/studio-pdf.png",
       "price": 39,
@@ -157,7 +157,7 @@
       "id": "bobeez",
       "name": "Bobeez",
       "tagline": "Gestionnaire d'images moderne — calendrier, carte, tri rapide",
-      "category": "productivite",
+      "category": "quotidien",
       "tier": "premium",
       "icon": "assets/apps/bobeez.png",
       "price": 27,
@@ -190,7 +190,7 @@
       "id": "pirate-life-mail",
       "name": "Pirate Life Mail",
       "tagline": "Client mail nouvelle génération, gratuit",
-      "category": "productivite",
+      "category": "quotidien",
       "tier": "free",
       "icon": "assets/apps/pirate-life-mail.png",
       "installed": false,
@@ -206,6 +206,98 @@
       ],
       "links": [
         { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+      ]
+    },
+    {
+      "id": "le-denicheur",
+      "name": "Le Dénicheur",
+      "tagline": "Trouve les créateurs YouTube, Twitch et Reddit qui n'ont pas encore monétisé leur audience",
+      "category": "pro",
+      "tier": "premium",
+      "icon": "assets/apps/le-denicheur.png",
+      "price": 149,
+      "priceNote": "Paiement unique · à vie",
+      "installed": false,
+      "exePath": null,
+      "pendingTunnel": true,
+      "buyUrl": null,
+      "description": "Le Dénicheur est un outil de prospection multi-plateforme. Tu lui donnes une niche (\"café spécialité\", \"poterie artisanale\", \"randonnée alpine\"…), il va parcourir YouTube, Twitch et Reddit, lit chaque profil, et détecte automatiquement ceux qui n'ont pas encore monétisé leur communauté — pas de boutique, pas de code promo, pas de Linktree. Tu repères en quelques minutes les créateurs prêts à être abordés, tu les ranges dans ton CRM intégré, et tu exportes tes prospects en CSV.",
+      "features": [
+        "Recherche multi-plateformes : YouTube, Twitch et Reddit en simultané",
+        "Détection auto de monétisation (Amazon, Linktree, Patreon, Shopify, Gumroad, Ko-Fi, et 20+ autres patterns)",
+        "Filtrage par niche + seuil d'abonnés max — tu cibles les créateurs sous-exploités",
+        "CRM intégré : statuts (à contacter, contacté, a répondu, refus), notes, export CSV",
+        "100 % local — tes prospects et tes clés API restent sur ta machine",
+        "APIs officielles uniquement — aucun risque de bannissement"
+      ],
+      "links": [
+        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+      ],
+      "installer": {
+        "kind": "exe-installer",
+        "productKey": "le-denicheur"
+      }
+    },
+    {
+      "id": "triskell-studio-sites",
+      "name": "Triskell Studio",
+      "tagline": "Ton site web déjà prêt — création + hébergement + maintenance, tout compris",
+      "category": "pro",
+      "tier": "service",
+      "kind": "service",
+      "icon": "assets/apps/triskell-studio-sites.png",
+      "priceFrom": "À partir de 49,97 €/mois HT",
+      "priceNote": "0 € de création · 0 € d'engagement",
+      "service": {
+        "url": "https://triskell-studio.fr",
+        "contactEmail": "contact@triskell-studio.fr",
+        "ctaPrimaryLabel": "Voir l'offre",
+        "ctaSecondaryLabel": "Nous écrire"
+      },
+      "description": "Une agence bretonne qui te livre 3 versions de ton site web, prêtes à activer en 48 heures. Tu choisis celle que tu préfères (rétro 80s, classique, futuriste — ou un univers sur mesure), et on s'occupe de tout : design, hébergement européen, maintenance technique, optimisation SEO local, certificat HTTPS, formulaires, Google Maps, avis Google… Pas de création à payer en amont, pas d'engagement, et tes données restent les tiennes.",
+      "features": [
+        "3 versions de site personnalisées à ton activité, livrées en 48 h",
+        "Hébergement européen + maintenance technique inclus, sans surprise",
+        "SEO local optimisé (balises structurées, vitesse, mobile, HTTPS)",
+        "Options à la carte : formulaire avancé, galerie, WhatsApp, réservations, avis Google… (5 €/mois chacune)",
+        "Support humain par email avec réponse sous 24 h ouvrées",
+        "Promo lancement Mai 2026 : création offerte (490 € HT), 0 € d'engagement",
+        "Export complet de tes données si tu pars — aucune captivité"
+      ],
+      "links": [
+        { "label": "Voir le site de l'agence", "url": "https://triskell-studio.fr" },
+        { "label": "Nous écrire", "url": "mailto:contact@triskell-studio.fr?subject=Demande%20site%20web" }
+      ]
+    },
+    {
+      "id": "eliks-studio",
+      "name": "Eliks Studio",
+      "tagline": "Growth Operator — on transforme tes réseaux sociaux en machine à ventes, payés uniquement à la commission",
+      "category": "pro",
+      "tier": "service",
+      "kind": "service",
+      "icon": "assets/apps/eliks-studio.svg",
+      "priceFrom": "Commission pure",
+      "priceNote": "Zéro fixe · pas de setup · pas d'engagement",
+      "service": {
+        "url": "https://eliks.triskell-studio.fr",
+        "contactEmail": "contact@triskell-studio.fr",
+        "ctaPrimaryLabel": "Voir Eliks Studio",
+        "ctaSecondaryLabel": "Réserver un appel"
+      },
+      "description": "Eliks Studio est un service de Growth Operator pour Instagram, TikTok, LinkedIn, YouTube et X. Pas community manager, pas tournage de vidéos : on conçoit, on analyse et on optimise la machine qui transforme ton audience en chiffre d'affaires. Stratégie de contenu, lecture des analytics, tunnel de conversion, automatisation. Et surtout : on n'est payés que sur les ventes qu'on génère. Si tu ne gagnes rien, on ne gagne rien. 6 marques en simultané maximum.",
+      "features": [
+        "Stratégie de contenu : positionnement, angles éditoriaux, hooks qui performent dans ta niche",
+        "Analyse de performance : watch time, retention, CTR profil, conversions attribuées — chaque métrique devient une décision",
+        "Tunnel de conversion repensé : bio, lien, capture, nurturing — pour que ton trafic se transforme",
+        "Système répétable : process clairs, automatisations, dashboards hebdo — pas du bricolage",
+        "Modèle commission pure : 0 € de mensualité, 0 € de setup, 0 engagement",
+        "Tracking transparent — tu vois chaque vente attribuée",
+        "Premier appel offert sous 48 h"
+      ],
+      "links": [
+        { "label": "Site Eliks Studio", "url": "https://eliks.triskell-studio.fr" },
+        { "label": "Réserver un appel offert", "url": "mailto:contact@triskell-studio.fr?subject=Appel%20offert%20Eliks%20Studio" }
       ]
     }
   ]

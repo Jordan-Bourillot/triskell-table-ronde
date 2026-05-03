@@ -11,6 +11,21 @@
 </head>
 <body>
 
+  <!-- ============== SPLASH SCREEN (visible au boot, masque apres chargement) ============== -->
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-stage">
+      <div class="splash-logo-wrap">
+        <img src="assets/triskell_mark.png" alt="" class="splash-logo" />
+        <span class="splash-glow" aria-hidden="true"></span>
+      </div>
+      <h1 class="splash-title">La Table Ronde</h1>
+      <p class="splash-sub" id="splash-message">Allumage des chandelles…</p>
+      <div class="splash-bar" aria-hidden="true">
+        <div class="splash-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============== LOGIN SCREEN (visible tant que non connecté) ============== -->
   <div id="login-screen" class="login-screen hidden">
     <div class="login-card">
@@ -92,8 +107,13 @@
     </header>
 
     <main class="main">
+      <nav id="main-tabs" class="main-tabs" role="tablist" aria-label="Catégories de produits"></nav>
+
       <div class="main-head">
-        <h1 id="main-title">Les compagnons de ta Table</h1>
+        <div class="main-head-text">
+          <h1 id="main-title" class="hidden">Les compagnons de ta Table</h1>
+          <p id="main-subtitle" class="muted small main-subtitle"></p>
+        </div>
         <span id="main-count" class="muted"></span>
       </div>
 
