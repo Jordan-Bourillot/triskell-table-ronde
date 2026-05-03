@@ -1,17 +1,22 @@
-// Resout l'URL du dernier .exe Windows publie sur GitHub Releases.
-// Fallback sur la page /releases/latest si l'API echoue ou n'a pas de .exe.
+// Resout l'URL du dernier .exe Windows.
+// Strategie : 1) GitHub Releases si dispo (pour electron-updater + nouvelles versions),
+//             2) sinon fallback sur le .exe servi en CDN par Netlify (toujours dispo).
 'use strict';
 
 (function () {
   const REPO = 'Jordan-Bourillot/triskell-table-ronde';
+  const NETLIFY_FALLBACK = '/_dl/La-Table-Ronde-Setup.exe';
   const btn = document.getElementById('download-btn');
   const meta = document.getElementById('download-meta');
   if (!btn) return;
 
-  const fallback = btn.dataset.fallback
-    || `https://github.com/${REPO}/releases/latest`;
-  btn.href = fallback;
+  // Fallback immediat : on pointe sur le .exe Netlify pour que le bouton
+  // marche meme avant que GitHub Releases existe.
+  btn.href = NETLIFY_FALLBACK;
+  if (meta) meta.textContent = 'v0.1.0 · ~82 Mo · Windows 64 bits';
 
+  // Si une release GitHub plus recente existe, on prefere celle-la
+  // (electron-updater pourra suivre les MAJ depuis GitHub).
   fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
     .then(r => r.ok ? r.json() : null)
     .then(release => {
@@ -24,5 +29,5 @@
         meta.textContent = `v${release.tag_name.replace(/^v/, '')} · ${sizeMB} Mo · Windows 64 bits`;
       }
     })
-    .catch(() => { /* fallback deja en place */ });
+    .catch(() => { /* le fallback Netlify reste actif */ });
 })();

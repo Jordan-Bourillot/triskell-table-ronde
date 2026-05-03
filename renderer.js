@@ -33,6 +33,7 @@
     loginCode:     $('login-code'),
     loginCodeBtn:  $('login-code-btn'),
     loginBackBtn:  $('login-back-btn'),
+    loginResendBtn:$('login-resend-btn'),
     loginSentEmail:$('login-sent-email'),
     loginError:    $('login-error'),
     loginVersion:  $('login-version'),
@@ -77,6 +78,8 @@
     const meta = await window.triskell.getMeta();
     els.loginVersion.textContent = `Triskell Studio · v${meta.version}`;
     els.metaText.textContent = `Triskell Studio · v${meta.version}`;
+    const bv = document.getElementById('brand-version');
+    if (bv) bv.textContent = `v${meta.version}`;
 
     const session = await window.triskell.auth.getSession();
     if (session && session.user) {
@@ -184,6 +187,42 @@
       els.loginCode.value = '';
       showLoginEmailStep();
     });
+
+    if (els.loginResendBtn) {
+      els.loginResendBtn.addEventListener('click', async () => {
+        const email = els.loginSentEmail.textContent;
+        if (!email) return;
+
+        els.loginResendBtn.disabled = true;
+        const original = els.loginResendBtn.textContent;
+        els.loginResendBtn.textContent = 'Envoi...';
+        clearLoginError();
+
+        const res = await window.triskell.auth.login(email);
+
+        if (!res.ok) {
+          setLoginError(humanizeAuthError(res.error)
+            + (res.message ? ` (${res.message})` : ''));
+          els.loginResendBtn.disabled = false;
+          els.loginResendBtn.textContent = original;
+          return;
+        }
+
+        // Succès — petit cooldown 30s pour éviter le spam.
+        els.loginResendBtn.textContent = 'Code renvoyé ✓';
+        let cooldown = 30;
+        const tick = setInterval(() => {
+          cooldown -= 1;
+          if (cooldown <= 0) {
+            clearInterval(tick);
+            els.loginResendBtn.disabled = false;
+            els.loginResendBtn.textContent = original;
+          } else {
+            els.loginResendBtn.textContent = `Renvoyer (${cooldown}s)`;
+          }
+        }, 1000);
+      });
+    }
   }
 
   function humanizeAuthError(code) {
@@ -213,6 +252,7 @@
     }
     state.apps = cat.apps || [];
     state.bundles = cat.bundles || [];
+    state.completionBundle = cat.completionBundle || null;
     state.promoNote = cat.promoNote || '';
     state.versions = (cat.apps || []).reduce((acc, a) => {
       if (a.latestVersion) acc[a.id] = a.latestVersion;
@@ -267,11 +307,24 @@
     const autoLaunch = !!state.prefs.autoLaunch;
     const telemetry = !!state.prefs.telemetry;
 
+    const displayName = state.prefs.displayName || '';
+
     openModal({
       title: 'Mon compte Triskell',
       bodyHtml: `
         <p class="muted">Connecté avec <strong style="color:var(--accent)">${escapeHtml(state.user.email)}</strong></p>
         <p class="muted">Tu possèdes <strong>${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
+
+        <div class="account-section profile-section">
+          <label class="profile-field">
+            <span class="profile-label">Comment veux-tu que je t'appelle ?</span>
+            <input type="text" id="pref-display-name" class="profile-input"
+                   maxlength="40" placeholder="Jordan, Maître Trieur, Compagnon…"
+                   value="${escapeHtml(displayName)}" />
+            <span class="profile-saved muted small hidden" id="pref-display-name-saved">Enregistré ✓</span>
+          </label>
+          <p class="muted small profile-hint">Apparaîtra dans le bandeau d'accueil ("Salut <span id="profile-preview">${escapeHtml(displayName || 'Compagnon')}</span> 👋"). Laisse vide pour rester anonyme.</p>
+        </div>
 
         <div class="account-section">
           <label class="pref-row">
@@ -328,6 +381,31 @@
       await window.triskell.prefs.setTelemetry(e.target.checked);
       state.prefs.telemetry = e.target.checked;
     });
+
+    // Champ "prenom" : sauvegarde debounce + petit feedback "Enregistre".
+    const dn = document.getElementById('pref-display-name');
+    const dnSaved = document.getElementById('pref-display-name-saved');
+    const dnPreview = document.getElementById('profile-preview');
+    if (dn) {
+      let dnTimer = null;
+      dn.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (dnPreview) dnPreview.textContent = val || 'Compagnon';
+        clearTimeout(dnTimer);
+        dnTimer = setTimeout(async () => {
+          const r = await window.triskell.prefs.setDisplayName(val);
+          if (r && r.ok) {
+            state.prefs.displayName = r.displayName;
+            if (dnSaved) {
+              dnSaved.classList.remove('hidden');
+              setTimeout(() => dnSaved.classList.add('hidden'), 1800);
+            }
+            // Repeint le bandeau pour reflechir la salutation immediatement
+            renderHomeBanner();
+          }
+        }, 500);
+      });
+    }
   }
 
   // Quand un achat in-app aboutit (page success Stripe atteinte) on rafraichit
@@ -401,11 +479,50 @@
 
   function filteredApps() {
     const q = (state.searchQuery || '').toLowerCase();
-    if (!q) return state.apps;
-    return state.apps.filter(a => {
-      const hay = (a.name + ' ' + (a.tagline || '')).toLowerCase();
-      return hay.includes(q);
-    });
+    let list = q
+      ? state.apps.filter(a => {
+          const hay = (a.name + ' ' + (a.tagline || '')).toLowerCase();
+          return hay.includes(q);
+        })
+      : state.apps.slice();
+    return list.sort(compareAppsByImportance);
+  }
+
+  // Tri par importance pour qu'au premier coup d'oeil l'utilisateur voie
+  // ce qui est actionnable maintenant, et que les "En quete" soient en bas.
+  function compareAppsByImportance(a, b) {
+    return statePriority(a) - statePriority(b);
+  }
+  function statePriority(app) {
+    const s = tileStateOf(app);
+    if (s === 'update-available')    return 0;   // top : faut agir
+    if (s === 'owned-not-installed') return 1;   // adoube, faut installer
+    if (s === 'installed')           return 2;   // a la table, pret
+    if (s === 'not-owned' && app.featured) return 3;   // recommande
+    if (s === 'not-owned')           return 4;
+    if (s === 'coming-soon')         return 5;   // bottom
+    return 6;
+  }
+
+  // Construit la salutation. Priorite : displayName personnalise > prenom
+  // extrait de l'email > "Bienvenue a la Table" si l'email est generique
+  // (contact@, hello@, info@, ...).
+  const GENERIC_EMAIL_PREFIXES = new Set([
+    'contact', 'hello', 'info', 'admin', 'support', 'noreply', 'no-reply',
+    'team', 'service', 'help', 'mail', 'mailbox', 'webmaster', 'postmaster',
+    'sales', 'orders', 'billing', 'office', 'bonjour', 'salut'
+  ]);
+
+  function makeGreeting(displayName, email) {
+    const cleanName = (displayName || '').trim();
+    if (cleanName) return `Salut ${cleanName}`;
+
+    const prefix = (email || '').split('@')[0].split('.')[0].toLowerCase()
+      .replace(/[^a-z0-9à-ÿ]/gi, '');
+    if (!prefix || GENERIC_EMAIL_PREFIXES.has(prefix)) {
+      return 'Bienvenue à la Table';
+    }
+    return `Salut ${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}`;
   }
 
   // Bandeau personnalisé en haut : salutation + compte rendu + raccourcis derniers utilisés.
@@ -420,9 +537,7 @@
     }
     const installedCount = Object.keys(state.installs).length;
     const ownedCount = Object.keys(state.licenses).length;
-    const firstName = (state.user.email || '').split('@')[0].split('.')[0]
-      .replace(/[^a-zA-ZÀ-ÿ]/g, '');
-    const hello = firstName ? `Salut ${firstName.charAt(0).toUpperCase() + firstName.slice(1)}` : 'Salut';
+    const hello = makeGreeting(state.prefs.displayName, state.user.email);
 
     const lastUsed = (state.prefs.lastUsed || [])
       .map(id => state.apps.find(a => a.id === id))
@@ -484,7 +599,19 @@
     }
   }
 
+  // Liste des apps payantes manquantes (premium, non possedees, non gratuites).
+  // Sert de base au bundle dynamique "Compléter ta Table".
+  function missingPremiumApps() {
+    return state.apps.filter(a =>
+      a.tier === 'premium'
+      && !state.licenses[a.id]
+    );
+  }
+
   // Bundles : cartes pleine-largeur au-dessus de la grille produit.
+  // Il y a deux sources : (1) les bundles statiques de apps.json (cartes
+  // figees, ex. campagnes saisonnieres) ; (2) le completionBundle dynamique
+  // qui s'adapte a ce que l'utilisateur possede deja.
   function renderBundles() {
     const host = document.getElementById('bundles-section')
       || (() => {
@@ -497,8 +624,12 @@
       })();
 
     host.innerHTML = '';
+
+    // 1. Le bundle dynamique de completion : visible si l'user a au moins 1
+    //    app premium en main ET qu'il en manque encore au moins 2.
+    renderCompletionBundle(host);
+
     const bundles = (state.bundles || []).filter(b => {
-      // masque le bundle si tous les produits inclus sont deja possedes
       const owned = (b.apps || []).every(id => state.licenses[id]);
       return !owned;
     });
@@ -546,6 +677,65 @@
     }
   }
 
+  // Carte dynamique "Compléter ta Table" : pricing par tier base sur le nombre
+  // d'apps qu'il manque a l'utilisateur (4/3/2). Sous 2 manquants, on cache
+  // (autant acheter en individuel). A 0 manquant (collection complete), on
+  // cache aussi.
+  function renderCompletionBundle(host) {
+    const cb = state.completionBundle;
+    if (!cb || !cb.tiers) return;
+
+    const missing = missingPremiumApps();
+    const count = missing.length;
+    if (count < 2) return;
+
+    const tier = cb.tiers[String(count)];
+    if (!tier) return;
+
+    const card = document.createElement('article');
+    card.className = 'bundle-card bundle-completion' + (cb.comingSoon ? ' bundle-soon' : '');
+
+    const original = tier.priceOriginal && tier.priceOriginal > tier.price
+      ? `<span class="price-old">${tier.priceOriginal} €</span>` : '';
+    const note = tier.priceNote ? `<p class="bundle-note">${escapeHtml(tier.priceNote)}</p>` : '';
+    const missingNames = missing.map(a => a.name).join(', ');
+
+    card.innerHTML = `
+      <div class="bundle-icon"></div>
+      <div class="bundle-body">
+        <div class="bundle-tags">
+          <span class="tag tag-suite">Bundle</span>
+          <span class="tag tag-completion">${count} manquant${count > 1 ? 's' : ''}</span>
+          ${cb.comingSoon ? '<span class="tag tag-soon">En quête</span>' : ''}
+        </div>
+        <h3 class="bundle-title">${escapeHtml(cb.name)}</h3>
+        <p class="bundle-tagline">${escapeHtml(cb.tagline || '')}</p>
+        <p class="bundle-missing muted small">Il te manque : <strong>${escapeHtml(missingNames)}</strong></p>
+        <div class="bundle-price">
+          <span class="price-current">${tier.price} €</span>
+          ${original}
+        </div>
+        ${note}
+      </div>
+      <div class="bundle-actions"></div>
+    `;
+    if (cb.icon) {
+      const iconBox = card.querySelector('.bundle-icon');
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = cb.icon;
+      iconBox.appendChild(img);
+    }
+    const actions = card.querySelector('.bundle-actions');
+    if (cb.comingSoon) {
+      actions.appendChild(makeBtn('Bientôt', 'btn-disabled', null, true));
+    } else {
+      actions.appendChild(makeBtn('Compléter ma Table', 'btn-buy',
+        () => window.triskell.purchase.openCompletion(count, missing.map(a => a.id))));
+    }
+    host.appendChild(card);
+  }
+
   // Determine l'etat affiche d'un produit, et donc les actions disponibles.
   function tileStateOf(app) {
     if (app.comingSoon) return 'coming-soon';
@@ -564,11 +754,15 @@
 
   function buildTile(app) {
     const tile = document.createElement('div');
-    tile.className = 'tile';
-    tile.dataset.id = app.id;
-
     const tileState = tileStateOf(app);
     const initials = makeInitials(app.name);
+
+    // Classes d'etat utilisees par le CSS pour donner une hierarchie visuelle
+    // (Adoube/Installé/Coming-soon/Featured ont des styles distincts).
+    const stateClass = `is-${tileState}`;
+    const featuredClass = app.featured && tileState === 'not-owned' ? ' is-featured' : '';
+    tile.className = `tile ${stateClass}${featuredClass}`;
+    tile.dataset.id = app.id;
 
     const tags = [];
     if (app.tier === 'free')                                     tags.push('<span class="tag tag-free">Gratuit</span>');
@@ -580,7 +774,12 @@
     const ownedAlready = state.licenses[app.id];
     const priceHtml = renderPriceBlock(app, ownedAlready);
 
+    const featuredRibbon = (app.featured && tileState === 'not-owned')
+      ? `<span class="tile-ribbon">${escapeHtml(app.featuredLabel || 'Populaire')}</span>`
+      : '';
+
     tile.innerHTML = `
+      ${featuredRibbon}
       <div class="tile-head">
         <div class="tile-icon" aria-hidden="true">${escapeHtml(initials)}</div>
         <div class="tile-title-block">

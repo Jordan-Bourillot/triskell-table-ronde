@@ -116,13 +116,14 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
   const productKey = product.installer && product.installer.productKey;
   if (!productKey) throw new Error('produit sans installer');
 
-  onProgress({ phase: 'token', percent: 0, message: 'Préparation...' });
+  onProgress({ phase: 'token', percent: 0, message: 'Préparation de la Table...' });
   const tokenInfo = await getInstallToken({ apiBase, sessionToken, productId: productKey });
   const { downloadUrl, version, kind } = tokenInfo;
   if (!downloadUrl) throw new Error('downloadUrl manquant');
 
   // Telechargement
-  onProgress({ phase: 'download', percent: 0, message: 'Téléchargement...' });
+  onProgress({ phase: 'download', percent: 0,
+    message: `Les compagnons de ${product.name} font route vers ta Table...` });
   const ext = kind === 'exe-installer' ? '.exe' : '.zip';
   const tmpFile = path.join(os.tmpdir(), `triskell-${productKey}-${Date.now()}${ext}`);
 
@@ -134,8 +135,10 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
       onProgress({
         phase: 'download',
         percent,
-        message: 'Téléchargement...',
-        detail: `${formatMB(received)} / ${total ? formatMB(total) : '?'} Mo`
+        message: `Les compagnons de ${product.name} font route vers ta Table...`,
+        detail: total
+          ? `${formatMB(received)} / ${formatMB(total)} Mo (${percent}%)`
+          : `${formatMB(received)} Mo téléchargés`
       });
     }
   });
@@ -146,7 +149,12 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
       homeDocuments(),
       product.installer.installPath || `Triskell/${productId}`
     );
-    onProgress({ phase: 'extract', percent: 0, message: 'Extraction...' });
+    const toolCount = (product.tools && product.tools.length) || 0;
+    const extractMsg = toolCount > 0
+      ? `Mise en place des ${toolCount} compagnons...`
+      : 'Mise en place à ta Table...';
+    onProgress({ phase: 'extract', percent: 95, message: extractMsg,
+      detail: `Dossier : ${installPath}` });
 
     // On nettoie le dossier cible avant extraction (install propre).
     if (fs.existsSync(installPath)) fs.rmSync(installPath, { recursive: true, force: true });
@@ -156,12 +164,17 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
     flattenIfSingleFolder(installPath);
     try { fs.unlinkSync(tmpFile); } catch (_) {}
 
-    onProgress({ phase: 'done', percent: 100, message: 'Installé.' });
+    const doneMsg = toolCount > 0
+      ? `${toolCount} compagnons ont rejoint ta Table`
+      : `${product.name} a rejoint ta Table`;
+    onProgress({ phase: 'done', percent: 100, message: doneMsg, detail: '' });
     return { installPath, version, kind };
   }
 
   if (kind === 'exe-installer') {
-    onProgress({ phase: 'install', percent: 50, message: 'Lancement de l\'installeur...' });
+    onProgress({ phase: 'install', percent: 60,
+      message: 'L\'installeur prend le relais...',
+      detail: 'Suis ses instructions à l\'écran si une fenêtre s\'ouvre.' });
     await runExeInstaller(tmpFile);
     try { fs.unlinkSync(tmpFile); } catch (_) {}
 
@@ -169,7 +182,8 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
     // Pour V1 on stocke juste un marqueur ; le mainExe sera detecte plus tard
     // (chemin classique dans %ProgramFiles%) ou configure manuellement.
     const mainExe = tokenInfo.expectedExePath || null;
-    onProgress({ phase: 'done', percent: 100, message: 'Installé.' });
+    onProgress({ phase: 'done', percent: 100,
+      message: `${product.name} a rejoint ta Table`, detail: '' });
     return { installPath: mainExe ? path.dirname(mainExe) : null, mainExe, version, kind };
   }
 

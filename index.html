@@ -11,8 +11,10 @@
   <!-- ============== LOGIN SCREEN (visible tant que non connecté) ============== -->
   <div id="login-screen" class="login-screen hidden">
     <div class="login-card">
-      <img src="assets/triskell_mark.png" alt="Triskell" class="login-logo"
-           onerror="this.style.display='none';" />
+      <div class="login-logo-wrap">
+        <img src="assets/triskell_mark.png" alt="Triskell" class="login-logo"
+             onerror="this.style.display='none';" />
+      </div>
       <h1 class="login-title">La Table Ronde</h1>
       <p class="login-sub">Le lieu où tes outils Triskell se réunissent.</p>
 
@@ -42,9 +44,15 @@
         <button type="submit" class="primary-btn login-button" id="login-code-btn">
           Me connecter
         </button>
-        <button type="button" class="ghost-btn login-back" id="login-back-btn">
-          Changer d'email
-        </button>
+        <div class="login-code-actions">
+          <button type="button" class="login-link" id="login-resend-btn">
+            Renvoyer le code
+          </button>
+          <span class="login-link-sep">·</span>
+          <button type="button" class="login-link" id="login-back-btn">
+            Changer d'email
+          </button>
+        </div>
       </form>
 
       <p id="login-error" class="login-error hidden"></p>
@@ -66,6 +74,7 @@
           <span class="brand-name">Triskell</span>
           <span class="brand-sub">Table Ronde</span>
         </div>
+        <span class="brand-version" id="brand-version" title="Version du Lanceur">v—</span>
       </div>
 
       <div class="header-actions">

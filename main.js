@@ -413,6 +413,12 @@ ipcMain.handle('prefs:set-last-used', async (_evt, productId) => {
   return { ok: true, lastUsed: next };
 });
 
+ipcMain.handle('prefs:set-display-name', async (_evt, name) => {
+  const clean = String(name || '').trim().slice(0, 40);
+  store.setPref('displayName', clean);
+  return { ok: true, displayName: clean };
+});
+
 // =============================================================================
 // Achat in-app : ouvre Stripe Checkout dans une fenetre Electron, ecoute les
 // navigations vers la page success, ferme la fenetre et notifie le renderer.
@@ -450,6 +456,58 @@ ipcMain.handle('purchase:open', async (_evt, { url, productId }) => {
   win.webContents.on('did-navigate-in-page', (_e, u) => inspectUrl(u));
   win.loadURL(url);
   return { ok: true };
+});
+
+// Achat du bundle dynamique "Completer ta Table". Le frontend envoie le tier
+// (2/3/4 apps manquantes) et la liste des productIds correspondante. Le
+// backend choisit le bon prix Stripe et cree une session checkout dont
+// l'URL est renvoyee ici. On reutilise le meme flux purchase:open qu'un
+// achat single.
+ipcMain.handle('purchase:completion', async (_evt, { tier, productIds }) => {
+  const session = store.getSession();
+  if (!session) return { ok: false, error: 'not-authenticated' };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/create-completion-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.token}`
+      },
+      body: JSON.stringify({ tier, productIds })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) return { ok: false, error: data.error || 'no-url' };
+
+    // On reutilise la meme fenetre Electron que pour les achats single.
+    const win = new BrowserWindow({
+      width: 980, height: 760, parent: mainWindow, modal: false,
+      title: 'Compléter ta Table · Triskell',
+      backgroundColor: '#0f1218', autoHideMenuBar: true,
+      webPreferences: { contextIsolation: true, nodeIntegration: false }
+    });
+    const success = (sessionId) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('purchase:completed', {
+          productId: 'completion-bundle', tier, productIds, sessionId
+        });
+      }
+      if (!win.isDestroyed()) win.close();
+    };
+    const inspectUrl = (u) => {
+      if (typeof u !== 'string') return;
+      if (/\/success\b/i.test(u) || /session_id=/i.test(u)) {
+        const m = u.match(/session_id=([^&]+)/);
+        success(m ? decodeURIComponent(m[1]) : null);
+      }
+    };
+    win.webContents.on('did-navigate', (_e, u) => inspectUrl(u));
+    win.webContents.on('did-navigate-in-page', (_e, u) => inspectUrl(u));
+    win.loadURL(data.url);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'network', message: err.message };
+  }
 });
 
 // =============================================================================

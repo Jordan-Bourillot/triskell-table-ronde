@@ -14,7 +14,8 @@ const KNOWN_PRODUCTS = new Set([
   'suite-des-heros',
   'delinote',
   'studio-pdf',
-  'bobeez'
+  'bobeez',
+  'pirate-life-mail'
 ]);
 
 function constantTimeEq(a, b) {

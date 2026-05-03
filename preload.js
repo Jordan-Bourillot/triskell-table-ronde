@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('triskell', {
   // Achat in-app (Stripe Checkout dans une fenetre Electron, retour licence auto)
   purchase: {
     open: (url, productId) => ipcRenderer.invoke('purchase:open', { url, productId }),
+    openCompletion: (tier, productIds) => ipcRenderer.invoke('purchase:completion', { tier, productIds }),
     onCompleted: (cb) => {
       const handler = (_evt, data) => cb(data);
       ipcRenderer.on('purchase:completed', handler);
@@ -55,10 +56,11 @@ contextBridge.exposeInMainWorld('triskell', {
 
   // Preferences (auto-launch, telemetrie...)
   prefs: {
-    get:           ()        => ipcRenderer.invoke('prefs:get'),
-    setAutoLaunch: (enabled) => ipcRenderer.invoke('prefs:set-auto-launch', enabled),
-    setTelemetry:  (enabled) => ipcRenderer.invoke('prefs:set-telemetry', enabled),
-    setLastUsed:   (productId) => ipcRenderer.invoke('prefs:set-last-used', productId)
+    get:            ()         => ipcRenderer.invoke('prefs:get'),
+    setAutoLaunch:  (enabled)  => ipcRenderer.invoke('prefs:set-auto-launch', enabled),
+    setTelemetry:   (enabled)  => ipcRenderer.invoke('prefs:set-telemetry', enabled),
+    setLastUsed:    (productId)=> ipcRenderer.invoke('prefs:set-last-used', productId),
+    setDisplayName: (name)     => ipcRenderer.invoke('prefs:set-display-name', name)
   },
 
   // Lancement d'un produit installe

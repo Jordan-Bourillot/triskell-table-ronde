@@ -3,20 +3,18 @@
     { "id": "all", "label": "Tous tes outils" },
     { "id": "productivite", "label": "Productivité" }
   ],
-  "bundles": [
-    {
-      "id": "pack-productivite",
-      "name": "Pack Productivité Triskell",
-      "tagline": "La Suite des Héros + DéliNote + Le Studio PDF — tout l'arsenal Triskell, à prix barré",
-      "apps": ["suite-des-heros", "delinote", "studio-pdf"],
-      "price": 69,
-      "priceOriginal": 95,
-      "priceNote": "Économise 26 € — paiement unique, mises à jour à vie",
-      "buyUrl": null,
-      "comingSoon": true,
-      "icon": "assets/triskell_mark.png"
+  "bundles": [],
+  "completionBundle": {
+    "name": "Compléter ta Table",
+    "tagline": "Récupère tous les compagnons qu'il te manque, à prix d'allié",
+    "icon": "assets/triskell_mark.png",
+    "comingSoon": true,
+    "tiers": {
+      "4": { "price": 89,  "priceOriginal": 130, "priceNote": "Économise 41 € — toute la Table d'un coup" },
+      "3": { "price": 69,  "priceOriginal": 100, "priceNote": "Économise 31 € — les 3 manquants" },
+      "2": { "price": 49,  "priceOriginal": 65,  "priceNote": "Économise 16 € — les 2 manquants" }
     }
-  ],
+  },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
   "apps": [
     {
@@ -26,6 +24,8 @@
       "category": "productivite",
       "tier": "premium",
       "icon": "assets/apps/suite-des-heros.png",
+      "featured": true,
+      "featuredLabel": "Populaire",
       "price": 27,
       "priceOriginal": 39,
       "priceNote": "Paiement unique · pas d'abonnement",
@@ -79,7 +79,12 @@
       "priceNote": "Paiement unique · à vie",
       "installed": false,
       "exePath": null,
-      "comingSoon": true
+      "buyUrl": "https://productivite.triskell-studio.fr",
+      "buyUrlPlaceholder": true,
+      "installer": {
+        "kind": "exe-installer",
+        "productKey": "studio-pdf"
+      }
     },
     {
       "id": "bobeez",

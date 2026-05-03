@@ -27,9 +27,16 @@
   --orange: var(--triskell-orange);
   --danger: #ef4444;
 
+  /* Or Table Ronde : pour les titres nobles, sceaux, emphase */
+  --gold: #d4b35a;
+  --gold-soft: #e6cd87;
+  --gold-shadow: rgba(212, 179, 90, 0.20);
+
   --radius: 10px;
   --radius-sm: 6px;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+
+  --font-quest: 'Cinzel', 'Trajan Pro', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
 }
 
 * { box-sizing: border-box; }
@@ -58,7 +65,7 @@ input, button { outline: none; }
 
 .app {
   display: grid;
-  grid-template-rows: 60px 1fr 28px;
+  grid-template-rows: 68px 1fr 32px;
   height: 100vh;
 }
 
@@ -68,7 +75,7 @@ input, button { outline: none; }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 18px;
+  padding: 0 32px;
   background: linear-gradient(180deg, #11141a 0%, #0f1218 100%);
   border-bottom: 1px solid var(--border);
 }
@@ -83,8 +90,21 @@ input, button { outline: none; }
   width: 36px;
   height: 36px;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 50%;
+  padding: 4px;
+  box-sizing: content-box;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 179, 90, 0.25), rgba(15, 18, 24, 0.6) 65%);
+  box-shadow: 0 0 0 1px rgba(212, 179, 90, 0.35),
+              0 0 12px rgba(212, 179, 90, 0.15),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   filter: drop-shadow(0 0 8px var(--accent-shadow));
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.brand:hover .brand-logo {
+  box-shadow: 0 0 0 1px rgba(212, 179, 90, 0.55),
+              0 0 18px rgba(212, 179, 90, 0.30),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transform: rotate(-3deg);
 }
 
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
@@ -98,8 +118,30 @@ input, button { outline: none; }
   display: inline-block;
   position: relative;
 }
-.brand-name { font-weight: 700; letter-spacing: 0.5px; color: var(--text); }
-.brand-sub  { font-size: 11px; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; }
+.brand-name {
+  font-family: var(--font-quest);
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--text);
+  font-size: 15px;
+}
+.brand-sub {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.brand-version {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 10px;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
 
 .header-actions {
   display: flex;
@@ -149,30 +191,33 @@ input, button { outline: none; }
 
 /* MAIN */
 .main {
-  padding: 22px 28px;
+  padding: 32px 40px 40px;
   overflow-y: auto;
 }
 
 .main-head {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 26px;
 }
 
 .main-head h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  font-family: var(--font-quest);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  font-size: 24px;
 }
+.main-head h1::first-letter { color: var(--gold); }
 
 .muted { color: var(--text-muted); font-size: 12px; }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
 }
 
 /* TILE */
@@ -180,10 +225,10 @@ input, button { outline: none; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   transition: all 0.18s;
   position: relative;
   overflow: hidden;
@@ -280,6 +325,7 @@ input, button { outline: none; }
 .tag-suite     { background: var(--accent-shadow); color: var(--accent); }
 .tag-premium   { background: rgba(167, 139, 250, 0.15); color: var(--triskell-violet); }
 .tag-pack      { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
+.tag-completion{ background: var(--gold-shadow); color: var(--gold); }
 
 .price-block {
   display: flex;
@@ -387,6 +433,22 @@ input, button { outline: none; }
   color: var(--triskell-orange);
   font-weight: 600;
 }
+
+.bundle-missing {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.bundle-missing strong { color: var(--text); font-weight: 600; }
+
+.bundle-completion {
+  background: linear-gradient(135deg,
+    rgba(212, 179, 90, 0.10),
+    rgba(124, 127, 233, 0.06) 60%,
+    rgba(167, 139, 250, 0.05) 100%);
+  border-color: rgba(212, 179, 90, 0.30);
+}
+.bundle-completion .bundle-title { color: var(--gold-soft); }
 
 .bundle-actions {
   display: flex;
@@ -568,14 +630,88 @@ input, button { outline: none; }
   text-align: center;
 }
 
+.login-logo-wrap {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-logo-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 45%,
+      rgba(167, 139, 250, 0.55) 0%,
+      rgba(124, 127, 233, 0.35) 25%,
+      rgba(249, 115, 22, 0.18) 50%,
+      transparent 75%);
+  filter: blur(28px);
+  z-index: 0;
+  pointer-events: none;
+  animation: logo-halo-breath 5s ease-in-out infinite;
+}
+
+@keyframes logo-halo-breath {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+
 .login-logo {
+  position: relative;
+  z-index: 1;
   width: 88px;
   height: 88px;
   object-fit: contain;
-  margin: 0 auto 18px;
   display: block;
-  border-radius: 18px;
-  filter: drop-shadow(0 0 14px var(--accent-shadow));
+  border-radius: 50%;
+  padding: 8px;
+  box-sizing: content-box;
+  background: radial-gradient(circle at 30% 30%, rgba(212, 179, 90, 0.22), rgba(15, 18, 24, 0.6) 70%);
+  box-shadow: 0 0 0 1px rgba(212, 179, 90, 0.45),
+              0 0 24px rgba(212, 179, 90, 0.18),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  filter:
+    drop-shadow(0 0 22px rgba(167, 139, 250, 0.55))
+    drop-shadow(0 0 44px rgba(124, 127, 233, 0.35));
+}
+
+/* ------ Liens secondaires sous le bouton "Me connecter" ------ */
+.login-code-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.login-link {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.login-link:hover {
+  color: var(--accent);
+}
+.login-link:disabled {
+  color: var(--text-muted);
+  cursor: wait;
+}
+
+.login-link-sep {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .login-title {
@@ -1000,3 +1136,146 @@ input, button { outline: none; }
   font-variant: all-small-caps;
 }
 .tag-owned { font-weight: 700; }   /* "Adoubé" doit ressortir */
+
+/* ============== HIÉRARCHIE VISUELLE PAR ÉTAT (UX premier coup d'œil) ==============
+   But : qu'au scan rapide on comprenne immédiatement
+   1. ce qui est prêt (installé)
+   2. ce qui est adoubé mais pas encore installé (action ready)
+   3. ce qui mérite attention (mise à jour)
+   4. ce qu'on peut recruter
+   5. ce qui est en quête (estompé) */
+
+/* Tuile "À ta Table" — calme, propre, légère teinte verte de validation */
+.tile.is-installed {
+  border-color: rgba(74, 222, 128, 0.20);
+}
+.tile.is-installed::before {
+  background: var(--green);
+  opacity: 0.35;
+}
+
+/* Tuile "Adoubé non installé" — bordure or, l'action attend */
+.tile.is-owned-not-installed {
+  border-color: rgba(249, 115, 22, 0.32);
+  background: linear-gradient(180deg,
+    rgba(249, 115, 22, 0.04),
+    var(--bg-card) 70%);
+}
+.tile.is-owned-not-installed::before {
+  background: var(--triskell-orange);
+  opacity: 0.55;
+}
+
+/* Tuile "Mise à jour disponible" — légère pulse pour attirer l'œil */
+.tile.is-update-available {
+  border-color: rgba(99, 102, 241, 0.40);
+  animation: tile-update-pulse 2.4s ease-in-out infinite;
+}
+.tile.is-update-available::before {
+  background: var(--triskell-indigo);
+  opacity: 0.6;
+}
+
+@keyframes tile-update-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  50%      { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.10); }
+}
+
+/* Tuile "En quête" — estompée, pas d'action, on ne s'y attarde pas */
+.tile.is-coming-soon {
+  opacity: 0.55;
+  filter: saturate(0.6);
+  transition: opacity 0.2s, filter 0.2s;
+}
+.tile.is-coming-soon:hover {
+  opacity: 0.85;
+  filter: saturate(0.9);
+}
+
+/* Tuile "Populaire" — petit ruban en haut à droite, halo discret */
+.tile.is-featured {
+  border-color: rgba(167, 139, 250, 0.35);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.10);
+}
+
+.tile-ribbon {
+  position: absolute;
+  top: 12px;
+  right: -32px;
+  transform: rotate(35deg);
+  background: linear-gradient(135deg, var(--triskell-orange), var(--triskell-violet));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 4px 36px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Tag "Adoubé" — accentue le or pour qu'il soit le plus visible */
+.tag-owned {
+  background: linear-gradient(135deg,
+    rgba(249, 115, 22, 0.22),
+    rgba(249, 115, 22, 0.10));
+  color: var(--triskell-orange);
+  font-weight: 700;
+  border: 1px solid rgba(249, 115, 22, 0.30);
+}
+
+/* ============== PROFIL (champ "Comment veux-tu que je t'appelle ?") ============== */
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.profile-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.profile-input {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.profile-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-shadow);
+}
+
+.profile-saved {
+  position: absolute;
+  right: 0;
+  top: 0;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.profile-hint {
+  margin: 0;
+}
+.profile-hint #profile-preview {
+  color: var(--accent);
+  font-weight: 600;
+}

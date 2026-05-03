@@ -16,7 +16,12 @@ const {
 } = require('./_lib');
 
 const CODE_TTL_MIN = 15;
-const RATE_LIMIT_PER_HOUR = 5;
+const RATE_LIMIT_PER_HOUR = parseInt(process.env.LOGIN_RATE_LIMIT_PER_HOUR || '20', 10);
+
+// Emails qui contournent completement le rate limit (utile pour le dev/founder).
+// Configure via env Netlify : LOGIN_BYPASS_EMAILS = "a@b.fr,c@d.fr"
+const BYPASS_EMAILS = (process.env.LOGIN_BYPASS_EMAILS || '')
+  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
 exports.handler = async (event) => {
   const pre = preflight(event);
@@ -32,16 +37,19 @@ exports.handler = async (event) => {
 
   const sb = supabase();
 
-  // Rate limit : pas plus de 5 codes par heure et par email.
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count } = await sb
-    .from('login_codes')
-    .select('id', { count: 'exact', head: true })
-    .eq('email', email)
-    .gte('created_at', oneHourAgo);
+  // Rate limit : LOGIN_RATE_LIMIT_PER_HOUR codes par heure et par email. Les
+  // emails dans LOGIN_BYPASS_EMAILS sont exemptes (founder / debug).
+  if (!BYPASS_EMAILS.includes(email)) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await sb
+      .from('login_codes')
+      .select('id', { count: 'exact', head: true })
+      .eq('email', email)
+      .gte('created_at', oneHourAgo);
 
-  if ((count || 0) >= RATE_LIMIT_PER_HOUR) {
-    return json(429, { error: 'too-many-requests' });
+    if ((count || 0) >= RATE_LIMIT_PER_HOUR) {
+      return json(429, { error: 'too-many-requests' });
+    }
   }
 
   // Genere et stocke le code.
