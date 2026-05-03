@@ -2276,6 +2276,35 @@ details[open] .danger-summary::before {
   transform: translateY(-1px);
 }
 
+/* Mode avatar-only : pas de pill, juste l'avatar agrandi en cercle.
+   Aucun nom/statut affiche pour un look minimaliste. */
+.account-pill-avatar-only {
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  gap: 0;
+}
+.account-pill-avatar-only:hover {
+  background: transparent;
+  border: none;
+  transform: translateY(-1px) scale(1.04);
+}
+.account-pill-avatar-only .account-avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+  border: 2px solid var(--border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35),
+              0 0 0 2px rgba(212, 179, 90, 0.18);
+  transition: box-shadow 0.18s, border-color 0.18s;
+}
+.account-pill-avatar-only:hover .account-avatar {
+  border-color: var(--gold);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45),
+              0 0 0 3px rgba(212, 179, 90, 0.35);
+}
+
 .account-avatar {
   flex-shrink: 0;
   width: 32px;

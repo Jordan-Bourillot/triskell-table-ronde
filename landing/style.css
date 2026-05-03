@@ -517,3 +517,64 @@ a:hover { color: var(--accent-hot); }
   .ss-grid { grid-template-columns: 1fr; gap: 24px; }
   .ss-text h2 { font-size: 22px; }
 }
+
+/* ============== MOBILE RESPONSIVE — ajouts précis pour < 768px ============== */
+
+/* Petit écran : on serre les paddings, on stack tout, on réduit les titres */
+@media (max-width: 768px) {
+  .nav { padding: 14px 18px; gap: 10px; }
+  .brand-logo { width: 28px; height: 28px; }
+  .brand-name { font-size: 14px; }
+  .brand-sub { font-size: 9px; letter-spacing: 1.3px; }
+
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 40px 18px 60px;
+    gap: 32px;
+  }
+  .hero h1 { font-size: 32px; line-height: 1.15; }
+  .lede { font-size: 15px; }
+
+  .cta-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .btn-primary, .btn-ghost {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .dl-meta { display: block; margin-left: 0; margin-top: 4px; }
+
+  .reassurance, .smartscreen-hint { font-size: 12px; text-align: center; }
+
+  .hero-screenshot { display: none; }   /* La capture en preview est lourde sur mobile */
+
+  .section { padding: 48px 18px; }
+  .section h2 { font-size: 22px; }
+  .section-sub { font-size: 14px; margin-bottom: 28px; }
+
+  .tools-grid { grid-template-columns: 1fr; gap: 12px; }
+  .tool-card { padding: 18px; }
+
+  .steps { grid-template-columns: 1fr; gap: 14px; }
+  .steps li { padding: 22px 18px; }
+  .steps h3 { font-size: 15px; }
+
+  .ss-grid { grid-template-columns: 1fr; gap: 22px; }
+  .ss-text h2 { font-size: 22px; }
+  .ss-lede { font-size: 14px; }
+  .ss-steps li { padding: 14px; }
+
+  .section-cta { padding: 60px 18px; }
+  .section-cta h2 { font-size: 22px; margin-bottom: 18px; }
+
+  .footer-row { flex-direction: column; text-align: center; gap: 8px; }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 14px; }
+}
+
+/* Très petit (320-480px) : ajustements micro */
+@media (max-width: 480px) {
+  .hero h1 { font-size: 26px; }
+  .lede { font-size: 14px; }
+  .badge { font-size: 11px; padding: 4px 10px; }
+  .nav-links { display: none; }
+}

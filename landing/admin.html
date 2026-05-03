@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Triskell Admin · La Table Ronde</title>
+  <link rel="icon" href="assets/triskell_mark.png" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin-body">
+
+  <!-- LOGIN -->
+  <section id="admin-login" class="admin-login">
+    <div class="admin-login-card">
+      <img src="assets/triskell_mark.png" alt="" class="admin-logo" />
+      <h1>Triskell · Admin</h1>
+      <p class="muted">Tableau de bord La Table Ronde — accès restreint.</p>
+
+      <form id="login-email-form" class="admin-form">
+        <label>Email admin</label>
+        <input id="login-email" type="email" placeholder="contact@triskell-studio.fr" required />
+        <button type="submit" id="login-email-btn" class="btn-primary">Recevoir un code</button>
+      </form>
+
+      <form id="login-code-form" class="admin-form hidden">
+        <label>Code reçu (6 chiffres)</label>
+        <input id="login-code" type="text" inputmode="numeric" maxlength="6" pattern="\d{6}" placeholder="123 456" />
+        <button type="submit" id="login-code-btn" class="btn-primary">Entrer</button>
+        <button type="button" id="login-back-btn" class="btn-link">← Changer d'email</button>
+      </form>
+
+      <p id="login-error" class="admin-error hidden"></p>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="admin-dashboard" class="admin-dashboard hidden">
+    <header class="admin-header">
+      <div class="admin-brand">
+        <img src="assets/triskell_mark.png" alt="" />
+        <div>
+          <strong>Triskell Admin</strong>
+          <span class="muted small" id="admin-email-label">…</span>
+        </div>
+      </div>
+      <div class="admin-actions">
+        <button id="refresh-btn" class="btn-ghost-sm">↻ Actualiser</button>
+        <button id="logout-btn" class="btn-ghost-sm">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <!-- TOTAUX -->
+      <section class="totals">
+        <div class="kpi"><span class="kpi-num" id="t-users">—</span><span class="kpi-label">Comptes Triskell</span></div>
+        <div class="kpi"><span class="kpi-num" id="t-licenses">—</span><span class="kpi-label">Licences actives</span></div>
+        <div class="kpi"><span class="kpi-num" id="t-interests">—</span><span class="kpi-label">Intérêts captés</span></div>
+        <div class="kpi"><span class="kpi-num" id="t-codes">—</span><span class="kpi-label">Codes login (24 h)</span></div>
+      </section>
+
+      <!-- COURBE 30J -->
+      <section class="card">
+        <h2>30 derniers jours</h2>
+        <div id="chart-wrap" class="chart-wrap"></div>
+        <p class="muted small chart-legend">
+          <span class="dot dot-users"></span> Nouveaux comptes
+          <span class="dot dot-licenses"></span> Nouvelles licences
+        </p>
+      </section>
+
+      <div class="grid-2">
+        <!-- DERNIERS COMPTES -->
+        <section class="card">
+          <h2>Derniers comptes</h2>
+          <table id="t-recent-users" class="data-table">
+            <thead><tr><th>Email</th><th>Créé</th><th>Dernier login</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <!-- DERNIERES LICENCES -->
+        <section class="card">
+          <h2>Dernières licences</h2>
+          <table id="t-recent-licenses" class="data-table">
+            <thead><tr><th>Email</th><th>Produit</th><th>Date</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- INTÉRÊTS -->
+      <section class="card">
+        <h2>Intérêts captés (à mailer au lancement)</h2>
+        <div id="interests-by-product"></div>
+      </section>
+    </main>
+  </section>
+
+  <script src="admin.js" defer></script>
+</body>
+</html>

@@ -109,6 +109,18 @@ function normalizeEmail(raw) {
   return e;
 }
 
+// Admin guard : verifie que la session JWT correspond a un email present
+// dans la whitelist ADMIN_EMAILS (CSV) cote env Netlify. Renvoie le payload
+// session si admin, null sinon.
+function authAdmin(headers) {
+  const session = authFromHeaders(headers);
+  if (!session || !session.email) return null;
+  const list = (process.env.ADMIN_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!list.includes(String(session.email).toLowerCase())) return null;
+  return session;
+}
+
 module.exports = {
   supabase,
   json,
@@ -118,6 +130,7 @@ module.exports = {
   signSession,
   verifySession,
   authFromHeaders,
+  authAdmin,
   normalizeEmail,
   captureException
 };

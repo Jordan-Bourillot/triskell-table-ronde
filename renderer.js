@@ -126,9 +126,10 @@
   // ============================================================================
   // THEME (dark / light / auto)
   // ============================================================================
-  // 'auto' suit prefers-color-scheme du systeme. 'dark'/'light' overrident.
+  // Defaut SOMBRE. L'utilisateur peut basculer en clair ou auto via le toggle
+  // dans la modale Compte (section Apparence).
   async function applyThemeFromPrefs() {
-    let theme = 'auto';
+    let theme = 'dark';
     try {
       const prefs = window.triskell.prefs ? await window.triskell.prefs.get() : {};
       if (prefs && ['dark', 'light', 'auto'].includes(prefs.theme)) {
@@ -139,7 +140,7 @@
   }
 
   function setTheme(theme, persist = true) {
-    const t = ['dark', 'light', 'auto'].includes(theme) ? theme : 'auto';
+    const t = ['dark', 'light', 'auto'].includes(theme) ? theme : 'dark';
     document.documentElement.setAttribute('data-theme', t);
     state.prefs = state.prefs || {};
     state.prefs.theme = t;
