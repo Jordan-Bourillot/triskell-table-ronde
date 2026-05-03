@@ -20,3 +20,8 @@ CLAUDE.md
 # Local install state during dev
 session.json
 installs.json
+
+# Gros artefacts de build (servis par Netlify CDN, pas par git)
+landing/_dl/*.exe
+landing/_dl/*.exe.blockmap
+landing/_dl/latest.yml
