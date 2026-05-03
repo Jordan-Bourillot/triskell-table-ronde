@@ -312,8 +312,11 @@
     openModal({
       title: 'Mon compte Triskell',
       bodyHtml: `
-        <p class="muted">Connecté avec <strong style="color:var(--accent)">${escapeHtml(state.user.email)}</strong></p>
-        <p class="muted">Tu possèdes <strong>${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
+        <div style="display:flex;justify-content:center;margin:-4px 0 14px;">
+          <img src="assets/triskell_mark.png" alt="Triskell" style="width:64px;height:64px;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,0.35);" />
+        </div>
+        <p class="muted" style="text-align:center;">Connecté avec <strong style="color:var(--text);">${escapeHtml(state.user.email)}</strong></p>
+        <p class="muted" style="text-align:center;">Tu possèdes <strong style="color:var(--text);">${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
 
         <div class="account-section profile-section">
           <label class="profile-field">
@@ -1009,24 +1012,58 @@
     const owned = state.licenses[app.id] || app.tier === 'free';
     const installed = !!state.installs[app.id];
 
-    let toolsHtml = '';
-    if (Array.isArray(app.tools) && app.tools.length) {
-      toolsHtml = `
-        <p class="muted" style="margin-top:14px;font-weight:600;">Outils inclus :</p>
+    // Description longue
+    let descHtml = '';
+    if (app.description) {
+      descHtml = `<p style="margin-top:14px;line-height:1.55;">${escapeHtml(app.description)}</p>`;
+    }
+
+    // Liste des fonctionnalités cles
+    let featuresHtml = '';
+    if (Array.isArray(app.features) && app.features.length) {
+      featuresHtml = `
+        <p class="muted" style="margin-top:18px;font-weight:600;color:var(--text);">Ce que tu peux faire :</p>
         <ul style="padding-left:18px;margin:6px 0 0;">
-          ${app.tools.map(t =>
-            `<li class="muted small"><strong style="color:var(--text);">${escapeHtml(t.name)}</strong> — ${escapeHtml(t.tagline)}</li>`
+          ${app.features.map(f =>
+            `<li class="muted small" style="margin:4px 0;color:var(--text);">${escapeHtml(f)}</li>`
           ).join('')}
         </ul>
       `;
     }
 
+    // Outils inclus (Suite des Heros)
+    let toolsHtml = '';
+    if (Array.isArray(app.tools) && app.tools.length) {
+      toolsHtml = `
+        <p class="muted" style="margin-top:18px;font-weight:600;color:var(--text);">Les ${app.tools.length} outils inclus :</p>
+        <ul style="padding-left:18px;margin:6px 0 0;">
+          ${app.tools.map(t =>
+            `<li class="muted small" style="margin:4px 0;"><strong style="color:var(--text);">${escapeHtml(t.name)}</strong> — ${escapeHtml(t.tagline)}</li>`
+          ).join('')}
+        </ul>
+      `;
+    }
+
+    // Liens externes (site, CGV, support, etc.)
+    let linksHtml = '';
+    if (Array.isArray(app.links) && app.links.length) {
+      linksHtml = `
+        <p class="muted" style="margin-top:18px;font-weight:600;color:var(--text);">En savoir plus :</p>
+        <ul style="padding-left:0;margin:6px 0 0;list-style:none;">
+          ${app.links.map(l =>
+            `<li style="margin:4px 0;"><a href="#" data-external="${escapeHtml(l.url)}" style="color:var(--accent);text-decoration:none;">→ ${escapeHtml(l.label)}</a></li>`
+          ).join('')}
+        </ul>
+      `;
+    }
+
+    // Prix
     let priceHtml = '';
     if (!owned && app.price) {
       const original = app.priceOriginal && app.priceOriginal > app.price
         ? `<span class="price-old">${app.priceOriginal} €</span>` : '';
       priceHtml = `
-        <div class="price-block" style="margin-top:14px;">
+        <div class="price-block" style="margin-top:18px;">
           <span class="price-current">${app.price} €</span>
           ${original}
           ${app.priceNote ? `<span class="price-note">${escapeHtml(app.priceNote)}</span>` : ''}
@@ -1036,19 +1073,33 @@
     }
 
     const uninstallBtn = installed
-      ? `<button class="ghost-btn" id="uninstall-btn" style="margin-top:14px;color:var(--danger);border-color:var(--danger);">Désinstaller</button>`
+      ? `<button class="ghost-btn" id="uninstall-btn" style="margin-top:18px;color:var(--danger);border-color:var(--danger);">Désinstaller</button>`
       : '';
 
     openModal({
       title: app.name,
       bodyHtml: `
-        <p class="muted">${escapeHtml(app.tagline || '')}</p>
+        <p class="muted" style="font-style:italic;">${escapeHtml(app.tagline || '')}</p>
         <p class="muted small">Statut : ${owned ? '<strong style="color:var(--green)">possédé</strong>' : 'non acquis'}${installed ? ' · installé' : ''}</p>
-        ${priceHtml}
+        ${descHtml}
+        ${featuresHtml}
         ${toolsHtml}
+        ${linksHtml}
+        ${priceHtml}
         ${uninstallBtn}
       `,
       ctaLabel: 'OK'
+    });
+
+    // Liens externes -> ouvrir dans le navigateur par defaut, pas dans Electron
+    document.querySelectorAll('[data-external]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const url = link.getAttribute('data-external');
+        if (url && window.triskell && window.triskell.openExternal) {
+          window.triskell.openExternal(url);
+        }
+      });
     });
 
     const ub = document.getElementById('uninstall-btn');

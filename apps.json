@@ -32,6 +32,20 @@
       "installed": false,
       "exePath": null,
       "buyUrl": "https://productivite.triskell-studio.fr",
+      "description": "Une boîte à outils desktop pour Windows qui regroupe 11 petits logiciels spécialisés, chacun pensé pour faire UNE chose et la faire bien : ranger un dossier en bordel, renommer 200 fichiers d'un coup, traquer les doublons, compresser une vidéo, fusionner des PDF, extraire une archive… Tout fonctionne 100 % en local, sans compte, sans abonnement, sans tracker.",
+      "features": [
+        "11 outils indépendants — utilise seulement ceux dont tu as besoin",
+        "100 % hors ligne — aucune donnée n'est envoyée sur Internet",
+        "Paiement unique 27 € — pas d'abonnement, mises à jour à vie",
+        "Garantie satisfait ou remboursé 14 jours",
+        "Compatible Windows 10 et 11"
+      ],
+      "links": [
+        { "label": "Site officiel + démo", "url": "https://productivite.triskell-studio.fr" },
+        { "label": "Conditions générales de vente", "url": "https://productivite.triskell-studio.fr/cgv.html" },
+        { "label": "Politique de remboursement", "url": "https://productivite.triskell-studio.fr/politique-remboursement.html" },
+        { "label": "Mentions légales", "url": "https://productivite.triskell-studio.fr/mentions-legales.html" }
+      ],
       "installer": {
         "kind": "zip-bundle",
         "productKey": "suite-des-heros",
@@ -63,6 +77,17 @@
       "installed": false,
       "exePath": null,
       "buyUrl": "https://delinote.triskell-studio.fr",
+      "description": "DéliNote est une app de notes pensée pour les gens qui détestent les apps de notes : pas d'inscription obligatoire, pas de cloud forcé, pas d'éditeur capricieux. Tu écris en Markdown natif (ou en texte simple), tout est sauvegardé dans tes propres dossiers, et la recherche te retrouve la moindre ligne en moins d'une seconde même sur 10 000 notes.",
+      "features": [
+        "Markdown natif avec aperçu en direct",
+        "Recherche instantanée full-text sur toutes tes notes",
+        "Synchronisation optionnelle (iCloud, Dropbox, OneDrive — c'est toi qui choisis)",
+        "Tes fichiers restent dans tes dossiers — aucun format propriétaire",
+        "Mode sombre, raccourcis clavier, export PDF"
+      ],
+      "links": [
+        { "label": "Site officiel + démo", "url": "https://delinote.triskell-studio.fr" }
+      ],
       "installer": {
         "kind": "exe-installer",
         "productKey": "delinote"
@@ -81,6 +106,17 @@
       "exePath": null,
       "buyUrl": "https://productivite.triskell-studio.fr",
       "buyUrlPlaceholder": true,
+      "description": "Le Studio PDF est ton couteau suisse pour tout ce qui touche au PDF : fusionner 50 documents en un, découper un gros rapport, faire de l'OCR sur un scan pour rendre le texte sélectionnable, ajouter une signature, compresser un PDF trop lourd pour l'email. Pas de filigrane, pas de limite de pages, et tout reste sur ta machine.",
+      "features": [
+        "Fusionner / découper / réorganiser des PDF par glisser-déposer",
+        "OCR (reconnaissance de texte) sur les scans, multilingue",
+        "Compression intelligente sans perte de qualité visible",
+        "Signature manuscrite ou électronique (.p12)",
+        "100 % local — tes documents ne quittent jamais ton PC"
+      ],
+      "links": [
+        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+      ],
       "installer": {
         "kind": "exe-installer",
         "productKey": "studio-pdf"
@@ -89,7 +125,7 @@
     {
       "id": "bobeez",
       "name": "Bobeez",
-      "tagline": "L'outil signature de Triskell Studio — assistant productivité tout-en-un",
+      "tagline": "Gestionnaire d'images moderne — calendrier, carte, tri rapide",
       "category": "productivite",
       "tier": "premium",
       "icon": "assets/apps/bobeez.png",
@@ -99,6 +135,18 @@
       "exePath": null,
       "buyUrl": "https://triskell-studio.fr",
       "buyUrlPlaceholder": true,
+      "description": "Bobeez range tes photos sans les bouger. Glisse un dossier dans la fenêtre, et il t'offre une vue calendrier (par mois et par jour), une vue carte (toutes tes photos GPS sur une carte du monde), un mode tri en plein écran style swipe, et de l'édition non destructive : tu recadres, ajustes, exportes — l'original reste intact dans son dossier d'origine.",
+      "features": [
+        "Vue calendrier — tes photos par mois et par jour",
+        "Vue carte — toutes tes photos GPS sur une mappemonde",
+        "Mode tri plein écran — accepte / refuse comme un swipe",
+        "Édition non destructive — l'original reste intact",
+        "Export par lot en JPG / PNG / WebP / AVIF",
+        "Palette de commandes Ctrl+K — tout au clavier"
+      ],
+      "links": [
+        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+      ],
       "installer": {
         "kind": "exe-installer",
         "productKey": "bobeez"
@@ -113,7 +161,18 @@
       "icon": "assets/apps/pirate-life-mail.png",
       "installed": false,
       "exePath": null,
-      "comingSoon": true
+      "comingSoon": true,
+      "description": "Pirate Life Mail est un client email léger et offline-first, qui regroupe toutes tes boîtes (Gmail, Outlook, Yahoo, IMAP) dans une interface unique et propre. Pas de pub, pas de tracker, pas de scan de tes mails par une IA. Gratuit pour toujours.",
+      "features": [
+        "Multi-comptes (Gmail, Outlook, Yahoo, IMAP standard)",
+        "100 % offline — tu peux lire et écrire sans connexion, ça envoie au prochain réseau",
+        "Aucune pub, aucun tracker, aucune analyse des emails",
+        "Recherche instantanée sur tes archives",
+        "Gratuit, sans compte Triskell obligatoire"
+      ],
+      "links": [
+        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+      ]
     }
   ]
 }

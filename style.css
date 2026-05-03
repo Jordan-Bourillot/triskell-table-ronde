@@ -1192,6 +1192,31 @@ input, button { outline: none; }
   filter: saturate(0.9);
 }
 
+/* Pirate Life Mail : un cran plus présent que les autres "En quête",
+   et un halo violet/rose autour de la tête d'ours pour le signaler. */
+.tile.is-coming-soon[data-id="pirate-life-mail"] {
+  opacity: 0.78;
+  filter: saturate(0.88);
+}
+.tile.is-coming-soon[data-id="pirate-life-mail"]:hover {
+  opacity: 0.96;
+  filter: saturate(1);
+}
+/* On retire le médaillon carré pour Pirate Life Mail : le halo doit suivre
+   la silhouette de la tête d'ours, pas un cadre. drop-shadow respecte la
+   transparence du PNG, contrairement à box-shadow qui dessine un rectangle. */
+.tile[data-id="pirate-life-mail"] .tile-icon {
+  background: none;
+  border: none;
+  overflow: visible;
+}
+.tile[data-id="pirate-life-mail"] .tile-icon::after { display: none; }
+.tile[data-id="pirate-life-mail"] .tile-icon img {
+  filter:
+    drop-shadow(0 0 6px rgba(167, 139, 250, 0.85))
+    drop-shadow(0 0 14px rgba(236, 72, 153, 0.55));
+}
+
 /* Tuile "Populaire" — petit ruban en haut à droite, halo discret */
 .tile.is-featured {
   border-color: rgba(167, 139, 250, 0.35);

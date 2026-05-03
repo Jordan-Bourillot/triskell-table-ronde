@@ -23,9 +23,10 @@ catch (_) { /* dev */ }
 // =============================================================================
 // Configuration
 // =============================================================================
-// Une fois le DNS de api.triskell-studio.fr configure, on pourra repointer
-// dessus. En attendant, l'URL netlify.app marche aussi parfaitement.
-const API_BASE = process.env.TRISKELL_API_URL || 'https://triskell-lanceur-api.netlify.app';
+// API publique sur le domaine custom Triskell. L'URL netlify.app reste
+// fonctionnelle aussi (cf. Netlify) et peut etre forcee via TRISKELL_API_URL
+// pour les builds de dev.
+const API_BASE = process.env.TRISKELL_API_URL || 'https://api.triskell-studio.fr';
 const IS_DEV = process.env.TRISKELL_DEV === '1';
 
 let mainWindow;

@@ -25,3 +25,9 @@ installs.json
 landing/_dl/*.exe
 landing/_dl/*.exe.blockmap
 landing/_dl/latest.yml
+
+# Installeur copié à la racine pour partage manuel
+/La Table Ronde Setup*.exe
+
+# Backups d'images générés par scripts/detoure_logo.py
+*.original.png
