@@ -67,6 +67,8 @@
     installCancel:   $('install-cancel'),
     // toasts
     toasts:          $('toasts'),
+    // decoration thematique
+    emptyDecor:      $('empty-decor'),
     // page produit
     productScreen:    $('product-screen'),
     productBack:      $('product-back'),
@@ -685,9 +687,11 @@
     els.grid.innerHTML = '';
     if (apps.length === 0) {
       els.empty.classList.remove('hidden');
+      if (els.emptyDecor) els.emptyDecor.classList.add('hidden');
       return;
     }
     els.empty.classList.add('hidden');
+    if (els.emptyDecor) els.emptyDecor.classList.remove('hidden');
 
     const frag = document.createDocumentFragment();
     for (const app of apps) frag.appendChild(buildTile(app));
@@ -848,7 +852,7 @@
       host.remove();
     });
     host.querySelector('#onboarding-feature')?.addEventListener('click', () => {
-      if (featured) onInfo(featured);
+      if (featured) showProductPage(featured);
     });
   }
 
@@ -1151,7 +1155,7 @@
       }
       case 'installed': {
         host.appendChild(makeBtn('Convoquer', 'btn-launch', () => onLaunch(app)));
-        host.appendChild(makeBtn('Infos', 'btn-info', () => onInfo(app)));
+        host.appendChild(makeBtn('Voir la fiche', 'btn-info', () => showProductPage(app)));
         break;
       }
       case 'update-available': {
@@ -1166,7 +1170,7 @@
       }
       case 'owned-not-installed': {
         host.appendChild(makeBtn('Installer', 'btn-launch', () => onInstall(app)));
-        host.appendChild(makeBtn('Infos', 'btn-info', () => onInfo(app)));
+        host.appendChild(makeBtn('Voir la fiche', 'btn-info', () => showProductPage(app)));
         break;
       }
       case 'not-owned':
@@ -1182,7 +1186,7 @@
         } else {
           host.appendChild(makeBtn('Bientôt en vente', 'btn-disabled', null, true));
         }
-        host.appendChild(makeBtn('En savoir plus', 'btn-info', () => onInfo(app)));
+        host.appendChild(makeBtn('Voir la fiche', 'btn-info', () => showProductPage(app)));
         break;
       }
     }
@@ -1788,6 +1792,12 @@
     els.modalCta.textContent = ctaLabel || 'OK';
     els.modalCta.classList.toggle('outline', ctaKind === 'danger');
     els.modalCta.onclick = onCta || closeModal;
+    // Si la modale est en mode "info pure" (pas de vrai callback CTA),
+    // les boutons "Fermer" et "OK" font exactement la meme chose : on
+    // cache "Fermer" pour eviter le doublon visuel.
+    if (els.modalCancel) {
+      els.modalCancel.style.display = onCta ? '' : 'none';
+    }
     els.modal.classList.remove('hidden');
   }
 
