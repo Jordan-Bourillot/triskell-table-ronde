@@ -170,7 +170,10 @@
       "installer": {
         "kind": "exe-installer",
         "productKey": "bobeez"
-      }
+      },
+      "screenshots": [
+        { "src": "assets/screenshots/bobeez/cover.svg", "caption": "Bobeez — gestionnaire d'images moderne" }
+      ]
     },
     {
       "id": "pirate-life-mail",

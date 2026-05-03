@@ -592,9 +592,9 @@
           <div class="pref-row pref-row-stack">
             <span><strong>Apparence</strong><br><span class="muted small">Choisis ton thème — "Auto" suit ton système.</span></span>
             <div class="theme-toggle" role="group" aria-label="Thème">
-              <button type="button" class="theme-toggle-btn ${(state.prefs.theme || 'auto') === 'auto' ? 'active' : ''}" data-theme="auto">🖥 Auto</button>
+              <button type="button" class="theme-toggle-btn ${state.prefs.theme === 'auto' ? 'active' : ''}" data-theme="auto">🖥 Auto</button>
               <button type="button" class="theme-toggle-btn ${state.prefs.theme === 'light' ? 'active' : ''}" data-theme="light">☀ Clair</button>
-              <button type="button" class="theme-toggle-btn ${state.prefs.theme === 'dark' ? 'active' : ''}" data-theme="dark">🌙 Sombre</button>
+              <button type="button" class="theme-toggle-btn ${(state.prefs.theme || 'dark') === 'dark' ? 'active' : ''}" data-theme="dark">🌙 Sombre</button>
             </div>
           </div>
         </div>
@@ -1665,16 +1665,27 @@
       default: {
         // Tunnel Stripe pas encore en place : on capture l'interet au lieu
         // d'envoyer le user vers une landing placeholder qui le perdra.
+        let isRealBuyButton = false;
         if (app.buyUrlPlaceholder || app.pendingTunnel) {
           host.appendChild(makeBtn('M\'intéresser', 'btn-buy',
             () => onInterest(app)));
         } else if (app.buyUrl) {
           host.appendChild(makeBtn('Recruter', 'btn-buy',
             () => onBuy(app)));
+          isRealBuyButton = true;
         } else {
           host.appendChild(makeBtn('Bientôt en vente', 'btn-disabled', null, true));
         }
         host.appendChild(makeBtn('Voir la fiche', 'btn-info', () => showProductPage(app)));
+        // Mention garantie : on l'affiche seulement quand il y a un vrai
+        // tunnel d'achat (Recruter), pas pour "M'intéresser" ni "Bientôt en
+        // vente" (le user ne paie pas encore -> pas de friction à diminuer).
+        if (isRealBuyButton) {
+          const note = document.createElement('span');
+          note.className = 'tile-guarantee';
+          note.innerHTML = '<span class="tile-guarantee-icon" aria-hidden="true">✓</span> Garantie 14 jours · satisfait ou remboursé';
+          host.appendChild(note);
+        }
         break;
       }
     }
@@ -1850,6 +1861,17 @@
         version: res.version
       };
       render();
+      // Animation de succes sur la tuile fraichement installee : pulse vert
+      // autour de la card + grand checkmark ephemere au centre. Renforce le
+      // toast (qui peut etre rate si l'oeil est ailleurs) avec un signal
+      // localise sur la card concernee.
+      requestAnimationFrame(() => {
+        const tile = document.querySelector(`.tile[data-id="${app.id}"]`);
+        if (tile) {
+          tile.classList.add('tile-just-installed');
+          setTimeout(() => tile.classList.remove('tile-just-installed'), 1800);
+        }
+      });
       showToast({
         kind: 'success',
         title: `${app.name} installé`,

@@ -604,7 +604,7 @@ ipcMain.handle('prefs:set-onboarding-dismissed', async (_evt, yes) => {
 // Theme : 'dark' | 'light' | 'auto' (suit l'OS). Persiste localement et le
 // renderer applique data-theme=... sur <html> au boot.
 ipcMain.handle('prefs:set-theme', async (_evt, theme) => {
-  const t = ['dark', 'light', 'auto'].includes(theme) ? theme : 'auto';
+  const t = ['dark', 'light', 'auto'].includes(theme) ? theme : 'dark';
   store.setPref('theme', t);
   return { ok: true, theme: t };
 });
