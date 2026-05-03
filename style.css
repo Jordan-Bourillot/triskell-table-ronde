@@ -481,6 +481,7 @@ input, button { outline: none; }
 .tile-actions {
   margin-top: auto;
   display: flex;
+  flex-wrap: wrap;     /* permet à la garantie de passer sur sa propre ligne */
   gap: 8px;
 }
 
@@ -1184,14 +1185,15 @@ input, button { outline: none; }
 .home-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 18px;
   padding: 14px 18px;
-  margin-bottom: 18px;
+  margin: 0 auto 18px;
   background: linear-gradient(135deg, rgba(124, 127, 233, 0.10), rgba(167, 139, 250, 0.06));
   border: 1px solid rgba(124, 127, 233, 0.22);
   border-radius: var(--radius);
   flex-wrap: wrap;
+  /* Aligne avec la grille en dessous (max 1100px). */
+  max-width: 1100px;
 }
 .banner-text h2 {
   margin: 0 0 2px;
@@ -2727,15 +2729,18 @@ details[open] .danger-summary::before {
    bousculer les boutons côte à côte. */
 .tile-guarantee {
   flex-basis: 100%;
-  margin-top: 8px;
+  width: 100%;          /* fallback si flex-wrap n'est pas honore */
+  margin-top: 6px;
   font-size: 11px;
   color: var(--green);
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;   /* centre horizontal */
   gap: 5px;
   letter-spacing: 0.2px;
   font-weight: 500;
   opacity: 0.85;
+  text-align: center;
 }
 .tile-guarantee-icon {
   display: inline-flex;
@@ -2763,3 +2768,142 @@ details[open] .danger-summary::before {
   height: 18px;
   font-size: 11px;
 }
+
+/* ============================================================================
+   Bandeau d'annonce dans le home (mise à jour, nouveau produit, promo, info)
+   ============================================================================
+   Edité par Triskell dans apps.json (cle "announcement"). Affiché juste sous
+   le greeting "Salut Jordan". Bouton X pour dismiss (l'id est mémorisé). */
+.announcement-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin: 12px 0 18px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg,
+    rgba(124, 127, 233, 0.08),
+    rgba(167, 139, 250, 0.05));
+  border: 1px solid var(--border);
+  position: relative;
+  animation: announcement-in 0.3s ease-out;
+}
+
+/* Quand l'annonce est integree dans le home-banner (cas par defaut depuis
+   renderAnnouncement), on l'allege visuellement : pas de marge, fond plus
+   discret pour ne pas dupliquer le cadre du parent, et flex: 1 pour qu'elle
+   prenne l'espace libre a droite du "Salut X 👋". */
+#home-banner > #announcement-banner {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 0;
+  background: rgba(124, 127, 233, 0.06);
+  border-color: rgba(124, 127, 233, 0.18);
+}
+
+@keyframes announcement-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.announcement-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.announcement-body { flex: 1; min-width: 0; }
+
+.announcement-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.announcement-title strong {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.announcement-kind {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(124, 127, 233, 0.18);
+  color: var(--accent);
+}
+
+.announcement-message {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.announcement-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.announcement-cta {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, transform 0.15s;
+}
+.announcement-cta:hover {
+  background: var(--accent-hot);
+  transform: translateY(-1px);
+}
+.announcement-cta-arrow {
+  transition: transform 0.18s ease;
+}
+.announcement-cta:hover .announcement-cta-arrow {
+  transform: translateX(2px);
+}
+
+.announcement-dismiss {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.announcement-dismiss:hover {
+  background: var(--bg-3);
+  color: var(--text);
+}
+
+/* Variantes par kind : couleur du tag + bordure */
+.announcement-update .announcement-kind { background: rgba(99, 102, 241, 0.18); color: var(--triskell-indigo); }
+.announcement-update                    { border-color: rgba(99, 102, 241, 0.35); }
+
+.announcement-new .announcement-kind    { background: rgba(74, 222, 128, 0.18); color: var(--green); }
+.announcement-new                       { border-color: rgba(74, 222, 128, 0.35); }
+
+.announcement-promo .announcement-kind  { background: rgba(249, 115, 22, 0.18); color: var(--triskell-orange); }
+.announcement-promo                     { border-color: rgba(249, 115, 22, 0.35); }
+
+.announcement-info .announcement-kind   { background: rgba(167, 139, 250, 0.18); color: var(--triskell-violet); }
+.announcement-info                      { border-color: rgba(167, 139, 250, 0.35); }
