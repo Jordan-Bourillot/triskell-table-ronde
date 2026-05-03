@@ -1,0 +1,20 @@
+[build]
+  functions = "netlify/functions"
+  publish   = "public"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Routes "propres" : /api/login -> /.netlify/functions/login
+[[redirects]]
+  from   = "/api/*"
+  to     = "/.netlify/functions/:splat"
+  status = 200
+
+# CORS preflight pour le client desktop (Electron)
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin  = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"

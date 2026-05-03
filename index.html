@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <title>Triskell Lanceur</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============== LOGIN SCREEN (visible tant que non connecté) ============== -->
+  <div id="login-screen" class="login-screen hidden">
+    <div class="login-card">
+      <img src="assets/logo_triskell.png" alt="Triskell" class="login-logo"
+           onerror="this.style.display='none';" />
+      <h1 class="login-title">Triskell Lanceur</h1>
+      <p class="login-sub">Hub unifié de tous tes outils Triskell.</p>
+
+      <!-- Étape 1 : email -->
+      <form id="login-email-form" class="login-step">
+        <label class="login-label" for="login-email">Ton email</label>
+        <input id="login-email" type="email" class="login-input"
+               placeholder="toi@exemple.fr" autocomplete="email" required />
+        <button type="submit" class="primary-btn login-button" id="login-email-btn">
+          Recevoir mon code
+        </button>
+        <p class="login-helper muted">
+          On t'envoie un code à 6 chiffres par email. Pas de mot de passe.
+        </p>
+      </form>
+
+      <!-- Étape 2 : code -->
+      <form id="login-code-form" class="login-step hidden">
+        <p class="login-sent-to">
+          Code envoyé à <strong id="login-sent-email"></strong>.
+          Regarde ta boîte (et les spams).
+        </p>
+        <label class="login-label" for="login-code">Code reçu</label>
+        <input id="login-code" type="text" class="login-input login-input-code"
+               inputmode="numeric" maxlength="6" pattern="\d{6}"
+               placeholder="123 456" autocomplete="one-time-code" required />
+        <button type="submit" class="primary-btn login-button" id="login-code-btn">
+          Me connecter
+        </button>
+        <button type="button" class="ghost-btn login-back" id="login-back-btn">
+          Changer d'email
+        </button>
+      </form>
+
+      <p id="login-error" class="login-error hidden"></p>
+    </div>
+    <p class="login-foot muted">
+      <span id="login-version">Triskell Studio</span> · <a href="#" id="login-cgu">CGU</a>
+    </p>
+  </div>
+
+  <!-- ============== APP PRINCIPALE (visible une fois connecté) ============== -->
+  <div id="app-screen" class="app hidden">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="brand">
+        <img src="assets/logo_triskell.png" alt="Triskell" class="brand-logo"
+             onerror="this.style.display='none';" />
+        <div class="brand-text">
+          <span class="brand-name">Triskell</span>
+          <span class="brand-sub">Lanceur</span>
+        </div>
+      </div>
+
+      <div class="search">
+        <span class="search-icon" aria-hidden="true">&#9906;</span>
+        <input id="search-input" type="search" placeholder="Rechercher un outil..." autocomplete="off" />
+      </div>
+
+      <div class="header-actions">
+        <button class="ghost-btn" id="account-btn">
+          <span id="account-email">Mon compte</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="body">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <nav id="categories" class="categories"></nav>
+
+        <div class="sidebar-foot">
+          <div class="legend"><span class="dot dot-owned"></span> Possédé</div>
+          <div class="legend"><span class="dot dot-free"></span> Gratuit</div>
+          <div class="legend"><span class="dot dot-soon"></span> Bientôt</div>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main">
+        <div class="main-head">
+          <h1 id="main-title">Tous tes outils</h1>
+          <span id="main-count" class="muted"></span>
+        </div>
+
+        <section id="grid" class="grid" aria-live="polite"></section>
+
+        <div id="empty-state" class="empty hidden">
+          <div class="empty-mark">&#x29FE;</div>
+          <h2>Aucun outil ne correspond</h2>
+          <p>Essaie un autre mot-clé ou change de catégorie.</p>
+        </div>
+
+        <div id="loading-state" class="empty">
+          <div class="spinner"></div>
+          <p>Chargement de tes outils...</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <span id="meta-text" class="muted">Triskell Studio</span>
+      <span class="muted">Tu es proprio. On te lâche pas.</span>
+    </footer>
+  </div>
+
+  <!-- ============== MODAL générique ============== -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close aria-label="Fermer">&times;</button>
+      <h2 id="modal-title">Titre</h2>
+      <div id="modal-body">Corps</div>
+      <div class="modal-actions">
+        <button class="ghost-btn" data-close id="modal-cancel">Fermer</button>
+        <button id="modal-cta" class="primary-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== MODAL d'install (progression) ============== -->
+  <div id="install-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h2 id="install-title">Installation en cours...</h2>
+      <p id="install-step" class="muted">Préparation...</p>
+      <div class="progress-bar">
+        <div id="install-progress" class="progress-fill"></div>
+      </div>
+      <p id="install-detail" class="muted small"></p>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="install-cancel">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

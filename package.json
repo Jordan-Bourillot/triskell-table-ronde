@@ -1,0 +1,61 @@
+{
+  "name": "triskell-lanceur",
+  "version": "0.1.0",
+  "description": "Hub desktop unifie pour l'ecosysteme Triskell Studio",
+  "main": "main.js",
+  "author": "Triskell Studio",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis",
+    "pack": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.0"
+  },
+  "build": {
+    "appId": "studio.triskell.lanceur",
+    "productName": "Triskell Lanceur",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "style.css",
+      "renderer.js",
+      "apps.json",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Jordan-Bourillot",
+        "repo": "triskell-lanceur"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/logo_triskell.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Triskell Lanceur"
+    }
+  }
+}

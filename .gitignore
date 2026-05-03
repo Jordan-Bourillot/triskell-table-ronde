@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+out/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Outils Claude Code
+.claude/
+CLAUDE.md
+
+# Netlify
+.netlify/
+
+# Local install state during dev
+session.json
+installs.json

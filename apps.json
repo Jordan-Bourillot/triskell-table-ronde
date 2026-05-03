@@ -1,0 +1,80 @@
+{
+  "categories": [
+    { "id": "all", "label": "Tous tes outils" },
+    { "id": "productivite", "label": "Productivité" }
+  ],
+  "apps": [
+    {
+      "id": "suite-des-heros",
+      "name": "La Suite des Héros",
+      "tagline": "11 outils desktop pour ranger, renommer, compresser et sécuriser tes fichiers",
+      "category": "productivite",
+      "tier": "premium",
+      "installed": false,
+      "exePath": null,
+      "buyUrl": "https://productivite.triskell-studio.fr",
+      "installer": {
+        "kind": "zip-bundle",
+        "productKey": "suite-des-heros",
+        "installPath": "Triskell/SuiteDesHeros"
+      },
+      "tools": [
+        { "id": "le-maitre-trieur",  "name": "Le Maître Trieur",  "exe": "LeMaitreTrieur.exe",  "tagline": "Range tes fichiers en un clic" },
+        { "id": "le-baptiseur",      "name": "Le Baptiseur",      "exe": "LeBaptiseur.exe",     "tagline": "Renomme 200 fichiers d'un coup" },
+        { "id": "le-chasseur",       "name": "Le Chasseur",       "exe": "LeChasseur.exe",      "tagline": "Traque et supprime les doublons" },
+        { "id": "le-metronome",      "name": "Le Métronome",      "exe": "LeMetronome.exe",     "tagline": "Pomodoro avec stats" },
+        { "id": "le-gardien",        "name": "Le Gardien",        "exe": "LeGardien.exe",       "tagline": "Coffre-fort chiffré AES-256" },
+        { "id": "lepurateur",        "name": "L'Épurateur",       "exe": "LEpurateur.exe",      "tagline": "Désinstalle proprement" },
+        { "id": "le-trancheur",      "name": "Le Trancheur",      "exe": "LeTrancheur.exe",     "tagline": "Découpe les gros fichiers" },
+        { "id": "larchiviste",       "name": "L'Archiviste",      "exe": "LArchiviste.exe",     "tagline": "Crée et ouvre tes archives" },
+        { "id": "le-distillateur",   "name": "Le Distillateur",   "exe": "LeDistillateur.exe",  "tagline": "Compresse vidéo et audio" },
+        { "id": "le-scribe",         "name": "Le Scribe",         "exe": "LeScribe.exe",        "tagline": "Fusionne et découpe les PDF" },
+        { "id": "lalchimiste",       "name": "L'Alchimiste",      "exe": "LAlchimiste.exe",     "tagline": "Convertit tes images" }
+      ]
+    },
+    {
+      "id": "delinote",
+      "name": "DéliNote",
+      "tagline": "Notes synchronisées, markdown natif, recherche instantanée",
+      "category": "productivite",
+      "tier": "premium",
+      "installed": false,
+      "exePath": null,
+      "buyUrl": "https://delinote.triskell-studio.fr",
+      "installer": {
+        "kind": "exe-installer",
+        "productKey": "delinote"
+      }
+    },
+    {
+      "id": "studio-pdf",
+      "name": "Le Studio PDF",
+      "tagline": "Fusion, split, OCR, signature — tout pour tes PDF",
+      "category": "productivite",
+      "tier": "premium",
+      "installed": false,
+      "exePath": null,
+      "comingSoon": true
+    },
+    {
+      "id": "bobeez",
+      "name": "Bobeez",
+      "tagline": "Bientôt — l'outil signature de Triskell Studio",
+      "category": "productivite",
+      "tier": "premium",
+      "installed": false,
+      "exePath": null,
+      "comingSoon": true
+    },
+    {
+      "id": "pirate-life-mail",
+      "name": "Pirate Life Mail",
+      "tagline": "Client mail nouvelle génération, gratuit",
+      "category": "productivite",
+      "tier": "free",
+      "installed": false,
+      "exePath": null,
+      "comingSoon": true
+    }
+  ]
+}
