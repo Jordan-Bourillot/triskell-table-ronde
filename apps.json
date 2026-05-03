@@ -104,7 +104,7 @@
       "priceNote": "Paiement unique · à vie",
       "installed": false,
       "exePath": null,
-      "buyUrl": "https://productivite.triskell-studio.fr",
+      "buyUrl": "https://studio-pdf.triskell-studio.fr",
       "buyUrlPlaceholder": true,
       "description": "Le Studio PDF est ton couteau suisse pour tout ce qui touche au PDF : fusionner 50 documents en un, découper un gros rapport, faire de l'OCR sur un scan pour rendre le texte sélectionnable, ajouter une signature, compresser un PDF trop lourd pour l'email. Pas de filigrane, pas de limite de pages, et tout reste sur ta machine.",
       "features": [
@@ -133,7 +133,7 @@
       "priceNote": "Paiement unique · à vie",
       "installed": false,
       "exePath": null,
-      "buyUrl": "https://triskell-studio.fr",
+      "buyUrl": "https://bobeez.triskell-studio.fr",
       "buyUrlPlaceholder": true,
       "description": "Bobeez range tes photos sans les bouger. Glisse un dossier dans la fenêtre, et il t'offre une vue calendrier (par mois et par jour), une vue carte (toutes tes photos GPS sur une carte du monde), un mode tri en plein écran style swipe, et de l'édition non destructive : tu recadres, ajustes, exportes — l'original reste intact dans son dossier d'origine.",
       "features": [
