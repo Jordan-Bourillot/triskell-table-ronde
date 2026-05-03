@@ -5,8 +5,12 @@
 !include nsDialogs.nsh
 !include LogicLib.nsh
 
-Var DesktopShortcutCheckbox
+; Les deux variables n'existent que cote installateur (uninstaller ne les voit
+; jamais ; sinon NSIS warning 6001 "variable not referenced").
+!ifndef BUILD_UNINSTALLER
 Var WantDesktopShortcut
+Var DesktopShortcutCheckbox
+!endif
 
 ; ==============================================================================
 ; Init : on coche par defaut "Creer un raccourci sur le bureau".
@@ -16,31 +20,40 @@ Var WantDesktopShortcut
 !macroend
 
 ; ==============================================================================
-; Insere notre page custom JUSTE APRES la page d'accueil.
-; (customWelcomePage remplace la page de bienvenue ; on remet la page MUI
-;  d'accueil standard, puis on ajoute notre page personnalisee derriere.)
+; Insere notre page custom APRES le choix du dossier d'installation
+; et AVANT le bouton "Installer". Le hook 'customPageAfterChangeDir' est
+; expose par electron-builder dans templates/nsis/assistedInstaller.nsh.
 ; ==============================================================================
-!macro customWelcomePage
-  !insertmacro MUI_PAGE_WELCOME
+!macro customPageAfterChangeDir
   Page custom shortcutsPageCreate shortcutsPageLeave
 !macroend
 
+; Les fonctions de page n'existent que pour l'installateur (pas pour l'uninstaller).
+; Sans ce !ifndef BUILD_UNINSTALLER, NSIS warning 6010 "function not referenced"
+; pendant la passe uninstaller fait planter le build (warning treated as error).
+!ifndef BUILD_UNINSTALLER
 Function shortcutsPageCreate
-  !insertmacro MUI_HEADER_TEXT "Personnaliser l'installation" "Choisis tes préférences pour Triskell Lanceur."
-
   nsDialogs::Create 1018
   Pop $0
   ${If} $0 == error
     Abort
   ${EndIf}
 
-  ${NSD_CreateLabel} 0 0u 100% 28u "Le Lanceur sera installé sur ta machine. Tu peux aussi créer un raccourci pour le retrouver facilement :"
+  ; Titre de la page (en gras, plus grand)
+  ${NSD_CreateLabel} 0 0u 100% 14u "Personnaliser l'installation"
+  Pop $0
+  CreateFont $1 "$(^Font)" "10" "700"
+  SendMessage $0 ${WM_SETFONT} $1 0
 
-  ${NSD_CreateCheckbox} 10u 35u 90% 12u "Créer un raccourci sur le bureau (recommandé)"
+  ${NSD_CreateLabel} 0 18u 100% 12u "Choisis tes préférences pour Triskell Lanceur."
+
+  ${NSD_CreateLabel} 0 40u 100% 24u "Tu peux créer un raccourci pour retrouver le Lanceur facilement :"
+
+  ${NSD_CreateCheckbox} 10u 70u 90% 12u "Créer un raccourci sur le bureau (recommandé)"
   Pop $DesktopShortcutCheckbox
   ${NSD_Check} $DesktopShortcutCheckbox
 
-  ${NSD_CreateLabel} 10u 55u 90% 24u "Un raccourci sera aussi créé dans le menu Démarrer dans tous les cas."
+  ${NSD_CreateLabel} 10u 90u 90% 24u "Un raccourci dans le menu Démarrer sera créé automatiquement dans tous les cas."
 
   nsDialogs::Show
 FunctionEnd
@@ -48,6 +61,7 @@ FunctionEnd
 Function shortcutsPageLeave
   ${NSD_GetState} $DesktopShortcutCheckbox $WantDesktopShortcut
 FunctionEnd
+!endif
 
 ; ==============================================================================
 ; A l'installation : on cree le raccourci bureau si la case etait cochee.
