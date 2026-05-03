@@ -33,6 +33,12 @@ Var DesktopShortcutCheckbox
 ; pendant la passe uninstaller fait planter le build (warning treated as error).
 !ifndef BUILD_UNINSTALLER
 Function shortcutsPageCreate
+  ; Si on est dans un update auto (electron-updater), on ne re-pose pas la
+  ; question : on garde le raccourci tel qu'il etait. Skip la page entiere.
+  ${If} ${isUpdated}
+    Abort
+  ${EndIf}
+
   nsDialogs::Create 1018
   Pop $0
   ${If} $0 == error
@@ -65,10 +71,14 @@ FunctionEnd
 
 ; ==============================================================================
 ; A l'installation : on cree le raccourci bureau si la case etait cochee.
+; Pour un update, on ne touche pas au raccourci (l'utilisateur a deja choisi
+; lors de la 1ere installation, on respecte son choix).
 ; ==============================================================================
 !macro customInstall
-  ${If} $WantDesktopShortcut == 1
-    CreateShortCut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${APP_EXECUTABLE_FILENAME}" "" "$INSTDIR\${APP_EXECUTABLE_FILENAME}" 0
+  ${IfNot} ${isUpdated}
+    ${If} $WantDesktopShortcut == 1
+      CreateShortCut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${APP_EXECUTABLE_FILENAME}" "" "$INSTDIR\${APP_EXECUTABLE_FILENAME}" 0
+    ${EndIf}
   ${EndIf}
 !macroend
 

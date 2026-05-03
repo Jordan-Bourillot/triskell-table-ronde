@@ -1364,8 +1364,17 @@
     if (cb.comingSoon) {
       actions.appendChild(makeBtn('Bientôt', 'btn-disabled', null, true));
     } else {
-      actions.appendChild(makeBtn('Compléter ma Table', 'btn-buy',
-        () => openCompletionPickerModal(missing, cb.tiers)));
+      // Bouton CTA enrichi : titre + sous-texte pour signaler que c'est
+      // une selection a la carte (et pas un achat aveugle de tout le pack).
+      const btn = document.createElement('button');
+      btn.className = 'btn-completion';
+      btn.innerHTML = `
+        <span class="btn-completion-main">Compléter ma Table <span class="btn-completion-arrow">→</span></span>
+        <span class="btn-completion-sub">Sélection à la carte</span>
+      `;
+      btn.addEventListener('click',
+        () => openCompletionPickerModal(missing, cb.tiers));
+      actions.appendChild(btn);
     }
     host.appendChild(card);
   }
