@@ -9,10 +9,11 @@
     "tagline": "Récupère tous les compagnons qu'il te manque, à prix d'allié",
     "icon": "assets/triskell_mark.png",
     "comingSoon": false,
-    "tiers": {
-      "4": { "price": 99,  "priceOriginal": 122, "priceNote": "Économise 23 € — toute la Table d'un coup" },
-      "3": { "price": 79,  "priceOriginal": 95,  "priceNote": "Économise 16 € — les 3 manquants" },
-      "2": { "price": 55,  "priceOriginal": 66,  "priceNote": "Économise 11 € — les 2 manquants" }
+    "discounts": {
+      "_comment": "Pourcentage de remise sur le prix individuel total selon le nombre d'outils choisis. Marges proportionnelles, jamais incohérent.",
+      "2": 15,
+      "3": 25,
+      "4": 35
     }
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
