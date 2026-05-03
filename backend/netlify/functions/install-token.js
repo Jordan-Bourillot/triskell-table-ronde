@@ -43,10 +43,11 @@ const PRODUCT_CONFIG = {
   },
   'delinote': {
     kind: 'exe-installer',
-    downloadHost: 'https://delinote.triskell-studio.fr',
-    assetPath: '/api/download',
-    version: 'latest',
-    validityHours: 24
+    downloadHost: SUITE_HOST,                        // CDN partage productivite
+    assetPath: '/_dl/delinote-setup.exe',
+    version: '0.9.9',
+    validityHours: 24,
+    expectedExePath: 'C:\\Users\\<USER>\\AppData\\Local\\Programs\\delinote\\DeliNote.exe'
   }
 };
 
