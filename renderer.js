@@ -312,10 +312,10 @@
     openModal({
       title: 'Mon compte Triskell',
       bodyHtml: `
-        <div style="display:flex;justify-content:center;margin:-4px 0 14px;">
-          <img src="assets/triskell_mark.png" alt="Triskell" style="width:64px;height:64px;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,0.35);" />
+        <div style="display:flex;justify-content:center;margin:8px 0 20px;">
+          <img src="assets/triskell_mark.png" alt="Triskell" style="width:72px;height:72px;border-radius:16px;" />
         </div>
-        <p class="muted" style="text-align:center;">Connecté avec <strong style="color:var(--text);">${escapeHtml(state.user.email)}</strong></p>
+        <p style="text-align:center;color:var(--text);margin:0 0 6px;">Connecté avec <strong style="color:var(--triskell-violet);">${escapeHtml(state.user.email)}</strong></p>
         <p class="muted" style="text-align:center;">Tu possèdes <strong style="color:var(--text);">${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
 
         <div class="account-section profile-section">
