@@ -73,7 +73,13 @@ contextBridge.exposeInMainWorld('triskell', {
     setTelemetry:            (enabled)  => ipcRenderer.invoke('prefs:set-telemetry', enabled),
     setLastUsed:             (productId)=> ipcRenderer.invoke('prefs:set-last-used', productId),
     setDisplayName:          (name)     => ipcRenderer.invoke('prefs:set-display-name', name),
-    setOnboardingDismissed:  (yes)      => ipcRenderer.invoke('prefs:set-onboarding-dismissed', yes)
+    setOnboardingDismissed:  (yes)      => ipcRenderer.invoke('prefs:set-onboarding-dismissed', yes),
+    setLastSeenVersion:      (v)        => ipcRenderer.invoke('prefs:set-last-seen-version', v)
+  },
+
+  // Changelog : release notes GitHub (fetched par le main pour passer la CSP)
+  changelog: {
+    fetch: (version) => ipcRenderer.invoke('changelog:fetch', version)
   },
 
   // Interet sur un produit pas encore en vente (Studio PDF, Bobeez, ...)

@@ -345,6 +345,99 @@
         }
       }).catch(() => { /* scan optionnel, on ignore les erreurs */ });
     }
+
+    // "Quoi de neuf" : si on detecte un changement de version (auto-update qui
+    // vient d'aboutir ou MAJ via reinstall), on affiche les release notes
+    // GitHub avec un petit delai pour ne pas masquer le rendu de la grille.
+    setTimeout(() => maybeShowChangelog(), 800);
+  }
+
+  // Affiche une bulle "Quoi de neuf" si la version installee differe de la
+  // derniere vue. Source : release notes GitHub (prefer markdown sobre).
+  // Premiere installation = on enregistre la version sans rien afficher.
+  async function maybeShowChangelog() {
+    if (!window.triskell.changelog) return;
+    const meta = await window.triskell.getMeta();
+    const current = meta.version;
+    const lastSeen = state.prefs.lastSeenVersion || '';
+
+    // Premiere fois qu'on voit ce user / cette version stockee — on enregistre
+    // sans afficher (pas de release notes a "rattraper", on demarre frais).
+    if (!lastSeen) {
+      window.triskell.prefs.setLastSeenVersion(current).catch(() => {});
+      return;
+    }
+    // Deja vu cette version
+    if (lastSeen === current) return;
+
+    const r = await window.triskell.changelog.fetch(current);
+    // Marque vu meme si on n'a pas pu recuperer les notes — pas de spam au
+    // prochain demarrage.
+    window.triskell.prefs.setLastSeenVersion(current).catch(() => {});
+    if (!r || !r.ok || !r.body) return;
+
+    showChangelogModal({
+      version: current,
+      title: r.name || `v${current}`,
+      body: r.body,
+      previousVersion: lastSeen
+    });
+  }
+
+  function showChangelogModal({ version, title, body, previousVersion }) {
+    // Mise en forme markdown -> HTML simple : titres "##", listes "-", "*"
+    // et **gras** sont reconnus. Le reste passe en paragraphes.
+    const html = renderChangelogBody(body);
+    openModal({
+      title: `Quoi de neuf · ${title}`,
+      bodyHtml: `
+        <p class="muted small" style="margin-bottom:14px;">
+          Tu es passé de <strong style="color:var(--text);">v${escapeHtml(previousVersion)}</strong>
+          à <strong style="color:var(--accent);">v${escapeHtml(version)}</strong>.
+          Voici ce qui change.
+        </p>
+        <div class="changelog-body">${html}</div>
+      `,
+      ctaLabel: 'Compris',
+      onCta: closeModal
+    });
+  }
+
+  function renderChangelogBody(md) {
+    if (!md) return '';
+    const lines = String(md).split(/\r?\n/);
+    const out = [];
+    let inList = false;
+    const closeList = () => { if (inList) { out.push('</ul>'); inList = false; } };
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      if (!line.trim()) { closeList(); continue; }
+      // Titre h2
+      if (/^##\s+/.test(line)) {
+        closeList();
+        out.push(`<h3 class="changelog-h">${escapeInlineMd(line.replace(/^##\s+/, ''))}</h3>`);
+        continue;
+      }
+      // Bullet
+      if (/^\s*[-*]\s+/.test(line)) {
+        if (!inList) { out.push('<ul class="changelog-list">'); inList = true; }
+        out.push(`<li>${escapeInlineMd(line.replace(/^\s*[-*]\s+/, ''))}</li>`);
+        continue;
+      }
+      // Paragraphe
+      closeList();
+      out.push(`<p class="changelog-p">${escapeInlineMd(line)}</p>`);
+    }
+    closeList();
+    return out.join('\n');
+  }
+
+  // Echappe le HTML puis re-active **gras** et `code` minimaliste.
+  function escapeInlineMd(s) {
+    let out = escapeHtml(s);
+    out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+    return out;
   }
 
   // ============================================================================

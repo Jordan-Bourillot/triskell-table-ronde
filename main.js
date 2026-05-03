@@ -543,6 +543,40 @@ ipcMain.handle('prefs:set-display-name', async (_evt, name) => {
   return { ok: true, displayName: clean };
 });
 
+ipcMain.handle('prefs:set-last-seen-version', async (_evt, version) => {
+  store.setPref('lastSeenVersion', String(version || ''));
+  return { ok: true };
+});
+
+// =============================================================================
+// Changelog : recupere les release notes depuis l'API GitHub. Le main process
+// fait le fetch (la CSP du renderer bloque api.github.com).
+// =============================================================================
+ipcMain.handle('changelog:fetch', async (_evt, version) => {
+  if (!version || typeof version !== 'string') {
+    return { ok: false, error: 'invalid-version' };
+  }
+  const tag = version.startsWith('v') ? version : `v${version}`;
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/Jordan-Bourillot/triskell-table-ronde/releases/tags/${encodeURIComponent(tag)}`,
+      { headers: { 'Accept': 'application/vnd.github+json', 'User-Agent': 'TriskellTableRonde' } }
+    );
+    if (!res.ok) return { ok: false, error: `http-${res.status}` };
+    const data = await res.json();
+    return {
+      ok: true,
+      tag,
+      name: data.name || tag,
+      body: data.body || '',
+      published_at: data.published_at,
+      url: data.html_url
+    };
+  } catch (err) {
+    return { ok: false, error: 'network', message: err.message };
+  }
+});
+
 ipcMain.handle('prefs:set-onboarding-dismissed', async (_evt, yes) => {
   store.setPref('onboardingDismissed', !!yes);
   return { ok: true };
