@@ -137,7 +137,10 @@
       "installer": {
         "kind": "exe-installer",
         "productKey": "studio-pdf"
-      }
+      },
+      "screenshots": [
+        { "src": "assets/screenshots/studio-pdf/main-view.png", "caption": "Écran d'accueil — Bertrand t'attend pour bosser tes PDF" }
+      ]
     },
     {
       "id": "bobeez",

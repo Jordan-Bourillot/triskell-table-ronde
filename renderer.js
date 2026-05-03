@@ -1127,18 +1127,165 @@
       actions.appendChild(makeBtn('Bientôt', 'btn-disabled', null, true));
     } else {
       actions.appendChild(makeBtn('Compléter ma Table', 'btn-buy',
-        async () => {
-          const r = await window.triskell.purchase.openCompletion(count, missing.map(a => a.id));
-          if (r && !r.ok) {
-            // Erreurs cote backend (Stripe pas encore configure, etc.)
-            const msg = r.error === 'tier-not-configured' || r.error === 'stripe-not-configured'
-              ? 'Le pack n\'est pas encore activé côté paiement. Notre équipe est prévenue, on revient vers toi vite.'
-              : 'Impossible de lancer le paiement. Réessaie dans un instant.';
-            showToast({ kind: 'error', title: 'Compléter ma Table', message: msg, timeout: 8000 });
-          }
-        }));
+        () => openCompletionPickerModal(missing, cb.tiers)));
     }
     host.appendChild(card);
+  }
+
+  // ============================================================================
+  // MODALE "Compléter ma Table" — sélection à la carte
+  // ============================================================================
+  // L'utilisateur ne veut pas forcement tous les outils manquants. On lui
+  // ouvre une modale avec une checkbox par outil, et on recalcule le prix
+  // bundle en temps reel selon le nombre coche. Sous 2 outils coches, plus
+  // de tier bundle valide -> on bascule l'UX vers l'achat individuel.
+  function openCompletionPickerModal(missing, tiers) {
+    const selected = new Set(missing.map(a => a.id));
+
+    const rowsHtml = missing.map(a => `
+      <label class="picker-row" data-id="${escapeHtml(a.id)}">
+        <input type="checkbox" class="picker-check" checked
+               data-id="${escapeHtml(a.id)}"
+               data-price="${a.price || 0}" />
+        <span class="picker-icon">${a.icon
+          ? `<img src="${escapeHtml(a.icon)}" alt="" />`
+          : escapeHtml(makeInitials(a.name))}</span>
+        <span class="picker-info">
+          <span class="picker-name">${escapeHtml(a.name)}</span>
+          <span class="picker-tagline muted small">${escapeHtml(a.tagline || '')}</span>
+        </span>
+        <span class="picker-price">${a.price || 0} €</span>
+      </label>
+    `).join('');
+
+    const bodyHtml = `
+      <p class="muted small" style="margin:0 0 14px;">
+        Coche les outils que tu veux ajouter à ta Table. Le prix bundle se
+        recalcule selon le nombre coché.
+      </p>
+      <div class="picker-list">${rowsHtml}</div>
+      <div class="picker-summary">
+        <div class="picker-summary-row">
+          <span>Achat séparé</span>
+          <span class="picker-individual"></span>
+        </div>
+        <div class="picker-summary-row picker-summary-bundle">
+          <span class="picker-bundle-label"></span>
+          <span class="picker-bundle"></span>
+        </div>
+        <div class="picker-summary-row picker-summary-savings">
+          <span>Économie</span>
+          <span class="picker-savings"></span>
+        </div>
+        <p class="picker-hint muted small"></p>
+      </div>
+    `;
+
+    openModal({
+      title: 'Compléter ma Table',
+      bodyHtml,
+      ctaLabel: 'Acheter',
+      onCta: async () => {
+        const ids = [...selected];
+        if (ids.length === 1) {
+          // Un seul produit -> on bascule sur le tunnel d'achat individuel.
+          const app = missing.find(a => a.id === ids[0]);
+          closeModal();
+          if (app && app.buyUrl) {
+            window.triskell.purchase.open(app.buyUrl, app.id);
+          } else if (app) {
+            onInfo(app);
+          }
+          return;
+        }
+        if (ids.length < 2) return; // CTA disabled
+
+        const r = await window.triskell.purchase.openCompletion(ids.length, ids);
+        if (r && !r.ok) {
+          const msg = r.error === 'tier-not-configured' || r.error === 'stripe-not-configured'
+            ? 'Le pack n\'est pas encore activé côté paiement. Notre équipe est prévenue, on revient vers toi vite.'
+            : 'Impossible de lancer le paiement. Réessaie dans un instant.';
+          showToast({ kind: 'error', title: 'Compléter ma Table', message: msg, timeout: 8000 });
+          return;
+        }
+        closeModal();
+      }
+    });
+
+    const checks = els.modalBody.querySelectorAll('.picker-check');
+    const $individual = els.modalBody.querySelector('.picker-individual');
+    const $bundleLabel = els.modalBody.querySelector('.picker-bundle-label');
+    const $bundle = els.modalBody.querySelector('.picker-bundle');
+    const $savingsRow = els.modalBody.querySelector('.picker-summary-savings');
+    const $savings = els.modalBody.querySelector('.picker-savings');
+    const $hint = els.modalBody.querySelector('.picker-hint');
+
+    function refresh() {
+      const count = selected.size;
+      const individualTotal = missing
+        .filter(a => selected.has(a.id))
+        .reduce((s, a) => s + (a.price || 0), 0);
+
+      $individual.textContent = `${individualTotal} €`;
+
+      const tier = tiers[String(count)];
+      if (count === 0) {
+        $bundleLabel.textContent = 'Bundle';
+        $bundle.textContent = '—';
+        $savingsRow.style.display = 'none';
+        $hint.textContent = 'Coche au moins 2 outils pour activer le bundle.';
+        els.modalCta.disabled = true;
+        els.modalCta.classList.add('btn-disabled');
+        els.modalCta.textContent = 'Acheter';
+      } else if (count === 1) {
+        $bundleLabel.textContent = 'Bundle';
+        $bundle.textContent = '— (min. 2)';
+        $savingsRow.style.display = 'none';
+        $hint.textContent = 'Avec 1 seul outil, autant l\'acheter directement (le bundle ne s\'active qu\'à partir de 2).';
+        els.modalCta.disabled = false;
+        els.modalCta.classList.remove('btn-disabled');
+        const only = missing.find(a => a.id === [...selected][0]);
+        els.modalCta.textContent = only
+          ? `Acheter ${only.name} — ${only.price || 0} €`
+          : 'Acheter';
+      } else if (!tier) {
+        $bundleLabel.textContent = 'Bundle';
+        $bundle.textContent = '—';
+        $savingsRow.style.display = 'none';
+        $hint.textContent = 'Aucun tarif bundle configuré pour cette quantité.';
+        els.modalCta.disabled = true;
+        els.modalCta.classList.add('btn-disabled');
+      } else {
+        const savings = individualTotal - tier.price;
+        $bundleLabel.textContent = `Bundle (${count} outil${count > 1 ? 's' : ''})`;
+        $bundle.textContent = `${tier.price} €`;
+
+        if (savings > 0) {
+          const pct = Math.round((savings / individualTotal) * 100);
+          $savingsRow.style.display = '';
+          $savings.textContent = `−${savings} € (−${pct} %)`;
+          $hint.textContent = '';
+        } else {
+          // Edge case : 2 outils peu chers -> bundle plus cher que la
+          // somme. On signale sans bloquer.
+          $savingsRow.style.display = 'none';
+          $hint.textContent = 'Le bundle revient plus cher que l\'achat séparé pour ces outils. Tu peux quand même prendre le bundle, ou décocher pour acheter à l\'unité.';
+        }
+        els.modalCta.disabled = false;
+        els.modalCta.classList.remove('btn-disabled');
+        els.modalCta.textContent = `Acheter ${count} outil${count > 1 ? 's' : ''} — ${tier.price} €`;
+      }
+    }
+
+    checks.forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.dataset.id;
+        if (cb.checked) selected.add(id);
+        else selected.delete(id);
+        refresh();
+      });
+    });
+    refresh();
   }
 
   // Determine l'etat affiche d'un produit, et donc les actions disponibles.
