@@ -322,11 +322,17 @@ input, button { outline: none; }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* auto-fit (au lieu de auto-fill) collapse les colonnes vides ;
+     minmax(220px, 320px) permet aux 5 cards Triskell actuelles de tenir
+     sur 1 seule ligne sur écran large (5 × 320 + 4 × 18 = ~1672px). Sur
+     écran plus étroit ça wrappe et la dernière ligne est centrée. */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 320px));
+  justify-content: center;
   gap: 18px;
-  /* Cap + centre la grille (alignement visuel avec le bundle-card et la
-     fiche produit, qui sont aussi cappes a 1100px). */
-  max-width: 1100px;
+  /* max-width relevé de 1100 → 1750 pour laisser de la place aux 5 cards.
+     L'alignement visuel avec bundle-card / fiche produit (cappés à 1100)
+     reste OK car ils sont cappés indépendamment. */
+  max-width: 1750px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -773,6 +779,22 @@ input, button { outline: none; }
   height: auto;
   display: block;
 }
+
+/* Image PNG (castle.png) — image noir-sur-blanc d'origine.
+   En dark theme on inverse les couleurs pour avoir blanc-sur-fond-sombre.
+   En light theme, image telle quelle (deja noire sur blanc). */
+.empty-decor img {
+  width: 100%;
+  max-width: 1400px;
+  height: auto;
+  display: block;
+  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(1.1);
+}
+:root[data-theme='light'] .empty-decor img { filter: none; }
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] .empty-decor img { filter: none; }
+}
+
 .empty-decor.hidden { display: none; }
 
 .spinner {
