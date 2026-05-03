@@ -1445,8 +1445,18 @@
       `;
     }
 
+    // Zone sensible : on garde la possibilite de desinstaller (honnetete +
+    // RGPD), mais cachee derriere un <details> pour ne pas pousser activement
+    // l'utilisateur a desinstaller. Meme pattern que "Supprimer mon compte"
+    // dans la modale Compte.
     const uninstallBtn = installed
-      ? `<button class="ghost-btn" id="uninstall-btn" style="margin-top:18px;color:var(--danger);border-color:var(--danger);">Désinstaller</button>`
+      ? `
+        <details class="account-section danger-zone" style="margin-top:18px;">
+          <summary class="danger-summary">Zone sensible</summary>
+          <p class="muted small" style="margin:8px 0 6px;">Désinstaller supprime le dossier d'installation local de ${escapeHtml(app.name)}. Ta licence reste valide — tu peux le réinstaller à tout moment.</p>
+          <button class="ghost-btn danger-btn" id="uninstall-btn" type="button">Désinstaller ${escapeHtml(app.name)}</button>
+        </details>
+      `
       : '';
 
     openModal({
