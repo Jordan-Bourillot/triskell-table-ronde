@@ -65,6 +65,26 @@ function removeInstall(productId) {
   writeJson('installs.json', all);
 }
 
+// ---------- Cache des licences (mode hors-ligne) ----------
+function getCachedLicenses() {
+  return readJson('licenses-cache.json', { licenses: [], cachedAt: 0 });
+}
+
+function setCachedLicenses(licenses) {
+  writeJson('licenses-cache.json', { licenses, cachedAt: Date.now() });
+}
+
+// ---------- Preferences (auto-launch, telemetrie, etc.) ----------
+function getPrefs() {
+  return readJson('prefs.json', {});
+}
+
+function setPref(key, value) {
+  const all = getPrefs();
+  all[key] = value;
+  writeJson('prefs.json', all);
+}
+
 module.exports = {
   init,
   getSession,
@@ -72,5 +92,9 @@ module.exports = {
   clearSession,
   getInstalls,
   setInstall,
-  removeInstall
+  removeInstall,
+  getCachedLicenses,
+  setCachedLicenses,
+  getPrefs,
+  setPref
 };

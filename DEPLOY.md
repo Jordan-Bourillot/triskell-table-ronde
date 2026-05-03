@@ -1,14 +1,14 @@
-# DEPLOY — Mise en production du Triskell Lanceur
+# DEPLOY — Mise en production de La Table Ronde
 
-Ce document liste **tout ce qu'il te reste à faire**, dans l'ordre, pour que le Lanceur tourne en prod.
+Ce document liste **tout ce qu'il te reste à faire**, dans l'ordre, pour que La Table Ronde tourne en prod.
 
 > **Ce qui est déjà fait** (par Claude Code, automatiquement) :
 > - ✅ Code complet (launcher + backend + landing)
 > - ✅ Repo Git local initialisé, premier commit fait
 > - ✅ Dépendances `npm install` faites pour `Lanceur/` et `backend/`
 > - ✅ **Sites Netlify créés** :
->   - `triskell-lanceur-app` → futur `app.triskell-studio.fr` (landing)
->   - `triskell-lanceur-api` → futur `api.triskell-studio.fr` (backend)
+>   - `triskell-table-ronde-app` → futur `app.triskell-studio.fr` (landing)
+>   - `triskell-table-ronde-api` → futur `api.triskell-studio.fr` (backend)
 > - ✅ Dossiers locaux **liés** aux sites Netlify (via `netlify link`)
 > - ✅ **8 variables d'env** déjà configurées sur le site backend
 > - ✅ **2 variables** ajoutées au site Suite des Héros (pour appeler le backend après chaque achat)
@@ -21,7 +21,7 @@ Ce document liste **tout ce qu'il te reste à faire**, dans l'ordre, pour que le
 
 1. Va sur https://supabase.com → Sign up ou Sign in
 2. **New project** :
-   - Name : `triskell-lanceur`
+   - Name : `triskell-table-ronde`
    - Database password : génère-en un et **note-le** (pas critique, on n'en a pas besoin avec la service key)
    - Region : `Europe (Frankfurt)`
    - Plan : **Free**
@@ -34,7 +34,7 @@ Ce document liste **tout ce qu'il te reste à faire**, dans l'ordre, pour que le
 ## Étape 2 — Ajouter les 3 variables qui restent à Netlify backend (~2 min)
 
 ```bash
-# Depuis le dossier backend/ (deja link to triskell-lanceur-api)
+# Depuis le dossier backend/ (deja link to triskell-table-ronde-api)
 cd "C:/Users/jorda/OneDrive/Bureau/Triskell Studio/Triskell 0 - Lanceur/backend"
 
 netlify env:set SUPABASE_URL "https://TON-PROJET.supabase.co"
@@ -51,10 +51,10 @@ cd "C:/Users/jorda/OneDrive/Bureau/Triskell Studio/Triskell 0 - Lanceur/backend"
 netlify deploy --prod
 ```
 
-Tu dois voir une URL de prod genre `https://triskell-lanceur-api.netlify.app`. Test rapide :
+Tu dois voir une URL de prod genre `https://triskell-table-ronde-api.netlify.app`. Test rapide :
 
 ```bash
-curl -X POST https://triskell-lanceur-api.netlify.app/api/login \
+curl -X POST https://triskell-table-ronde-api.netlify.app/api/login \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"toi@triskell-studio.fr\"}"
 # Doit renvoyer: {"ok":true,"expiresIn":900}
@@ -67,14 +67,14 @@ Chez ton registrar (Gandi / OVH / Cloudflare / etc.), ajoute **2 CNAME** sur `tr
 
 | Sous-domaine | Type   | Valeur                                  |
 |--------------|--------|-----------------------------------------|
-| `api`        | CNAME  | `triskell-lanceur-api.netlify.app`      |
-| `app`        | CNAME  | `triskell-lanceur-app.netlify.app`      |
+| `api`        | CNAME  | `triskell-table-ronde-api.netlify.app`      |
+| `app`        | CNAME  | `triskell-table-ronde-app.netlify.app`      |
 
 La propagation DNS prend de 5 minutes à 1 heure.
 
 ## Étape 5 — Connecter les domaines custom à Netlify (~3 min)
 
-Pour chaque site (`triskell-lanceur-api` et `triskell-lanceur-app`) :
+Pour chaque site (`triskell-table-ronde-api` et `triskell-table-ronde-app`) :
 
 1. Netlify Dashboard → ton site → **Domain settings**
 2. **Add custom domain** → tape `api.triskell-studio.fr` (resp. `app.triskell-studio.fr`)
@@ -83,7 +83,7 @@ Pour chaque site (`triskell-lanceur-api` et `triskell-lanceur-app`) :
 ## Étape 6 — Pousser le repo sur GitHub (~5 min)
 
 1. Va sur https://github.com/new
-2. Repository name : `triskell-lanceur`
+2. Repository name : `triskell-table-ronde`
 3. Visibility : **Private** (mieux pour V1, tu peux le passer en public après)
 4. **Ne coche pas** "Add README" (on en a déjà un)
 5. Crée le repo
@@ -92,7 +92,7 @@ Puis depuis le dossier local :
 
 ```bash
 cd "C:/Users/jorda/OneDrive/Bureau/Triskell Studio/Triskell 0 - Lanceur"
-git remote add origin https://github.com/Jordan-Bourillot/triskell-lanceur.git
+git remote add origin https://github.com/Jordan-Bourillot/triskell-table-ronde.git
 git branch -M main
 git push -u origin main
 ```
@@ -109,7 +109,7 @@ git push origin v0.1.0
 ```
 
 Puis :
-1. Va sur https://github.com/Jordan-Bourillot/triskell-lanceur/actions
+1. Va sur https://github.com/Jordan-Bourillot/triskell-table-ronde/actions
 2. Tu vois le workflow "Release Triskell Lanceur" tourner (~10-15 minutes)
 3. Une fois fini, va dans **Releases** → tu dois voir `v0.1.0` avec le `Triskell Lanceur Setup 0.1.0.exe` attaché
 

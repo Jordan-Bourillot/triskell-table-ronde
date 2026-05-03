@@ -9,13 +9,16 @@
   // ============================================================================
   const state = {
     apps: [],
-    categories: [],
+    bundles: [],
     licenses: {},      // { productKey: true }
     installs: {},      // { productId: { installPath, mainExe, version } }
+    versions: {},      // { productId: latestVersion } depuis apps.json
     user: null,
-    activeCategory: 'all',
-    query: '',
-    installing: new Set()   // ids des produits en cours d'install
+    installing: new Set(),
+    updateInfo: '',
+    promoNote: '',
+    offline: false,    // true si licences viennent du cache
+    prefs: { autoLaunch: false, telemetry: false, lastUsed: [] }
   };
 
   const $ = (id) => document.getElementById(id);
@@ -36,8 +39,6 @@
     // app
     appScreen:    $('app-screen'),
     grid:         $('grid'),
-    search:       $('search-input'),
-    cats:         $('categories'),
     title:        $('main-title'),
     count:        $('main-count'),
     empty:        $('empty-state'),
@@ -57,7 +58,9 @@
     installStep:     $('install-step'),
     installProgress: $('install-progress'),
     installDetail:   $('install-detail'),
-    installCancel:   $('install-cancel')
+    installCancel:   $('install-cancel'),
+    // toasts
+    toasts:          $('toasts')
   };
 
   // ============================================================================
@@ -68,6 +71,8 @@
   async function init() {
     bindModal();
     bindInstallProgress();
+    bindUpdateStatus();
+    bindPurchaseCompleted();
 
     const meta = await window.triskell.getMeta();
     els.loginVersion.textContent = `Triskell Studio · v${meta.version}`;
@@ -207,12 +212,21 @@
       return;
     }
     state.apps = cat.apps || [];
-    state.categories = cat.categories || [];
+    state.bundles = cat.bundles || [];
+    state.promoNote = cat.promoNote || '';
+    state.versions = (cat.apps || []).reduce((acc, a) => {
+      if (a.latestVersion) acc[a.id] = a.latestVersion;
+      return acc;
+    }, {});
 
-    const [licRes, installs] = await Promise.all([
+    const [licRes, installs, prefs, versions] = await Promise.all([
       window.triskell.licenses.fetch(),
-      window.triskell.installs.list()
+      window.triskell.installs.list(),
+      window.triskell.prefs ? window.triskell.prefs.get() : Promise.resolve({}),
+      window.triskell.versions ? window.triskell.versions.fetch() : Promise.resolve({})
     ]);
+    state.prefs = { autoLaunch: false, telemetry: false, lastUsed: [], ...prefs };
+    state.versions = { ...state.versions, ...(versions || {}) };
 
     if (!licRes.ok && licRes.error === 'session-expired') {
       state.user = null;
@@ -224,13 +238,13 @@
     if (licRes.ok && Array.isArray(licRes.licenses)) {
       for (const l of licRes.licenses) state.licenses[l.product_key] = true;
     }
+    state.offline = !!(licRes && licRes.fromCache);
     state.installs = installs || {};
 
     els.accountEmail.textContent = state.user.email;
     els.accountBtn.title = state.user.email;
 
     bindHeader();
-    renderCategories();
     render();
     els.loading.classList.add('hidden');
   }
@@ -242,21 +256,38 @@
   function bindHeader() {
     if (headerBound) return;
     headerBound = true;
-
-    els.search.addEventListener('input', (e) => {
-      state.query = e.target.value.trim().toLowerCase();
-      render();
-    });
-
     els.accountBtn.addEventListener('click', openAccountMenu);
   }
 
   function openAccountMenu() {
+    const updateLine = state.updateInfo
+      ? `<p class="muted small" id="update-line">${escapeHtml(state.updateInfo)}</p>`
+      : `<p class="muted small" id="update-line"></p>`;
+
+    const autoLaunch = !!state.prefs.autoLaunch;
+    const telemetry = !!state.prefs.telemetry;
+
     openModal({
       title: 'Mon compte Triskell',
       bodyHtml: `
         <p class="muted">Connecté avec <strong style="color:var(--accent)">${escapeHtml(state.user.email)}</strong></p>
         <p class="muted">Tu possèdes <strong>${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
+
+        <div class="account-section">
+          <label class="pref-row">
+            <span><strong>Lancer au démarrage de Windows</strong><br><span class="muted small">Triskell s'ouvre automatiquement quand tu allumes ton PC.</span></span>
+            <input type="checkbox" id="pref-auto-launch" ${autoLaunch ? 'checked' : ''}>
+          </label>
+          <label class="pref-row">
+            <span><strong>Statistiques anonymes</strong><br><span class="muted small">Aide Triskell à savoir ce qui est utilisé. Aucune donnée perso, aucun tracker.</span></span>
+            <input type="checkbox" id="pref-telemetry" ${telemetry ? 'checked' : ''}>
+          </label>
+        </div>
+
+        <div class="account-section">
+          <button class="ghost-btn" id="check-updates-btn" type="button">Vérifier les mises à jour</button>
+          ${updateLine}
+        </div>
       `,
       ctaLabel: 'Me déconnecter',
       ctaKind: 'danger',
@@ -268,64 +299,251 @@
         showLogin();
       }
     });
-  }
 
-  // ============================================================================
-  // SIDEBAR
-  // ============================================================================
-  function renderCategories() {
-    els.cats.innerHTML = '';
-    for (const cat of state.categories) {
-      const count = cat.id === 'all'
-        ? state.apps.length
-        : state.apps.filter(a => a.category === cat.id).length;
-
-      const btn = document.createElement('button');
-      btn.className = 'cat-btn' + (cat.id === state.activeCategory ? ' active' : '');
-      btn.dataset.cat = cat.id;
-      btn.innerHTML = `<span>${escapeHtml(cat.label)}</span><span class="cat-count">${count}</span>`;
-      btn.addEventListener('click', () => {
-        state.activeCategory = cat.id;
-        document.querySelectorAll('.cat-btn').forEach(b =>
-          b.classList.toggle('active', b.dataset.cat === cat.id));
-        render();
+    const btn = document.getElementById('check-updates-btn');
+    const line = document.getElementById('update-line');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        line.textContent = 'Recherche...';
+        const r = await window.triskell.updates.check();
+        if (!r.ok) {
+          line.textContent = r.error === 'dev-mode'
+            ? 'Auto-update actif uniquement sur version installee.'
+            : 'Erreur lors de la verification.';
+          btn.disabled = false;
+        }
       });
-      els.cats.appendChild(btn);
     }
+
+    const al = document.getElementById('pref-auto-launch');
+    if (al) al.addEventListener('change', async (e) => {
+      const r = await window.triskell.prefs.setAutoLaunch(e.target.checked);
+      if (r && r.ok) state.prefs.autoLaunch = !!r.openAtLogin;
+      else e.target.checked = state.prefs.autoLaunch;
+    });
+
+    const tl = document.getElementById('pref-telemetry');
+    if (tl) tl.addEventListener('change', async (e) => {
+      await window.triskell.prefs.setTelemetry(e.target.checked);
+      state.prefs.telemetry = e.target.checked;
+    });
+  }
+
+  // Quand un achat in-app aboutit (page success Stripe atteinte) on rafraichit
+  // les licences pour que la tuile passe de "Acheter" a "Installer".
+  function bindPurchaseCompleted() {
+    if (!window.triskell.purchase) return;
+    window.triskell.purchase.onCompleted(async (data) => {
+      showToast({
+        kind: 'success',
+        title: 'Achat confirmé',
+        message: 'Ta licence est en cours d\'activation...'
+      });
+      // Stripe webhook -> backend register-license -> notre /api/me. On laisse
+      // 2s au backend pour rattraper avant le refresh.
+      setTimeout(async () => {
+        const r = await window.triskell.licenses.fetch();
+        if (r && r.ok) {
+          state.licenses = {};
+          for (const l of (r.licenses || [])) state.licenses[l.product_key] = true;
+          render();
+          showToast({
+            kind: 'success',
+            title: 'Licence activée',
+            message: 'Tu peux installer ton produit maintenant.'
+          });
+        }
+      }, 2200);
+    });
+  }
+
+  function bindUpdateStatus() {
+    if (!window.triskell.updates) return;
+    window.triskell.updates.onStatus((data) => {
+      let msg = '';
+      switch (data.phase) {
+        case 'available':   msg = `Version ${data.version} disponible. Telechargement...`; break;
+        case 'downloading': msg = `Telechargement... ${Math.round(data.percent || 0)}%`; break;
+        case 'up-to-date':  msg = 'Tu es a jour.'; break;
+        case 'ready':       msg = `Version ${data.version} prete a installer.`; break;
+        case 'error':       msg = `Erreur: ${data.message || ''}`; break;
+      }
+      state.updateInfo = msg;
+      const line = document.getElementById('update-line');
+      if (line) line.textContent = msg;
+    });
   }
 
   // ============================================================================
-  // GRID
+  // GRID + BANNERS + SEARCH
   // ============================================================================
   function render() {
-    const filtered = filterApps();
-    const cat = state.categories.find(c => c.id === state.activeCategory);
-    els.title.textContent = cat
-      ? (cat.id === 'all' ? 'Tous tes outils' : cat.label)
-      : 'Outils';
-    els.count.textContent = `${filtered.length} outil${filtered.length > 1 ? 's' : ''}`;
+    const apps = filteredApps();
+    els.count.textContent = `${apps.length} outil${apps.length > 1 ? 's' : ''}`;
+
+    renderHomeBanner();
+    renderOfflineBadge();
+    renderSearchBar();
+    renderBundles();
 
     els.grid.innerHTML = '';
-    if (filtered.length === 0) {
+    if (apps.length === 0) {
       els.empty.classList.remove('hidden');
       return;
     }
     els.empty.classList.add('hidden');
 
     const frag = document.createDocumentFragment();
-    for (const app of filtered) frag.appendChild(buildTile(app));
+    for (const app of apps) frag.appendChild(buildTile(app));
     els.grid.appendChild(frag);
   }
 
-  function filterApps() {
-    return state.apps.filter(app => {
-      if (state.activeCategory !== 'all' && app.category !== state.activeCategory) return false;
-      if (state.query) {
-        const hay = (app.name + ' ' + (app.tagline || '')).toLowerCase();
-        if (!hay.includes(state.query)) return false;
-      }
-      return true;
+  function filteredApps() {
+    const q = (state.searchQuery || '').toLowerCase();
+    if (!q) return state.apps;
+    return state.apps.filter(a => {
+      const hay = (a.name + ' ' + (a.tagline || '')).toLowerCase();
+      return hay.includes(q);
     });
+  }
+
+  // Bandeau personnalisé en haut : salutation + compte rendu + raccourcis derniers utilisés.
+  function renderHomeBanner() {
+    const main = document.querySelector('.main');
+    let host = document.getElementById('home-banner');
+    if (!host) {
+      host = document.createElement('section');
+      host.id = 'home-banner';
+      host.className = 'home-banner';
+      main.insertBefore(host, main.children[1] || null);
+    }
+    const installedCount = Object.keys(state.installs).length;
+    const ownedCount = Object.keys(state.licenses).length;
+    const firstName = (state.user.email || '').split('@')[0].split('.')[0]
+      .replace(/[^a-zA-ZÀ-ÿ]/g, '');
+    const hello = firstName ? `Salut ${firstName.charAt(0).toUpperCase() + firstName.slice(1)}` : 'Salut';
+
+    const lastUsed = (state.prefs.lastUsed || [])
+      .map(id => state.apps.find(a => a.id === id))
+      .filter(a => a && state.installs[a.id])
+      .slice(0, 4);
+
+    const lastUsedHtml = lastUsed.length
+      ? `<div class="banner-shortcuts">
+          <span class="muted small">Récents :</span>
+          ${lastUsed.map(a => `<button class="banner-shortcut" data-id="${a.id}">${escapeHtml(a.name)}</button>`).join('')}
+        </div>`
+      : '';
+
+    host.innerHTML = `
+      <div class="banner-text">
+        <h2>${escapeHtml(hello)} 👋</h2>
+        <p class="muted small">${ownedCount} licence${ownedCount > 1 ? 's' : ''} · ${installedCount} outil${installedCount > 1 ? 's' : ''} installé${installedCount > 1 ? 's' : ''}.</p>
+      </div>
+      ${lastUsedHtml}
+    `;
+    host.querySelectorAll('.banner-shortcut').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const a = state.apps.find(x => x.id === btn.dataset.id);
+        if (a) onLaunch(a);
+      });
+    });
+  }
+
+  function renderOfflineBadge() {
+    const main = document.querySelector('.main');
+    let host = document.getElementById('offline-badge');
+    if (!state.offline) { if (host) host.remove(); return; }
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'offline-badge';
+      host.className = 'offline-badge';
+      main.insertBefore(host, main.children[2] || null);
+    }
+    host.innerHTML = `<span>📡</span> Mode hors-ligne — licences chargées depuis le cache local.`;
+  }
+
+  // Affiche la barre de recherche uniquement quand le catalogue depasse 6 produits.
+  function renderSearchBar() {
+    const main = document.querySelector('.main');
+    let host = document.getElementById('main-search');
+    const shouldShow = state.apps.length >= 6;
+    if (!shouldShow) { if (host) host.remove(); return; }
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'main-search';
+      host.className = 'main-search';
+      host.innerHTML = `<input type="search" id="search-input" placeholder="Rechercher un outil..." autocomplete="off" />`;
+      const grid = document.getElementById('grid');
+      main.insertBefore(host, grid);
+      host.querySelector('#search-input').addEventListener('input', (e) => {
+        state.searchQuery = e.target.value.trim();
+        render();
+      });
+    }
+  }
+
+  // Bundles : cartes pleine-largeur au-dessus de la grille produit.
+  function renderBundles() {
+    const host = document.getElementById('bundles-section')
+      || (() => {
+        const el = document.createElement('section');
+        el.id = 'bundles-section';
+        el.className = 'bundles';
+        const main = document.querySelector('.main');
+        main.insertBefore(el, document.getElementById('grid'));
+        return el;
+      })();
+
+    host.innerHTML = '';
+    const bundles = (state.bundles || []).filter(b => {
+      // masque le bundle si tous les produits inclus sont deja possedes
+      const owned = (b.apps || []).every(id => state.licenses[id]);
+      return !owned;
+    });
+    if (bundles.length === 0) return;
+
+    for (const b of bundles) {
+      const card = document.createElement('article');
+      card.className = 'bundle-card' + (b.comingSoon ? ' bundle-soon' : '');
+      const original = b.priceOriginal && b.priceOriginal > b.price
+        ? `<span class="price-old">${b.priceOriginal} €</span>` : '';
+      const note = b.priceNote ? `<p class="bundle-note">${escapeHtml(b.priceNote)}</p>` : '';
+      card.innerHTML = `
+        <div class="bundle-icon"></div>
+        <div class="bundle-body">
+          <div class="bundle-tags">
+            <span class="tag tag-suite">Bundle</span>
+            ${b.comingSoon ? '<span class="tag tag-soon">En quête</span>' : ''}
+          </div>
+          <h3 class="bundle-title">${escapeHtml(b.name)}</h3>
+          <p class="bundle-tagline">${escapeHtml(b.tagline || '')}</p>
+          <div class="bundle-price">
+            <span class="price-current">${b.price} €</span>
+            ${original}
+          </div>
+          ${note}
+        </div>
+        <div class="bundle-actions"></div>
+      `;
+      if (b.icon) {
+        const iconBox = card.querySelector('.bundle-icon');
+        const img = document.createElement('img');
+        img.alt = '';
+        img.src = b.icon;
+        iconBox.appendChild(img);
+      }
+      const actions = card.querySelector('.bundle-actions');
+      if (b.comingSoon || !b.buyUrl) {
+        const btn = makeBtn('Bientôt', 'btn-disabled', null, true);
+        actions.appendChild(btn);
+      } else {
+        actions.appendChild(makeBtn('Recruter le bundle', 'btn-buy',
+          () => window.triskell.openExternal(b.buyUrl)));
+      }
+      host.appendChild(card);
+    }
   }
 
   // Determine l'etat affiche d'un produit, et donc les actions disponibles.
@@ -334,7 +552,12 @@
     if (state.installing.has(app.id)) return 'installing';
     const installed = !!state.installs[app.id];
     const owned = app.tier === 'free' || !!state.licenses[app.id];
-    if (installed) return 'installed';
+    if (installed) {
+      const localVer = state.installs[app.id].version;
+      const latest = state.versions[app.id];
+      if (latest && localVer && latest !== localVer) return 'update-available';
+      return 'installed';
+    }
     if (owned) return 'owned-not-installed';
     return 'not-owned';
   }
@@ -349,9 +572,13 @@
 
     const tags = [];
     if (app.tier === 'free')                                     tags.push('<span class="tag tag-free">Gratuit</span>');
-    if (state.licenses[app.id])                                  tags.push('<span class="tag tag-owned">Possédé</span>');
-    if (app.comingSoon)                                          tags.push('<span class="tag tag-soon">Bientôt</span>');
-    if (state.installs[app.id] && !app.comingSoon)               tags.push('<span class="tag tag-installed">Installé</span>');
+    if (state.licenses[app.id])                                  tags.push('<span class="tag tag-owned">Adoubé</span>');
+    if (app.comingSoon)                                          tags.push('<span class="tag tag-soon">En quête</span>');
+    if (state.installs[app.id] && !app.comingSoon)               tags.push('<span class="tag tag-installed">À ta Table</span>');
+    if (tileStateOf(app) === 'update-available')                 tags.push('<span class="tag tag-update">Mise à jour</span>');
+
+    const ownedAlready = state.licenses[app.id];
+    const priceHtml = renderPriceBlock(app, ownedAlready);
 
     tile.innerHTML = `
       <div class="tile-head">
@@ -362,8 +589,21 @@
         </div>
       </div>
       <div class="tile-tags">${tags.join('')}</div>
+      ${priceHtml}
       <div class="tile-actions"></div>
     `;
+
+    if (app.icon) {
+      const iconBox = tile.querySelector('.tile-icon');
+      const img = document.createElement('img');
+      img.alt = '';
+      img.addEventListener('error', () => {
+        iconBox.textContent = initials;
+      });
+      img.src = app.icon;
+      iconBox.textContent = '';
+      iconBox.appendChild(img);
+    }
 
     const actions = tile.querySelector('.tile-actions');
     renderTileActions(actions, app, tileState);
@@ -374,7 +614,7 @@
     host.innerHTML = '';
     switch (tileState) {
       case 'coming-soon': {
-        host.appendChild(makeBtn('Bientôt disponible', 'btn-disabled', null, true));
+        host.appendChild(makeBtn('En quête...', 'btn-disabled', null, true));
         break;
       }
       case 'installing': {
@@ -382,8 +622,13 @@
         break;
       }
       case 'installed': {
-        host.appendChild(makeBtn('Lancer', 'btn-launch', () => onLaunch(app)));
+        host.appendChild(makeBtn('Convoquer', 'btn-launch', () => onLaunch(app)));
         host.appendChild(makeBtn('Infos', 'btn-info', () => onInfo(app)));
+        break;
+      }
+      case 'update-available': {
+        host.appendChild(makeBtn('Mettre à jour', 'btn-launch', () => onInstall(app)));
+        host.appendChild(makeBtn('Convoquer', 'btn-info', () => onLaunch(app)));
         break;
       }
       case 'owned-not-installed': {
@@ -394,8 +639,8 @@
       case 'not-owned':
       default: {
         if (app.buyUrl) {
-          host.appendChild(makeBtn('Acheter', 'btn-buy',
-            () => window.triskell.openExternal(app.buyUrl)));
+          host.appendChild(makeBtn('Recruter', 'btn-buy',
+            () => onBuy(app)));
         } else {
           host.appendChild(makeBtn('Bientôt en vente', 'btn-disabled', null, true));
         }
@@ -403,6 +648,32 @@
         break;
       }
     }
+  }
+
+  // Achat in-app : ouvre une fenetre Electron sur le checkout Stripe. Quand le
+  // user revient sur /success, on ferme et on rafraichit ses licences.
+  function onBuy(app) {
+    if (!app.buyUrl) return;
+    window.triskell.purchase.open(app.buyUrl, app.id);
+  }
+
+  // Bloc prix d'une tuile : barre l'ancien prix s'il y a une promo, masque tout
+  // si le user possede deja le produit ou que c'est gratuit.
+  function renderPriceBlock(app, ownedAlready) {
+    if (ownedAlready) return '';
+    if (app.tier === 'free') return '';
+    if (!app.price) return '';
+    const original = app.priceOriginal && app.priceOriginal > app.price
+      ? `<span class="price-old">${app.priceOriginal} €</span>` : '';
+    const note = app.priceNote
+      ? `<span class="price-note">${escapeHtml(app.priceNote)}</span>` : '';
+    return `
+      <div class="price-block">
+        <span class="price-current">${app.price} €</span>
+        ${original}
+        ${note}
+      </div>
+    `;
   }
 
   function makeBtn(label, klass, handler, disabled = false) {
@@ -418,12 +689,84 @@
   // ACTIONS
   // ============================================================================
   async function onLaunch(app) {
+    // Si le produit a plusieurs outils (Suite des Heros), on affiche un sous-menu
+    // au lieu d'ouvrir le dossier d'install.
+    if (Array.isArray(app.tools) && app.tools.length > 0) {
+      if (!state.installs[app.id]) {
+        showToast({ kind: 'error', title: 'Pas encore installé', message: 'Installe d\'abord ' + app.name });
+        return;
+      }
+      openToolPicker(app);
+      return;
+    }
     const res = await window.triskell.launch.product(app.id);
     if (!res.ok) {
-      openModal({
+      showToast({
+        kind: 'error',
         title: 'Lancement impossible',
-        body: humanizeLaunchError(res),
-        ctaLabel: 'OK'
+        message: humanizeLaunchError(res),
+        timeout: 9000
+      });
+      return;
+    }
+    if (window.triskell.prefs) window.triskell.prefs.setLastUsed(app.id).then(r => {
+      if (r && r.lastUsed) state.prefs.lastUsed = r.lastUsed;
+    });
+  }
+
+  function openToolPicker(app) {
+    const tools = app.tools.map(t => `
+      <button class="tool-pick" data-tool="${t.id}">
+        <strong>${escapeHtml(t.name)}</strong>
+        <span class="muted small">${escapeHtml(t.tagline)}</span>
+      </button>
+    `).join('');
+
+    openModal({
+      title: `Lancer un outil de ${app.name}`,
+      bodyHtml: `<div class="tool-picker">${tools}</div>`,
+      ctaLabel: 'Fermer',
+      onCta: closeModal
+    });
+
+    document.querySelectorAll('.tool-pick').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const toolId = btn.dataset.tool;
+        closeModal();
+        const res = await window.triskell.launch.tool(app.id, toolId);
+        if (!res.ok) {
+          showToast({
+            kind: 'error',
+            title: 'Lancement impossible',
+            message: humanizeLaunchError(res),
+            timeout: 9000
+          });
+        } else if (window.triskell.prefs) {
+          window.triskell.prefs.setLastUsed(app.id).then(r => {
+            if (r && r.lastUsed) state.prefs.lastUsed = r.lastUsed;
+          });
+        }
+      });
+    });
+  }
+
+  async function onUninstall(app) {
+    const res = await window.triskell.install.uninstall(app.id);
+    closeModal();
+    if (res.ok) {
+      delete state.installs[app.id];
+      render();
+      showToast({
+        kind: 'success',
+        title: `${app.name} désinstallé`,
+        message: 'Tu peux le réinstaller à tout moment.'
+      });
+    } else {
+      showToast({
+        kind: 'error',
+        title: 'Désinstallation échouée',
+        message: res.message || 'Erreur inconnue',
+        timeout: 9000
       });
     }
   }
@@ -436,6 +779,7 @@
     const res = await window.triskell.install.start(app.id);
 
     state.installing.delete(app.id);
+    hideInstallModal();
 
     if (res.ok) {
       state.installs[app.id] = {
@@ -443,20 +787,21 @@
         mainExe: res.mainExe,
         version: res.version
       };
-      hideInstallModal();
       render();
-      openModal({
+      showToast({
+        kind: 'success',
         title: `${app.name} installé`,
-        body: `Tu peux maintenant lancer ${app.name} depuis ta grille.`,
-        ctaLabel: 'Super'
+        message: 'Tu peux le lancer maintenant.',
+        actionLabel: 'Lancer',
+        onAction: () => onLaunch(app)
       });
     } else {
-      hideInstallModal();
       render();
-      openModal({
+      showToast({
+        kind: 'error',
         title: 'Installation échouée',
-        body: humanizeInstallError(res),
-        ctaLabel: 'Fermer'
+        message: humanizeInstallError(res),
+        timeout: 9000
       });
     }
   }
@@ -477,14 +822,41 @@
       `;
     }
 
+    let priceHtml = '';
+    if (!owned && app.price) {
+      const original = app.priceOriginal && app.priceOriginal > app.price
+        ? `<span class="price-old">${app.priceOriginal} €</span>` : '';
+      priceHtml = `
+        <div class="price-block" style="margin-top:14px;">
+          <span class="price-current">${app.price} €</span>
+          ${original}
+          ${app.priceNote ? `<span class="price-note">${escapeHtml(app.priceNote)}</span>` : ''}
+        </div>
+        ${state.promoNote ? `<p class="muted small" style="margin-top:6px;">🎟️ ${escapeHtml(state.promoNote)}</p>` : ''}
+      `;
+    }
+
+    const uninstallBtn = installed
+      ? `<button class="ghost-btn" id="uninstall-btn" style="margin-top:14px;color:var(--danger);border-color:var(--danger);">Désinstaller</button>`
+      : '';
+
     openModal({
       title: app.name,
       bodyHtml: `
         <p class="muted">${escapeHtml(app.tagline || '')}</p>
         <p class="muted small">Statut : ${owned ? '<strong style="color:var(--green)">possédé</strong>' : 'non acquis'}${installed ? ' · installé' : ''}</p>
+        ${priceHtml}
         ${toolsHtml}
+        ${uninstallBtn}
       `,
       ctaLabel: 'OK'
+    });
+
+    const ub = document.getElementById('uninstall-btn');
+    if (ub) ub.addEventListener('click', () => {
+      if (confirm(`Vraiment désinstaller ${app.name} ? Le dossier d'installation sera supprimé.`)) {
+        onUninstall(app);
+      }
     });
   }
 
@@ -560,6 +932,53 @@
 
   function hideInstallModal() {
     els.installModal.classList.add('hidden');
+  }
+
+  // ============================================================================
+  // TOASTS (notifications non-bloquantes)
+  // ============================================================================
+  function showToast({ kind = 'info', title, message, actionLabel, onAction, timeout = 6000 }) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${kind}`;
+
+    const iconChar = kind === 'success' ? '✓' : kind === 'error' ? '!' : 'i';
+    toast.innerHTML = `
+      <div class="toast-icon" aria-hidden="true">${iconChar}</div>
+      <div class="toast-body">
+        ${title ? `<p class="toast-title">${escapeHtml(title)}</p>` : ''}
+        ${message ? `<p class="toast-message">${escapeHtml(message)}</p>` : ''}
+      </div>
+    `;
+
+    if (actionLabel && onAction) {
+      const btn = document.createElement('button');
+      btn.className = 'toast-action';
+      btn.textContent = actionLabel;
+      btn.addEventListener('click', () => {
+        onAction();
+        dismiss();
+      });
+      toast.appendChild(btn);
+    }
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.setAttribute('aria-label', 'Fermer');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.addEventListener('click', dismiss);
+    toast.appendChild(closeBtn);
+
+    els.toasts.appendChild(toast);
+
+    let timer = setTimeout(dismiss, timeout);
+    toast.addEventListener('mouseenter', () => clearTimeout(timer));
+    toast.addEventListener('mouseleave', () => { timer = setTimeout(dismiss, 2500); });
+
+    function dismiss() {
+      if (!toast.isConnected) return;
+      toast.classList.add('toast-out');
+      setTimeout(() => toast.remove(), 200);
+    }
   }
 
   // ============================================================================

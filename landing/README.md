@@ -1,6 +1,6 @@
 # Landing app.triskell-studio.fr
 
-Page statique qui présente le **Triskell Lanceur** et propose son téléchargement.
+Page statique qui présente **La Table Ronde** (le hub Triskell Studio) et propose son téléchargement.
 
 ## Stack
 

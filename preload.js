@@ -27,14 +27,38 @@ contextBridge.exposeInMainWorld('triskell', {
     list: () => ipcRenderer.invoke('installs:list')
   },
 
+  // Versions a jour de chaque produit (depuis le backend, pour detecter MAJ)
+  versions: {
+    fetch: () => ipcRenderer.invoke('versions:fetch')
+  },
+
   // Telechargement + install d'un produit
   install: {
     start:      (productId) => ipcRenderer.invoke('install:start', productId),
+    uninstall:  (productId) => ipcRenderer.invoke('install:uninstall', productId),
     onProgress: (cb) => {
       const handler = (_evt, data) => cb(data);
       ipcRenderer.on('install:progress', handler);
       return () => ipcRenderer.removeListener('install:progress', handler);
     }
+  },
+
+  // Achat in-app (Stripe Checkout dans une fenetre Electron, retour licence auto)
+  purchase: {
+    open: (url, productId) => ipcRenderer.invoke('purchase:open', { url, productId }),
+    onCompleted: (cb) => {
+      const handler = (_evt, data) => cb(data);
+      ipcRenderer.on('purchase:completed', handler);
+      return () => ipcRenderer.removeListener('purchase:completed', handler);
+    }
+  },
+
+  // Preferences (auto-launch, telemetrie...)
+  prefs: {
+    get:           ()        => ipcRenderer.invoke('prefs:get'),
+    setAutoLaunch: (enabled) => ipcRenderer.invoke('prefs:set-auto-launch', enabled),
+    setTelemetry:  (enabled) => ipcRenderer.invoke('prefs:set-telemetry', enabled),
+    setLastUsed:   (productId) => ipcRenderer.invoke('prefs:set-last-used', productId)
   },
 
   // Lancement d'un produit installe
@@ -44,5 +68,16 @@ contextBridge.exposeInMainWorld('triskell', {
   },
 
   // Liens externes (acheter, CGU, etc.)
-  openExternal: (url) => ipcRenderer.invoke('triskell:open-external', url)
+  openExternal: (url) => ipcRenderer.invoke('triskell:open-external', url),
+
+  // Auto-update du Lanceur lui-meme (electron-updater + GitHub Releases).
+  updates: {
+    check:       ()    => ipcRenderer.invoke('updates:check'),
+    installNow:  ()    => ipcRenderer.invoke('updates:install'),
+    onStatus: (cb) => {
+      const handler = (_evt, data) => cb(data);
+      ipcRenderer.on('updates:status', handler);
+      return () => ipcRenderer.removeListener('updates:status', handler);
+    }
+  }
 });

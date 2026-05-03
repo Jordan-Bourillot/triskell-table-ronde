@@ -3,7 +3,7 @@
 'use strict';
 
 (function () {
-  const REPO = 'Jordan-Bourillot/triskell-lanceur';
+  const REPO = 'Jordan-Bourillot/triskell-table-ronde';
   const btn = document.getElementById('download-btn');
   const meta = document.getElementById('download-meta');
   if (!btn) return;

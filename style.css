@@ -1,26 +1,35 @@
-/* Triskell Lanceur - sombre, accent or/bronze, triskele */
+/* Triskell Lanceur - palette officielle Triskell Studio (indigo + violet + orange sur fond nuit) */
 
 :root {
-  --bg: #0d0f12;
-  --bg-2: #14171c;
-  --bg-3: #1b1f26;
-  --bg-card: #161a20;
-  --bg-card-hover: #1d222a;
-  --border: #262b34;
-  --border-strong: #353c48;
-  --text: #e9e6df;
-  --text-dim: #9aa0ab;
-  --text-muted: #6b7280;
-  --accent: #c9a961;
-  --accent-hot: #e0bd6f;
-  --accent-shadow: rgba(201, 169, 97, 0.18);
-  --green: #6db285;
-  --blue: #6ea3d6;
-  --purple: #a98cd1;
-  --danger: #d76b6b;
+  --bg: #0f1218;
+  --bg-2: #161a23;
+  --bg-3: #1d222e;
+  --bg-card: #181c27;
+  --bg-card-hover: #20253092;
+  --border: #262c39;
+  --border-strong: #353c4d;
+  --text: #ecebf5;
+  --text-dim: #9da3b3;
+  --text-muted: #6b7180;
+
+  /* Triskell : indigo (pale haute), violet (pale droite), orange (pale gauche) */
+  --triskell-indigo: #6366f1;
+  --triskell-violet: #a78bfa;
+  --triskell-orange: #f97316;
+
+  --accent: #7c7fe9;          /* indigo principal pour CTA */
+  --accent-hot: #9396f0;
+  --accent-shadow: rgba(124, 127, 233, 0.22);
+
+  --green: #4ade80;
+  --blue: var(--triskell-indigo);
+  --purple: var(--triskell-violet);
+  --orange: var(--triskell-orange);
+  --danger: #ef4444;
+
   --radius: 10px;
   --radius-sm: 6px;
-  --shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -55,12 +64,12 @@ input, button { outline: none; }
 
 /* HEADER */
 .header {
-  display: grid;
-  grid-template-columns: 280px 1fr auto;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   padding: 0 18px;
-  background: linear-gradient(180deg, #11141a 0%, #0d0f12 100%);
+  background: linear-gradient(180deg, #11141a 0%, #0f1218 100%);
   border-bottom: 1px solid var(--border);
 }
 
@@ -74,6 +83,7 @@ input, button { outline: none; }
   width: 36px;
   height: 36px;
   object-fit: contain;
+  border-radius: 8px;
   filter: drop-shadow(0 0 8px var(--accent-shadow));
 }
 
@@ -90,39 +100,6 @@ input, button { outline: none; }
 }
 .brand-name { font-weight: 700; letter-spacing: 0.5px; color: var(--text); }
 .brand-sub  { font-size: 11px; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; }
-
-.search {
-  position: relative;
-  max-width: 540px;
-  width: 100%;
-  justify-self: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: 16px;
-  pointer-events: none;
-}
-
-#search-input {
-  width: 100%;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 12px 9px 36px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-#search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-shadow);
-}
 
 .header-actions {
   display: flex;
@@ -149,7 +126,7 @@ input, button { outline: none; }
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   background: var(--accent);
-  color: #1a1408;
+  color: #ffffff;
   font-weight: 600;
   font-size: 13px;
   transition: all 0.15s;
@@ -169,89 +146,6 @@ input, button { outline: none; }
 .primary-btn.outline:hover {
   background: var(--accent-shadow);
 }
-
-/* BODY */
-.body {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  overflow: hidden;
-}
-
-/* SIDEBAR */
-.sidebar {
-  background: var(--bg-2);
-  border-right: 1px solid var(--border);
-  padding: 18px 12px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.categories {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cat-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  color: var(--text-dim);
-  font-size: 13px;
-  text-align: left;
-  transition: all 0.12s;
-}
-
-.cat-btn:hover {
-  background: var(--bg-3);
-  color: var(--text);
-}
-
-.cat-btn.active {
-  background: var(--bg-3);
-  color: var(--accent);
-  font-weight: 600;
-  box-shadow: inset 2px 0 0 var(--accent);
-}
-
-.cat-count {
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--bg);
-  padding: 2px 7px;
-  border-radius: 10px;
-}
-
-.sidebar-foot {
-  margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.legend {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.dot-free    { background: var(--green); }
-.dot-suite   { background: var(--accent); }
-.dot-premium { background: var(--purple); }
 
 /* MAIN */
 .main {
@@ -321,10 +215,10 @@ input, button { outline: none; }
 }
 
 .tile-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #1f242c 0%, #161a20 100%);
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #20243088 0%, #181c2788 100%);
   border: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
@@ -334,6 +228,14 @@ input, button { outline: none; }
   color: var(--accent);
   flex-shrink: 0;
   letter-spacing: 0.5px;
+  overflow: hidden;
+}
+
+.tile-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .tile-title-block { flex: 1; min-width: 0; }
@@ -371,17 +273,130 @@ input, button { outline: none; }
   font-weight: 600;
 }
 
-.tag-free    { background: rgba(109, 178, 133, 0.15); color: var(--green); }
-.tag-suite   { background: var(--accent-shadow); color: var(--accent); }
-.tag-premium { background: rgba(169, 140, 209, 0.15); color: var(--purple); }
-.tag-installed { background: rgba(110, 163, 214, 0.12); color: var(--blue); }
-.tag-soon    { background: rgba(215, 107, 107, 0.12); color: var(--danger); }
-.tag-pack    { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
+.tag-free      { background: rgba(74, 222, 128, 0.14); color: var(--green); }
+.tag-owned     { background: rgba(249, 115, 22, 0.14); color: var(--triskell-orange); }
+.tag-installed { background: rgba(99, 102, 241, 0.16); color: var(--triskell-indigo); }
+.tag-soon      { background: rgba(167, 139, 250, 0.14); color: var(--triskell-violet); }
+.tag-suite     { background: var(--accent-shadow); color: var(--accent); }
+.tag-premium   { background: rgba(167, 139, 250, 0.15); color: var(--triskell-violet); }
+.tag-pack      { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
+
+.price-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+
+.price-current {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.price-old {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.price-note {
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-basis: 100%;
+}
 
 .tile-actions {
   margin-top: auto;
   display: flex;
   gap: 8px;
+}
+
+/* ============== BUNDLES (cartes pleine-largeur au-dessus de la grille) ============== */
+.bundles {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.bundle-card {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.10),
+    rgba(167, 139, 250, 0.08) 50%,
+    rgba(249, 115, 22, 0.08) 100%);
+  border: 1px solid rgba(124, 127, 233, 0.30);
+  border-radius: var(--radius);
+  position: relative;
+  overflow: hidden;
+}
+
+.bundle-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(600px 100px at 0% 0%, rgba(124, 127, 233, 0.12), transparent 70%);
+}
+
+.bundle-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: rgba(15, 18, 24, 0.55);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.bundle-icon img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.bundle-body { min-width: 0; }
+.bundle-tags { display: flex; gap: 6px; margin-bottom: 6px; }
+.bundle-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.bundle-tagline {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.bundle-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.bundle-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--triskell-orange);
+  font-weight: 600;
+}
+
+.bundle-actions {
+  display: flex;
+  align-items: center;
+}
+.bundle-actions button {
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
 }
 
 .tile-actions button {
@@ -395,7 +410,7 @@ input, button { outline: none; }
 
 .btn-launch {
   background: var(--accent);
-  color: #1a1408;
+  color: #ffffff;
 }
 .btn-launch:hover { background: var(--accent-hot); }
 
@@ -554,10 +569,12 @@ input, button { outline: none; }
 }
 
 .login-logo {
-  width: 64px;
-  height: 64px;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
   margin: 0 auto 18px;
   display: block;
+  border-radius: 18px;
   filter: drop-shadow(0 0 14px var(--accent-shadow));
 }
 
@@ -666,7 +683,7 @@ input, button { outline: none; }
 /* ============== BOUTONS DE TUILES (états supplémentaires) ============== */
 .btn-buy {
   background: var(--accent);
-  color: #1a1408;
+  color: #ffffff;
 }
 .btn-buy:hover { background: var(--accent-hot); }
 
@@ -675,12 +692,6 @@ input, button { outline: none; }
   color: var(--text-dim);
   cursor: wait;
 }
-
-.tag-owned { background: rgba(109, 178, 133, 0.15); color: var(--green); }
-
-.dot-owned   { background: var(--green); }
-.dot-free    { background: var(--blue); }
-.dot-soon    { background: var(--text-muted); }
 
 /* ============== MODALE D'INSTALL (progression) ============== */
 .progress-bar {
@@ -712,3 +723,280 @@ input, button { outline: none; }
   background: var(--green);
   box-shadow: 0 0 6px rgba(109, 178, 133, 0.6);
 }
+
+/* ============== HOME BANNER (salutation + raccourcis) ============== */
+.home-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  background: linear-gradient(135deg, rgba(124, 127, 233, 0.10), rgba(167, 139, 250, 0.06));
+  border: 1px solid rgba(124, 127, 233, 0.22);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+.banner-text h2 {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.banner-shortcuts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.banner-shortcut {
+  background: var(--bg-3);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all 0.12s;
+}
+.banner-shortcut:hover {
+  background: var(--accent-shadow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ============== OFFLINE BADGE ============== */
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  background: rgba(249, 115, 22, 0.10);
+  border: 1px solid rgba(249, 115, 22, 0.30);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--triskell-orange);
+}
+
+/* ============== SEARCH (re-injectee si N+ apps) ============== */
+.main-search {
+  margin-bottom: 14px;
+}
+#search-input {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-shadow);
+  outline: none;
+}
+
+/* ============== TOOL PICKER (sous-menu Suite des Heros) ============== */
+.tool-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.tool-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: all 0.12s;
+}
+.tool-pick:hover {
+  background: var(--accent-shadow);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.tool-pick strong { font-size: 13px; color: var(--text); font-weight: 600; }
+
+/* ============== ACCOUNT MENU PREFS ============== */
+.account-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.pref-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.pref-row span { flex: 1; font-size: 13px; color: var(--text); }
+.pref-row input[type="checkbox"] {
+  width: 38px;
+  height: 22px;
+  appearance: none;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s;
+  margin-top: 2px;
+}
+.pref-row input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: all 0.18s;
+}
+.pref-row input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.pref-row input[type="checkbox"]:checked::after {
+  left: 18px;
+  background: #fff;
+}
+
+/* ============== TAG: MISE A JOUR ============== */
+.tag-update { background: rgba(249, 115, 22, 0.18); color: var(--triskell-orange); }
+
+/* ============== TOASTS (notifications non-bloquantes, bas-droite) ============== */
+.toasts {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+  pointer-events: none;
+  max-width: 380px;
+}
+
+.toast {
+  pointer-events: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  animation: toast-in 0.22s ease-out;
+}
+
+.toast.toast-out {
+  animation: toast-out 0.18s ease-in forwards;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+.toast-success .toast-icon { background: rgba(74, 222, 128, 0.18); color: var(--green); }
+.toast-error   .toast-icon { background: rgba(239, 68, 68, 0.18); color: var(--danger); }
+.toast-info    .toast-icon { background: var(--accent-shadow); color: var(--accent); }
+
+.toast-body { flex: 1; min-width: 0; }
+.toast-title { font-size: 13px; font-weight: 600; color: var(--text); margin: 0 0 2px; }
+.toast-message { font-size: 12px; color: var(--text-dim); margin: 0; line-height: 1.35; }
+
+.toast-action {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+.toast-action:hover { background: var(--accent-hot); }
+
+.toast-close {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.toast-close:hover { color: var(--text); background: var(--bg-3); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+/* ============== HERALDIC TOUCH (La Table Ronde) ==============
+   Petites notes typographiques pour donner un cachet "édition premium /
+   table ronde" sans casser le design moderne. Pas de polices externes,
+   on utilise une chaîne de fallback qui dégrade gracieusement. */
+
+:root {
+  --serif-stack: 'Cinzel', 'Trajan Pro', 'Cormorant Garamond', 'Playfair Display',
+                 Georgia, 'Times New Roman', serif;
+}
+
+.login-title,
+.main-head h1,
+.tile-title {
+  font-family: var(--serif-stack);
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+
+.login-title { letter-spacing: 1.2px; }
+.main-head h1 { letter-spacing: 0.6px; }
+
+/* Tile-icon : passer de "case carrée" à "médaillon arrondi", comme un sceau. */
+.tile-icon {
+  border-radius: 14px;
+  position: relative;
+}
+.tile-icon::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+/* Tags : les rendre légèrement plus "estampillés" (sceau de cire). */
+.tag {
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-variant: all-small-caps;
+}
+.tag-owned { font-weight: 700; }   /* "Adoubé" doit ressortir */

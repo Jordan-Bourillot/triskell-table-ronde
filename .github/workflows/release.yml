@@ -12,7 +12,7 @@
 #   - de fichier de download pour la landing app.triskell-studio.fr
 #   - de feed pour electron-updater (auto-update du Lanceur)
 
-name: Release Triskell Lanceur
+name: Release La Table Ronde
 
 on:
   push:

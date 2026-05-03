@@ -1,9 +1,9 @@
-# Triskell Lanceur — Backend
+# La Table Ronde — Backend
 
 API serverless qui gère :
 - les **comptes Triskell** (login par code email à 6 chiffres)
-- les **licences** (qui possède quoi)
-- les **tokens d'install** (téléchargement sécurisé des produits depuis le Lanceur)
+- les **licences** (qui a adoubé quoi)
+- les **tokens d'install** (téléchargement sécurisé des compagnons depuis La Table Ronde)
 
 Hébergé sur **Netlify Functions**, base de données sur **Supabase** (gratuit), emails via **Resend**.
 

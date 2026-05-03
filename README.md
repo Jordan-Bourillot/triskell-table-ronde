@@ -1,17 +1,17 @@
-# Triskell Lanceur
+# La Table Ronde — Triskell Studio
 
-Hub desktop unifié de l'écosystème **Triskell Studio**. Une seule application Windows pour découvrir, acheter, installer, lancer et mettre à jour tous les outils Triskell : Suite des Héros, DéliNote, Le Studio PDF, Bobeez, Pirate Life Mail, et tous les futurs.
+Le lieu où tes outils **Triskell Studio** se réunissent. Une seule application Windows pour découvrir, recruter, installer, convoquer et tenir à jour toute ta suite : Suite des Héros, DéliNote, Le Studio PDF, Bobeez, Pirate Life Mail, et tous les compagnons à venir.
 
-> **Modèle économique** : le Lanceur est **gratuit** (capture email + remarketing). Chaque outil reste vendu séparément sur sa propre landing page. Le Lanceur détecte automatiquement ce que l'utilisateur possède via son compte Triskell.
+> **Modèle économique** : La Table Ronde est **gratuite** (capture email + remarketing). Chaque compagnon reste vendu séparément sur sa propre landing page. La Table détecte automatiquement ce que l'utilisateur a adoubé via son compte Triskell.
 
 ## Architecture en 3 morceaux
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│  1. LANCEUR (Electron, ce dossier)                                   │
+│  1. LA TABLE RONDE (Electron, ce dossier)                            │
 │  - app.triskell-studio.fr propose le .exe en téléchargement gratuit  │
 │  - Login email + code 6 chiffres                                     │
-│  - Affiche les tuiles : Lancer / Installer / Acheter selon licences  │
+│  - Tuiles : Convoquer / Installer / Recruter selon les licences      │
 │  - Auto-update via electron-updater + GitHub Releases                │
 └──────────────────────────────────────────────────────────────────────┘
                               │

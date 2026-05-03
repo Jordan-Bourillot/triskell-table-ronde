@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
-  <title>Triskell Lanceur</title>
+  <title>La Table Ronde — Triskell Studio</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,10 +11,10 @@
   <!-- ============== LOGIN SCREEN (visible tant que non connecté) ============== -->
   <div id="login-screen" class="login-screen hidden">
     <div class="login-card">
-      <img src="assets/logo_triskell.png" alt="Triskell" class="login-logo"
+      <img src="assets/triskell_mark.png" alt="Triskell" class="login-logo"
            onerror="this.style.display='none';" />
-      <h1 class="login-title">Triskell Lanceur</h1>
-      <p class="login-sub">Hub unifié de tous tes outils Triskell.</p>
+      <h1 class="login-title">La Table Ronde</h1>
+      <p class="login-sub">Le lieu où tes outils Triskell se réunissent.</p>
 
       <!-- Étape 1 : email -->
       <form id="login-email-form" class="login-step">
@@ -60,17 +60,12 @@
     <!-- HEADER -->
     <header class="header">
       <div class="brand">
-        <img src="assets/logo_triskell.png" alt="Triskell" class="brand-logo"
+        <img src="assets/triskell_mark.png" alt="Triskell" class="brand-logo"
              onerror="this.style.display='none';" />
         <div class="brand-text">
           <span class="brand-name">Triskell</span>
-          <span class="brand-sub">Lanceur</span>
+          <span class="brand-sub">Table Ronde</span>
         </div>
-      </div>
-
-      <div class="search">
-        <span class="search-icon" aria-hidden="true">&#9906;</span>
-        <input id="search-input" type="search" placeholder="Rechercher un outil..." autocomplete="off" />
       </div>
 
       <div class="header-actions">
@@ -80,39 +75,25 @@
       </div>
     </header>
 
-    <div class="body">
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
-        <nav id="categories" class="categories"></nav>
+    <main class="main">
+      <div class="main-head">
+        <h1 id="main-title">Les compagnons de ta Table</h1>
+        <span id="main-count" class="muted"></span>
+      </div>
 
-        <div class="sidebar-foot">
-          <div class="legend"><span class="dot dot-owned"></span> Possédé</div>
-          <div class="legend"><span class="dot dot-free"></span> Gratuit</div>
-          <div class="legend"><span class="dot dot-soon"></span> Bientôt</div>
-        </div>
-      </aside>
+      <section id="grid" class="grid" aria-live="polite"></section>
 
-      <!-- MAIN -->
-      <main class="main">
-        <div class="main-head">
-          <h1 id="main-title">Tous tes outils</h1>
-          <span id="main-count" class="muted"></span>
-        </div>
+      <div id="empty-state" class="empty hidden">
+        <div class="empty-mark">&#x29FE;</div>
+        <h2>Nul compagnon ne répond à cet appel</h2>
+        <p>Reviens plus tard, on en ajoute en continu.</p>
+      </div>
 
-        <section id="grid" class="grid" aria-live="polite"></section>
-
-        <div id="empty-state" class="empty hidden">
-          <div class="empty-mark">&#x29FE;</div>
-          <h2>Aucun outil ne correspond</h2>
-          <p>Essaie un autre mot-clé ou change de catégorie.</p>
-        </div>
-
-        <div id="loading-state" class="empty">
-          <div class="spinner"></div>
-          <p>Chargement de tes outils...</p>
-        </div>
-      </main>
-    </div>
+      <div id="loading-state" class="empty">
+        <div class="spinner"></div>
+        <p>Convocation de tes compagnons...</p>
+      </div>
+    </main>
 
     <!-- FOOTER -->
     <footer class="footer">
@@ -150,6 +131,9 @@
       </div>
     </div>
   </div>
+
+  <!-- ============== TOASTS (notifications non-bloquantes) ============== -->
+  <div id="toasts" class="toasts" aria-live="polite"></div>
 
   <script src="renderer.js"></script>
 </body>

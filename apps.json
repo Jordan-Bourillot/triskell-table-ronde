@@ -3,6 +3,21 @@
     { "id": "all", "label": "Tous tes outils" },
     { "id": "productivite", "label": "Productivité" }
   ],
+  "bundles": [
+    {
+      "id": "pack-productivite",
+      "name": "Pack Productivité Triskell",
+      "tagline": "La Suite des Héros + DéliNote + Le Studio PDF — tout l'arsenal Triskell, à prix barré",
+      "apps": ["suite-des-heros", "delinote", "studio-pdf"],
+      "price": 69,
+      "priceOriginal": 95,
+      "priceNote": "Économise 26 € — paiement unique, mises à jour à vie",
+      "buyUrl": null,
+      "comingSoon": true,
+      "icon": "assets/triskell_mark.png"
+    }
+  ],
+  "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
   "apps": [
     {
       "id": "suite-des-heros",
@@ -10,6 +25,10 @@
       "tagline": "11 outils desktop pour ranger, renommer, compresser et sécuriser tes fichiers",
       "category": "productivite",
       "tier": "premium",
+      "icon": "assets/apps/suite-des-heros.png",
+      "price": 27,
+      "priceOriginal": 39,
+      "priceNote": "Paiement unique · pas d'abonnement",
       "installed": false,
       "exePath": null,
       "buyUrl": "https://productivite.triskell-studio.fr",
@@ -38,6 +57,9 @@
       "tagline": "Notes synchronisées, markdown natif, recherche instantanée",
       "category": "productivite",
       "tier": "premium",
+      "icon": "assets/apps/delinote.png",
+      "price": 29,
+      "priceNote": "Paiement unique · à vie",
       "installed": false,
       "exePath": null,
       "buyUrl": "https://delinote.triskell-studio.fr",
@@ -52,6 +74,9 @@
       "tagline": "Fusion, split, OCR, signature — tout pour tes PDF",
       "category": "productivite",
       "tier": "premium",
+      "icon": "assets/apps/studio-pdf.png",
+      "price": 39,
+      "priceNote": "Paiement unique · à vie",
       "installed": false,
       "exePath": null,
       "comingSoon": true
@@ -62,6 +87,7 @@
       "tagline": "Bientôt — l'outil signature de Triskell Studio",
       "category": "productivite",
       "tier": "premium",
+      "icon": "assets/apps/bobeez.png",
       "installed": false,
       "exePath": null,
       "comingSoon": true
@@ -72,6 +98,7 @@
       "tagline": "Client mail nouvelle génération, gratuit",
       "category": "productivite",
       "tier": "free",
+      "icon": "assets/apps/pirate-life-mail.png",
       "installed": false,
       "exePath": null,
       "comingSoon": true

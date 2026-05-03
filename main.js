@@ -1,12 +1,17 @@
 // Triskell Lanceur - main process
 'use strict';
 
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const installer = require('./src/installer');
 const store = require('./src/store');
+
+// On fixe le nom systeme avant tout pour que app.getPath('userData') reste
+// stable peu importe le branding affiche (le titre/UI peut changer, mais le
+// dossier userData ne doit jamais bouger sinon la session est perdue).
+app.setName('Triskell Lanceur');
 
 // electron-updater est seulement requis dans une appli packagee. En dev, on
 // l'ignore pour ne pas planter quand le module manque ou que app n'est pas
@@ -18,7 +23,9 @@ catch (_) { /* dev */ }
 // =============================================================================
 // Configuration
 // =============================================================================
-const API_BASE = process.env.TRISKELL_API_URL || 'https://api.triskell-studio.fr';
+// Une fois le DNS de api.triskell-studio.fr configure, on pourra repointer
+// dessus. En attendant, l'URL netlify.app marche aussi parfaitement.
+const API_BASE = process.env.TRISKELL_API_URL || 'https://triskell-lanceur-api.netlify.app';
 const IS_DEV = process.env.TRISKELL_DEV === '1';
 
 let mainWindow;
@@ -32,9 +39,9 @@ function createWindow() {
     height: 800,
     minWidth: 1024,
     minHeight: 680,
-    backgroundColor: '#0d0f12',
+    backgroundColor: '#0f1218',
     title: 'Triskell Lanceur',
-    icon: path.join(__dirname, 'assets', 'logo_triskell.png'),
+    icon: path.join(__dirname, 'assets', 'triskell_mark.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -60,12 +67,36 @@ app.whenReady().then(() => {
 });
 
 // Auto-update (silencieux en arriere-plan, prompt avant install).
+// Le check tourne au demarrage puis toutes les 4h. Un check manuel est aussi
+// expose au renderer via ipc 'updates:check'.
+let updaterReady = false;
 function setupAutoUpdate() {
   if (!autoUpdater || !app.isPackaged) return;
   autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('updates:status', { phase: 'available', version: info.version });
+    }
+  });
+
+  autoUpdater.on('download-progress', (p) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('updates:status', { phase: 'downloading', percent: p.percent });
+    }
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('updates:status', { phase: 'up-to-date' });
+    }
+  });
 
   autoUpdater.on('update-downloaded', async (info) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('updates:status', { phase: 'ready', version: info.version });
+    }
     const { response } = await dialog.showMessageBox(mainWindow, {
       type: 'info',
       buttons: ['Installer maintenant', 'Plus tard'],
@@ -73,16 +104,43 @@ function setupAutoUpdate() {
       cancelId: 1,
       title: 'Mise à jour disponible',
       message: `Triskell Lanceur ${info.version} est prêt à être installé.`,
-      detail: 'L\'application redémarrera pour appliquer la mise à jour.'
+      detail: 'L\'application redémarrera pour appliquer la mise à jour. Sinon elle s\'installera automatiquement à la prochaine fermeture.'
     });
     if (response === 0) autoUpdater.quitAndInstall();
   });
 
-  autoUpdater.on('error', (err) => console.error('updater:', err.message));
+  autoUpdater.on('error', (err) => {
+    console.error('updater:', err.message);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('updates:status', { phase: 'error', message: err.message });
+    }
+  });
 
+  updaterReady = true;
   autoUpdater.checkForUpdates().catch(err =>
     console.error('check-for-updates:', err.message));
+
+  // Re-check toutes les 4 heures tant que le Lanceur tourne.
+  setInterval(() => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  }, 4 * 60 * 60 * 1000);
 }
+
+ipcMain.handle('updates:check', async () => {
+  if (!updaterReady) return { ok: false, error: 'dev-mode' };
+  try {
+    const r = await autoUpdater.checkForUpdates();
+    return { ok: true, version: r && r.updateInfo ? r.updateInfo.version : null };
+  } catch (err) {
+    return { ok: false, error: 'check-failed', message: err.message };
+  }
+});
+
+ipcMain.handle('updates:install', async () => {
+  if (!updaterReady) return { ok: false, error: 'dev-mode' };
+  autoUpdater.quitAndInstall();
+  return { ok: true };
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -157,7 +215,7 @@ ipcMain.handle('auth:logout', async () => {
 });
 
 // =============================================================================
-// Licences (depuis l'API)
+// Licences (depuis l'API, avec cache hors-ligne)
 // =============================================================================
 ipcMain.handle('licenses:fetch', async () => {
   const session = store.getSession();
@@ -173,9 +231,33 @@ ipcMain.handle('licenses:fetch', async () => {
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: data.error || 'server-error' };
-    return { ok: true, licenses: data.licenses || [], user: data.user };
+    const licenses = data.licenses || [];
+    store.setCachedLicenses(licenses);
+    return { ok: true, licenses, user: data.user, fromCache: false };
   } catch (err) {
+    // Pas de reseau : on retourne le cache pour que le user puisse au moins
+    // lancer ses outils deja installes.
+    const cached = store.getCachedLicenses();
+    if (cached.licenses && cached.licenses.length > 0) {
+      return { ok: true, licenses: cached.licenses, user: session.user, fromCache: true, cachedAt: cached.cachedAt };
+    }
     return { ok: false, error: 'network', message: err.message };
+  }
+});
+
+// =============================================================================
+// Versions a jour des produits (pour detecter "Mise a jour disponible").
+// Le backend doit exposer GET /api/versions qui renvoie
+// { "suite-des-heros": "1.2.3", "delinote": "0.4.0", ... }
+// Si l'endpoint n'existe pas (404, network), on retourne {} silencieusement.
+// =============================================================================
+ipcMain.handle('versions:fetch', async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/versions`);
+    if (!res.ok) return {};
+    return await res.json();
+  } catch (_) {
+    return {};
   }
 });
 
@@ -206,12 +288,42 @@ ipcMain.handle('install:start', async (_evt, productId) => {
       onProgress
     });
     store.setInstall(productId, result);
+    showSystemNotification(`${product.name} installé`,
+      `Tu peux le lancer depuis le Lanceur Triskell.`);
     return { ok: true, ...result };
   } catch (err) {
     onProgress({ phase: 'error', message: err.message });
     return { ok: false, error: 'install-failed', message: err.message };
   }
 });
+
+// Desinstalle un produit : supprime le dossier d'install + l'entree du store.
+ipcMain.handle('install:uninstall', async (_evt, productId) => {
+  const inst = store.getInstalls()[productId];
+  if (!inst) return { ok: false, error: 'not-installed' };
+
+  try {
+    if (inst.installPath && fs.existsSync(inst.installPath)) {
+      fs.rmSync(inst.installPath, { recursive: true, force: true });
+    }
+    store.removeInstall(productId);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'uninstall-failed', message: err.message };
+  }
+});
+
+function showSystemNotification(title, body) {
+  if (!Notification.isSupported()) return;
+  try {
+    new Notification({
+      title,
+      body,
+      icon: path.join(__dirname, 'assets', 'triskell_mark.png'),
+      silent: false
+    }).show();
+  } catch (_) { /* best-effort */ }
+}
 
 // =============================================================================
 // Lancement
@@ -258,6 +370,86 @@ ipcMain.handle('triskell:open-external', async (_evt, url) => {
     return { ok: true };
   }
   return { ok: false, error: 'invalid-url' };
+});
+
+// =============================================================================
+// Preferences (auto-launch Windows, etc.)
+// =============================================================================
+ipcMain.handle('prefs:get', async () => {
+  const prefs = store.getPrefs();
+  // Source de verite pour openAtLogin = Electron lui-meme (pas le store).
+  const loginItem = app.getLoginItemSettings();
+  return {
+    ...prefs,
+    openAtLogin: loginItem.openAtLogin,
+    openAsHidden: loginItem.openAsHidden || false
+  };
+});
+
+ipcMain.handle('prefs:set-auto-launch', async (_evt, enabled) => {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!enabled,
+      openAsHidden: false,
+      args: ['--auto-launched']
+    });
+    store.setPref('autoLaunch', !!enabled);
+    return { ok: true, openAtLogin: app.getLoginItemSettings().openAtLogin };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('prefs:set-telemetry', async (_evt, enabled) => {
+  store.setPref('telemetry', !!enabled);
+  return { ok: true };
+});
+
+ipcMain.handle('prefs:set-last-used', async (_evt, productId) => {
+  const prefs = store.getPrefs();
+  const lastUsed = Array.isArray(prefs.lastUsed) ? prefs.lastUsed : [];
+  const next = [productId, ...lastUsed.filter(id => id !== productId)].slice(0, 5);
+  store.setPref('lastUsed', next);
+  return { ok: true, lastUsed: next };
+});
+
+// =============================================================================
+// Achat in-app : ouvre Stripe Checkout dans une fenetre Electron, ecoute les
+// navigations vers la page success, ferme la fenetre et notifie le renderer.
+// =============================================================================
+ipcMain.handle('purchase:open', async (_evt, { url, productId }) => {
+  if (!url || !/^https?:\/\//.test(url)) return { ok: false, error: 'invalid-url' };
+
+  const win = new BrowserWindow({
+    width: 980,
+    height: 760,
+    parent: mainWindow,
+    modal: false,
+    title: 'Achat sécurisé · Triskell',
+    backgroundColor: '#0f1218',
+    autoHideMenuBar: true,
+    webPreferences: { contextIsolation: true, nodeIntegration: false }
+  });
+
+  const success = (sessionId) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('purchase:completed', { productId, sessionId });
+    }
+    if (!win.isDestroyed()) win.close();
+  };
+
+  const inspectUrl = (urlStr) => {
+    if (typeof urlStr !== 'string') return;
+    if (/\/success\b/i.test(urlStr) || /session_id=/i.test(urlStr)) {
+      const m = urlStr.match(/session_id=([^&]+)/);
+      success(m ? decodeURIComponent(m[1]) : null);
+    }
+  };
+
+  win.webContents.on('did-navigate', (_e, u) => inspectUrl(u));
+  win.webContents.on('did-navigate-in-page', (_e, u) => inspectUrl(u));
+  win.loadURL(url);
+  return { ok: true };
 });
 
 // =============================================================================

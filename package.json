@@ -1,7 +1,7 @@
 {
-  "name": "triskell-lanceur",
+  "name": "triskell-table-ronde",
   "version": "0.1.0",
-  "description": "Hub desktop unifie pour l'ecosysteme Triskell Studio",
+  "description": "La Table Ronde - hub desktop unifie de l'ecosysteme Triskell Studio",
   "main": "main.js",
   "author": "Triskell Studio",
   "license": "UNLICENSED",
@@ -19,8 +19,8 @@
     "electron-updater": "^6.3.0"
   },
   "build": {
-    "appId": "studio.triskell.lanceur",
-    "productName": "Triskell Lanceur",
+    "appId": "studio.triskell.tableronde",
+    "productName": "La Table Ronde",
     "directories": {
       "output": "dist"
     },
@@ -38,7 +38,7 @@
       {
         "provider": "github",
         "owner": "Jordan-Bourillot",
-        "repo": "triskell-lanceur"
+        "repo": "triskell-table-ronde"
       }
     ],
     "win": {
@@ -55,7 +55,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Triskell Lanceur"
+      "shortcutName": "La Table Ronde"
     }
   }
 }
