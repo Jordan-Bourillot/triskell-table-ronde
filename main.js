@@ -7,6 +7,7 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 const installer = require('./src/installer');
 const store = require('./src/store');
+const scanner = require('./src/scanner');
 
 // On fixe le nom systeme avant tout pour que app.getPath('userData') reste
 // stable peu importe le branding affiche (le titre/UI peut changer, mais le
@@ -335,6 +336,29 @@ ipcMain.handle('versions:fetch', async () => {
 // =============================================================================
 ipcMain.handle('installs:list', async () => store.getInstalls());
 
+// Scan auto : trouve les produits installes "ailleurs" (avant le Lanceur,
+// par ex. via productivite.triskell-studio.fr) et les ajoute a installs.json.
+// Renvoie la liste des produits nouvellement detectes (pour toast UX).
+ipcMain.handle('installs:scan', async (_evt, productIds) => {
+  try {
+    const known = store.getInstalls();
+    const found = scanner.scanAll(productIds || [], known);
+    for (const f of found) {
+      store.setInstall(f.productId, {
+        installPath: f.installPath,
+        mainExe: f.mainExe,
+        version: f.version,
+        autoDetected: true,
+        source: f.source,
+      });
+    }
+    return { ok: true, detected: found };
+  } catch (err) {
+    console.error('scan:', err.message);
+    return { ok: false, error: err.message, detected: [] };
+  }
+});
+
 ipcMain.handle('install:start', async (_evt, productId) => {
   const session = store.getSession();
   if (!session) return { ok: false, error: 'not-authenticated' };
@@ -415,7 +439,9 @@ ipcMain.handle('launch:product', async (_evt, productId) => {
   // Sinon : un seul exe a lancer.
   const inst = store.getInstalls()[productId];
   if (!inst || !inst.mainExe) return { ok: false, error: 'not-installed' };
-  return spawnExe(inst.mainExe);
+  const result = spawnExe(inst.mainExe);
+  if (result && result.ok) store.recordLaunch(productId);
+  return result;
 });
 
 ipcMain.handle('launch:tool', async (_evt, { productId, toolId }) => {
@@ -430,7 +456,36 @@ ipcMain.handle('launch:tool', async (_evt, { productId, toolId }) => {
   if (!inst) return { ok: false, error: 'not-installed' };
 
   const exePath = path.join(inst.installPath, tool.exe);
-  return spawnExe(exePath);
+  const result = spawnExe(exePath);
+  if (result && result.ok) store.recordLaunch(productId, toolId);
+  return result;
+});
+
+ipcMain.handle('stats:get', async () => store.getStats());
+
+// Stripe Customer Portal : cree une session et renvoie l'URL au renderer.
+// Le renderer ouvre l'URL dans le navigateur par defaut. Si pas de stripe
+// customer associe (user qui n'a jamais paye), renvoie no-stripe-customer
+// pour que le frontend bascule sur le mailto.
+ipcMain.handle('billing:open-portal', async () => {
+  const session = store.getSession();
+  if (!session) return { ok: false, error: 'not-authenticated' };
+  try {
+    const res = await fetch(`${API_BASE}/api/customer-portal`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.token}`
+      }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: data.error || `http-${res.status}` };
+    if (data.url) shell.openExternal(data.url);
+    return { ok: true, url: data.url };
+  } catch (err) {
+    console.error('billing:open-portal:', err.message);
+    return { ok: false, error: 'network', message: err.message };
+  }
 });
 
 ipcMain.handle('triskell:open-external', async (_evt, url) => {
@@ -486,6 +541,11 @@ ipcMain.handle('prefs:set-display-name', async (_evt, name) => {
   const clean = String(name || '').trim().slice(0, 40);
   store.setPref('displayName', clean);
   return { ok: true, displayName: clean };
+});
+
+ipcMain.handle('prefs:set-onboarding-dismissed', async (_evt, yes) => {
+  store.setPref('onboardingDismissed', !!yes);
+  return { ok: true };
 });
 
 // =============================================================================

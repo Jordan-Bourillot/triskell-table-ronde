@@ -2,8 +2,11 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com;" />
   <title>La Table Ronde — Triskell Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&display=swap" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -103,6 +106,58 @@
         <p>Convocation de tes compagnons...</p>
       </div>
     </main>
+
+    <!-- ============== PAGE PRODUIT (fiche dediee, masquee par defaut) ============== -->
+    <section id="product-screen" class="product-page hidden" aria-hidden="true">
+      <div class="product-topbar">
+        <button class="product-back" id="product-back" type="button">
+          <span class="product-back-arrow" aria-hidden="true">&larr;</span>
+          <span>Retour à la Table</span>
+        </button>
+      </div>
+
+      <div class="product-hero">
+        <div class="product-hero-icon" id="product-icon" aria-hidden="true"></div>
+        <div class="product-hero-text">
+          <div class="product-tags" id="product-tags"></div>
+          <h1 class="product-name" id="product-name"></h1>
+          <p class="product-tagline" id="product-tagline"></p>
+          <div class="product-status muted small" id="product-status"></div>
+          <div class="product-price-block" id="product-price-block"></div>
+          <div class="product-actions" id="product-actions"></div>
+        </div>
+      </div>
+
+      <div class="product-media" id="product-media">
+        <div class="product-media-empty">
+          <span class="product-media-icon" aria-hidden="true">&#x1F4F8;</span>
+          <p class="product-media-title">Captures d'écran et démo vidéo</p>
+          <p class="muted small">Bientôt visibles ici — on prépare les visuels.</p>
+        </div>
+      </div>
+
+      <div class="product-body">
+        <section class="product-section" id="product-description-section">
+          <h2 class="product-section-title">À propos</h2>
+          <p class="product-description" id="product-description"></p>
+        </section>
+
+        <section class="product-section hidden" id="product-features-section">
+          <h2 class="product-section-title">Ce que tu peux faire</h2>
+          <ul class="product-features" id="product-features"></ul>
+        </section>
+
+        <section class="product-section hidden" id="product-tools-section">
+          <h2 class="product-section-title" id="product-tools-title">Les outils inclus</h2>
+          <div class="product-tools-grid" id="product-tools"></div>
+        </section>
+
+        <section class="product-section hidden" id="product-links-section">
+          <h2 class="product-section-title">En savoir plus</h2>
+          <ul class="product-links" id="product-links"></ul>
+        </section>
+      </div>
+    </section>
 
     <!-- FOOTER -->
     <footer class="footer">

@@ -25,7 +25,18 @@ contextBridge.exposeInMainWorld('triskell', {
 
   // Etat installe local (installs.json)
   installs: {
-    list: () => ipcRenderer.invoke('installs:list')
+    list: () => ipcRenderer.invoke('installs:list'),
+    scan: (productIds) => ipcRenderer.invoke('installs:scan', productIds)
+  },
+
+  // Stats d'usage (compteurs de lancements, premier/dernier)
+  stats: {
+    get: () => ipcRenderer.invoke('stats:get')
+  },
+
+  // Stripe billing portal (factures, methodes de paiement)
+  billing: {
+    openPortal: () => ipcRenderer.invoke('billing:open-portal')
   },
 
   // Versions a jour de chaque produit (depuis le backend, pour detecter MAJ)
@@ -57,11 +68,12 @@ contextBridge.exposeInMainWorld('triskell', {
 
   // Preferences (auto-launch, telemetrie...)
   prefs: {
-    get:            ()         => ipcRenderer.invoke('prefs:get'),
-    setAutoLaunch:  (enabled)  => ipcRenderer.invoke('prefs:set-auto-launch', enabled),
-    setTelemetry:   (enabled)  => ipcRenderer.invoke('prefs:set-telemetry', enabled),
-    setLastUsed:    (productId)=> ipcRenderer.invoke('prefs:set-last-used', productId),
-    setDisplayName: (name)     => ipcRenderer.invoke('prefs:set-display-name', name)
+    get:                     ()         => ipcRenderer.invoke('prefs:get'),
+    setAutoLaunch:           (enabled)  => ipcRenderer.invoke('prefs:set-auto-launch', enabled),
+    setTelemetry:            (enabled)  => ipcRenderer.invoke('prefs:set-telemetry', enabled),
+    setLastUsed:             (productId)=> ipcRenderer.invoke('prefs:set-last-used', productId),
+    setDisplayName:          (name)     => ipcRenderer.invoke('prefs:set-display-name', name),
+    setOnboardingDismissed:  (yes)      => ipcRenderer.invoke('prefs:set-onboarding-dismissed', yes)
   },
 
   // Interet sur un produit pas encore en vente (Studio PDF, Bobeez, ...)

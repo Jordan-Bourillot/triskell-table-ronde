@@ -85,6 +85,32 @@ function setPref(key, value) {
   writeJson('prefs.json', all);
 }
 
+// ---------- Stats d'usage (compteur de lancements, premier/dernier) ----------
+// stats.json :
+//   {
+//     "<productId>": { count, firstAt, lastAt, tools: { "<toolId>": count } },
+//     ...
+//   }
+function getStats() {
+  return readJson('stats.json', {});
+}
+
+function recordLaunch(productId, toolId) {
+  const all = getStats();
+  const now = Date.now();
+  const entry = all[productId] || { count: 0, firstAt: now, lastAt: now, tools: {} };
+  entry.count = (entry.count || 0) + 1;
+  entry.lastAt = now;
+  if (!entry.firstAt) entry.firstAt = now;
+  if (toolId) {
+    entry.tools = entry.tools || {};
+    entry.tools[toolId] = (entry.tools[toolId] || 0) + 1;
+  }
+  all[productId] = entry;
+  writeJson('stats.json', all);
+  return entry;
+}
+
 module.exports = {
   init,
   getSession,
@@ -96,5 +122,7 @@ module.exports = {
   getCachedLicenses,
   setCachedLicenses,
   getPrefs,
-  setPref
+  setPref,
+  getStats,
+  recordLaunch
 };

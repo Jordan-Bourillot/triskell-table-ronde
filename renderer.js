@@ -23,6 +23,11 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // ID du produit dont la fiche dediee est actuellement affichee (null si on
+  // est sur la grille). Permet de re-render la fiche apres un changement
+  // d'etat (achat, install, scan auto qui detecte un .exe...).
+  state.openProductId = null;
+
   const els = {
     // login
     loginScreen:   $('login-screen'),
@@ -61,7 +66,25 @@
     installDetail:   $('install-detail'),
     installCancel:   $('install-cancel'),
     // toasts
-    toasts:          $('toasts')
+    toasts:          $('toasts'),
+    // page produit
+    productScreen:    $('product-screen'),
+    productBack:      $('product-back'),
+    productIcon:      $('product-icon'),
+    productTags:      $('product-tags'),
+    productName:      $('product-name'),
+    productTagline:   $('product-tagline'),
+    productStatus:    $('product-status'),
+    productPriceBlock:$('product-price-block'),
+    productActions:   $('product-actions'),
+    productDescription: $('product-description'),
+    productFeaturesSection: $('product-features-section'),
+    productFeatures:  $('product-features'),
+    productToolsSection: $('product-tools-section'),
+    productToolsTitle: $('product-tools-title'),
+    productTools:     $('product-tools'),
+    productLinksSection: $('product-links-section'),
+    productLinks:     $('product-links')
   };
 
   // ============================================================================
@@ -71,6 +94,7 @@
 
   async function init() {
     bindModal();
+    bindProductPage();
     bindInstallProgress();
     bindUpdateStatus();
     bindPurchaseCompleted();
@@ -179,6 +203,11 @@
         return;
       }
       state.user = res.user;
+      // Animation "triumph" : 1.2s de rotation + scale + halo dore avant
+      // de basculer sur l'app, pour marquer le moment "Bienvenue a la Table".
+      const logo = document.querySelector('.login-logo');
+      if (logo) logo.classList.add('triumph');
+      await new Promise(r => setTimeout(r, 900));
       hideLogin();
       enterApp();
     });
@@ -287,6 +316,32 @@
     bindHeader();
     render();
     els.loading.classList.add('hidden');
+
+    // Scan auto en arriere-plan : detecte les .exe installes ailleurs
+    // (par ex. Suite des Heros installee via productivite.triskell-studio.fr
+    // avant que le Lanceur n'existe). Si on trouve quelque chose, on
+    // refresh l'etat et on previent l'utilisateur via toast.
+    if (window.triskell.installs.scan) {
+      const productIds = state.apps.map(a => a.id);
+      window.triskell.installs.scan(productIds).then(res => {
+        if (res && res.ok && Array.isArray(res.detected) && res.detected.length) {
+          // Recupere la liste a jour des installs et re-render
+          window.triskell.installs.list().then(updated => {
+            state.installs = updated || state.installs;
+            render();
+            const names = res.detected
+              .map(d => (state.apps.find(a => a.id === d.productId) || {}).name || d.productId)
+              .join(', ');
+            showToast({
+              kind: 'success',
+              title: `${res.detected.length} outil${res.detected.length > 1 ? 's' : ''} déjà installé${res.detected.length > 1 ? 's' : ''} détecté${res.detected.length > 1 ? 's' : ''}`,
+              message: `${names} — reconnu${res.detected.length > 1 ? 's' : ''} sur ta machine, tu peux le${res.detected.length > 1 ? 's' : ''} lancer directement.`,
+              timeout: 8000
+            });
+          });
+        }
+      }).catch(() => { /* scan optionnel, on ignore les erreurs */ });
+    }
   }
 
   // ============================================================================
@@ -299,7 +354,25 @@
     els.accountBtn.addEventListener('click', openAccountMenu);
   }
 
-  function openAccountMenu() {
+  // Calcule les badges debloques d'apres les stats. Renvoie une liste
+  // d'objets { emoji, label, hint, unlocked }.
+  function computeBadges(stats) {
+    const totalLaunches = Object.values(stats || {}).reduce((s, e) => s + (e.count || 0), 0);
+    const productsLaunched = Object.keys(stats || {}).filter(k => (stats[k].count || 0) > 0).length;
+    const maxToolCount = Math.max(0, ...Object.values(stats || {}).flatMap(e =>
+      Object.values(e.tools || {})
+    ));
+    const ownedCount = Object.keys(state.licenses).length;
+    return [
+      { emoji: '🌱', label: 'Premier pas',     hint: '1er lancement enregistré',          unlocked: totalLaunches >= 1 },
+      { emoji: '⚔️', label: 'Compagnon',       hint: '10 lancements au total',            unlocked: totalLaunches >= 10 },
+      { emoji: '🛡️', label: 'Veilleur',        hint: '50 lancements au total',            unlocked: totalLaunches >= 50 },
+      { emoji: '👑', label: 'Maître Trieur',   hint: '50 fois sur un même outil',         unlocked: maxToolCount >= 50 },
+      { emoji: '🏛️', label: 'Table Ronde',     hint: 'Tous tes outils possédés ouverts',  unlocked: ownedCount > 0 && productsLaunched >= ownedCount },
+    ];
+  }
+
+  async function openAccountMenu() {
     const updateLine = state.updateInfo
       ? `<p class="muted small" id="update-line">${escapeHtml(state.updateInfo)}</p>`
       : `<p class="muted small" id="update-line"></p>`;
@@ -309,6 +382,28 @@
 
     const displayName = state.prefs.displayName || '';
     const version = (document.getElementById('brand-version')?.textContent || '').trim();
+
+    // Stats : on les recupere si dispo
+    const stats = (window.triskell.stats && await window.triskell.stats.get()) || {};
+    const totalLaunches = Object.values(stats).reduce((s, e) => s + (e.count || 0), 0);
+    const badges = computeBadges(stats);
+    const unlockedBadges = badges.filter(b => b.unlocked);
+    const lockedBadges = badges.filter(b => !b.unlocked);
+
+    const statsHtml = totalLaunches > 0 ? `
+      <div class="account-section stats-section">
+        <p class="account-section-title">Tes hauts faits</p>
+        <p class="muted small" style="margin:0 0 10px;">${totalLaunches} lancement${totalLaunches > 1 ? 's' : ''} au compteur · ${unlockedBadges.length}/${badges.length} badges débloqués</p>
+        <div class="badges-grid">
+          ${badges.map(b => `
+            <div class="badge ${b.unlocked ? 'badge-unlocked' : 'badge-locked'}" title="${escapeHtml(b.hint)}">
+              <span class="badge-emoji">${b.emoji}</span>
+              <span class="badge-label">${escapeHtml(b.label)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
 
     openModal({
       title: '',
@@ -322,6 +417,8 @@
         </div>
         <p style="text-align:center;color:var(--text);margin:0 0 6px;">Connecté avec <strong style="color:var(--triskell-violet);">${escapeHtml(state.user.email)}</strong></p>
         <p class="muted" style="text-align:center;">Tu possèdes <strong style="color:var(--text);">${Object.keys(state.licenses).length}</strong> licence${Object.keys(state.licenses).length > 1 ? 's' : ''}.</p>
+
+        ${statsHtml}
 
         <div class="account-section profile-section">
           <label class="profile-field">
@@ -356,6 +453,14 @@
             <span class="muted small">→ ${escapeHtml(state.user.email)}</span>
           </button>
           <p class="muted small" style="margin:6px 0 0;">Demande tes factures par email — réponse sous 24 h ouvrées.</p>
+        </div>
+
+        <div class="account-section">
+          <button class="ghost-btn account-link-btn" id="report-bug-btn" type="button">
+            <span>🐞 Signaler un bug</span>
+            <span class="muted small">→ contact@triskell-studio.fr</span>
+          </button>
+          <p class="muted small" style="margin:6px 0 0;">Décris ce qui ne va pas, ton mail s'ouvrira pré-rempli (version, OS, email).</p>
         </div>
 
         <div class="account-section danger-zone">
@@ -406,13 +511,48 @@
       state.prefs.telemetry = e.target.checked;
     });
 
-    // Bouton "Mes factures" : ouvre un mailto pre-rempli (V1, en attendant
-    // un vrai customer portal Stripe).
+    // Bouton "Mes factures" : tente d'ouvrir le Stripe Customer Portal,
+    // fallback mailto si l'utilisateur n'a pas encore de Stripe customer
+    // (jamais paye) ou si le portal n'est pas configure cote Stripe.
     const invBtn = document.getElementById('invoices-btn');
-    if (invBtn) invBtn.addEventListener('click', () => {
+    if (invBtn) invBtn.addEventListener('click', async () => {
+      invBtn.disabled = true;
+      const original = invBtn.innerHTML;
+      invBtn.innerHTML = '<span>Ouverture du portail...</span>';
+      const r = window.triskell.billing
+        ? await window.triskell.billing.openPortal()
+        : { ok: false, error: 'no-billing-handler' };
+      invBtn.disabled = false;
+      invBtn.innerHTML = original;
+      if (r && r.ok) {
+        // Le portail s'est ouvert dans le navigateur, on ferme la modale
+        closeModal();
+        return;
+      }
+      // Fallback : ouvrir un mailto pre-rempli (cas user sans Stripe customer)
       const subject = encodeURIComponent('Demande de factures Triskell');
       const body = encodeURIComponent(
         `Bonjour,\n\nMerci de bien vouloir m'envoyer mes factures pour les achats effectues avec l'email ${state.user.email}.\n\nMerci !\n`
+      );
+      window.triskell.openExternal(`mailto:contact@triskell-studio.fr?subject=${subject}&body=${body}`);
+    });
+
+    // Bouton "Signaler un bug" : mailto pre-rempli avec contexte technique
+    const bugBtn = document.getElementById('report-bug-btn');
+    if (bugBtn) bugBtn.addEventListener('click', () => {
+      const ver = (document.getElementById('brand-version')?.textContent || '').trim();
+      const subject = encodeURIComponent(`[Bug Lanceur ${ver}] `);
+      const body = encodeURIComponent(
+        `Bonjour,\n\n` +
+        `J'ai rencontre un probleme avec le Lanceur Triskell.\n\n` +
+        `Description du probleme :\n[Decris ici ce qui ne va pas]\n\n` +
+        `Ce que je faisais :\n[Decris ici ce que tu essayais de faire]\n\n` +
+        `Ce qui devrait se passer :\n[Decris ici ce que tu attendais]\n\n` +
+        `--- Infos techniques (ne pas effacer) ---\n` +
+        `Lanceur : ${ver}\n` +
+        `Email compte : ${state.user.email}\n` +
+        `Plateforme : ${navigator.platform}\n` +
+        `User Agent : ${navigator.userAgent}\n`
       );
       window.triskell.openExternal(`mailto:contact@triskell-studio.fr?subject=${subject}&body=${body}`);
     });
@@ -490,7 +630,8 @@
       showToast({
         kind: 'success',
         title: 'Achat confirmé',
-        message: 'Ta licence est en cours d\'activation...'
+        message: 'Ta licence est en cours d\'activation...',
+        sound: true
       });
       // Stripe webhook -> backend register-license -> notre /api/me. On laisse
       // 2s au backend pour rattraper avant le refresh.
@@ -503,7 +644,8 @@
           showToast({
             kind: 'success',
             title: 'Licence activée',
-            message: 'Tu peux installer ton produit maintenant.'
+            message: 'Tu peux installer ton produit maintenant.',
+            sound: true
           });
         }
       }, 2200);
@@ -549,6 +691,14 @@
     const frag = document.createDocumentFragment();
     for (const app of apps) frag.appendChild(buildTile(app));
     els.grid.appendChild(frag);
+
+    // Si une fiche produit est actuellement affichee, on la repaint aussi
+    // pour que les CTA suivent l'etat (achat, install termine, etc.).
+    if (state.openProductId) {
+      const openApp = state.apps.find(a => a.id === state.openProductId);
+      if (openApp) renderProductPage(openApp);
+      else hideProductPage();
+    }
   }
 
   function filteredApps() {
@@ -637,6 +787,67 @@
         const a = state.apps.find(x => x.id === btn.dataset.id);
         if (a) onLaunch(a);
       });
+    });
+
+    // Onboarding : bandeau extra pour les nouveaux comptes (0 licence + 0 install)
+    renderOnboardingHint(ownedCount, installedCount);
+  }
+
+  // Onboarding pour les nouveaux comptes : affiche un guide rapide quand
+  // l'utilisateur a 0 licence et 0 install. On le cache des qu'il a au moins
+  // un produit ou une licence.
+  function renderOnboardingHint(ownedCount, installedCount) {
+    const main = document.querySelector('.main');
+    let host = document.getElementById('onboarding-hint');
+    const shouldShow = ownedCount === 0 && installedCount === 0
+                    && !state.prefs.onboardingDismissed;
+    if (!shouldShow) { if (host) host.remove(); return; }
+    if (!host) {
+      host = document.createElement('section');
+      host.id = 'onboarding-hint';
+      host.className = 'onboarding-hint';
+      const banner = document.getElementById('home-banner');
+      if (banner && banner.nextSibling) main.insertBefore(host, banner.nextSibling);
+      else main.appendChild(host);
+    }
+    // Trouve l'app "phare" a recommander (la featured, sinon la 1ere premium)
+    const featured = state.apps.find(a => a.featured)
+                  || state.apps.find(a => a.tier === 'premium');
+
+    host.innerHTML = `
+      <button class="onboarding-close" id="onboarding-dismiss" aria-label="Fermer">×</button>
+      <div class="onboarding-step">
+        <span class="onboarding-num">1</span>
+        <div>
+          <p class="onboarding-title">Bienvenue à la Table Ronde 🛡️</p>
+          <p class="muted small">5 produits desktop, paiement unique, à vie. Pas d'abonnement, pas de tracker, tout fonctionne hors ligne.</p>
+        </div>
+      </div>
+      <div class="onboarding-step">
+        <span class="onboarding-num">2</span>
+        <div>
+          <p class="onboarding-title">Choisis ton premier compagnon</p>
+          <p class="muted small">${featured ? `On te recommande <strong>${escapeHtml(featured.name)}</strong> — ${escapeHtml(featured.tagline || '')}` : 'Parcours les tuiles ci-dessous.'}</p>
+          ${featured ? `<button class="onboarding-cta" id="onboarding-feature">Voir ${escapeHtml(featured.name)}</button>` : ''}
+        </div>
+      </div>
+      <div class="onboarding-step">
+        <span class="onboarding-num">3</span>
+        <div>
+          <p class="onboarding-title">Plusieurs outils en tête ? Le pack Table Ronde est jusqu'à -30 %</p>
+          <p class="muted small">Plus tu en prends, plus c'est avantageux. Le bundle apparaît automatiquement quand tu en possèdes au moins 1.</p>
+        </div>
+      </div>
+    `;
+    host.querySelector('#onboarding-dismiss')?.addEventListener('click', async () => {
+      state.prefs.onboardingDismissed = true;
+      if (window.triskell.prefs && window.triskell.prefs.setOnboardingDismissed) {
+        await window.triskell.prefs.setOnboardingDismissed(true);
+      }
+      host.remove();
+    });
+    host.querySelector('#onboarding-feature')?.addEventListener('click', () => {
+      if (featured) onInfo(featured);
     });
   }
 
@@ -805,7 +1016,16 @@
       actions.appendChild(makeBtn('Bientôt', 'btn-disabled', null, true));
     } else {
       actions.appendChild(makeBtn('Compléter ma Table', 'btn-buy',
-        () => window.triskell.purchase.openCompletion(count, missing.map(a => a.id))));
+        async () => {
+          const r = await window.triskell.purchase.openCompletion(count, missing.map(a => a.id));
+          if (r && !r.ok) {
+            // Erreurs cote backend (Stripe pas encore configure, etc.)
+            const msg = r.error === 'tier-not-configured' || r.error === 'stripe-not-configured'
+              ? 'Le pack n\'est pas encore activé côté paiement. Notre équipe est prévenue, on revient vers toi vite.'
+              : 'Impossible de lancer le paiement. Réessaie dans un instant.';
+            showToast({ kind: 'error', title: 'Compléter ma Table', message: msg, timeout: 8000 });
+          }
+        }));
     }
     host.appendChild(card);
   }
@@ -880,6 +1100,17 @@
 
     const actions = tile.querySelector('.tile-actions');
     renderTileActions(actions, app, tileState);
+
+    // Clic n'importe ou sur la tuile -> ouvre la fiche dediee.
+    // Les boutons d'action a l'interieur arretent la propagation pour rester
+    // independants (Convoquer, Installer, etc. ne doivent pas tomber dans
+    // l'ouverture de la page).
+    tile.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      showProductPage(app);
+    });
+    actions.addEventListener('click', (e) => e.stopPropagation());
+
     return tile;
   }
 
@@ -1103,7 +1334,8 @@
         title: `${app.name} installé`,
         message: 'Tu peux le lancer maintenant.',
         actionLabel: 'Lancer',
-        onAction: () => onLaunch(app)
+        onAction: () => onLaunch(app),
+        sound: true
       });
     } else {
       render();
@@ -1295,9 +1527,69 @@
   }
 
   // ============================================================================
+  // SOUND DESIGN — chant de cor discret via Web Audio API
+  // ============================================================================
+  // On synthetise un mini "fanfare" 2 notes (Sol4 -> Re5) avec un timbre brass
+  // sin+saw + enveloppe ADSR, joue au moment des moments forts (achat, install
+  // reussie, etc.). Pas de fichier audio a charger : marche meme offline.
+  let _audioCtx = null;
+  function getAudioCtx() {
+    if (!_audioCtx) {
+      try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (_) { return null; }
+    }
+    if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+    return _audioCtx;
+  }
+
+  function playSuccessFanfare() {
+    // Respect du toggle telemetrie : si l'utilisateur a coupe les sons (via
+    // la pref dediee plus tard), on coupe. Pour l'instant pas de pref dediee
+    // donc on joue toujours, mais discret (gain max 0.12).
+    if (state.prefs && state.prefs.muteSounds) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 392.00, start: 0.00, duration: 0.18 }, // Sol4
+      { freq: 587.33, start: 0.18, duration: 0.42 }, // Re5
+    ];
+    const master = ctx.createGain();
+    master.gain.value = 0.12;
+    master.connect(ctx.destination);
+    notes.forEach(({ freq, start, duration }) => {
+      const t = now + start;
+      // Timbre "brass" : oscillateur sinus + sawtooth panche
+      const o1 = ctx.createOscillator();
+      o1.type = 'sine';
+      o1.frequency.value = freq;
+      const o2 = ctx.createOscillator();
+      o2.type = 'sawtooth';
+      o2.frequency.value = freq;
+      const oGain = ctx.createGain();
+      oGain.gain.setValueAtTime(0, t);
+      oGain.gain.linearRampToValueAtTime(1, t + 0.03);   // attaque rapide
+      oGain.gain.exponentialRampToValueAtTime(0.5, t + duration * 0.5); // decay
+      oGain.gain.exponentialRampToValueAtTime(0.001, t + duration);    // release
+      const mix = ctx.createGain();
+      mix.gain.value = 0.7;
+      o1.connect(mix);
+      const sawAtten = ctx.createGain();
+      sawAtten.gain.value = 0.3;
+      o2.connect(sawAtten);
+      sawAtten.connect(mix);
+      mix.connect(oGain);
+      oGain.connect(master);
+      o1.start(t); o1.stop(t + duration + 0.02);
+      o2.start(t); o2.stop(t + duration + 0.02);
+    });
+  }
+
+  // ============================================================================
   // TOASTS (notifications non-bloquantes)
   // ============================================================================
-  function showToast({ kind = 'info', title, message, actionLabel, onAction, timeout = 6000 }) {
+  function showToast({ kind = 'info', title, message, actionLabel, onAction, timeout = 6000, sound = false }) {
+    if (sound && kind === 'success') playSuccessFanfare();
     const toast = document.createElement('div');
     toast.className = `toast toast-${kind}`;
 
