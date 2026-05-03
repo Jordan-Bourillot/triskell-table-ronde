@@ -977,12 +977,25 @@
     const tier = cb.tiers[String(count)];
     if (!tier) return;
 
+    // Calcul DYNAMIQUE du prix de reference : on additionne les prix des
+    // apps que l'utilisateur n'a pas encore. Ca donne la vraie economie en
+    // fonction de SA config (et pas un chiffre marketing arbitraire).
+    const actualOriginal = missing.reduce((s, a) => s + (a.price || 0), 0);
+    const savings = actualOriginal - tier.price;
+
+    // Si le bundle revient plus cher (cas rare avec des apps a faible prix
+    // par ex. Suite + Bobeez = 54€ < bundle 55€), on ne montre pas le bundle.
+    if (savings <= 0) return;
+
     const card = document.createElement('article');
     card.className = 'bundle-card bundle-completion' + (cb.comingSoon ? ' bundle-soon' : '');
 
-    const original = tier.priceOriginal && tier.priceOriginal > tier.price
-      ? `<span class="price-old">${tier.priceOriginal} €</span>` : '';
-    const note = tier.priceNote ? `<p class="bundle-note">${escapeHtml(tier.priceNote)}</p>` : '';
+    // Pourcentage d'economie pour highlight visuel
+    const savingsPercent = Math.round((savings / actualOriginal) * 100);
+
+    const original = `<span class="price-old">${actualOriginal} €</span>`;
+    const dynamicNote = `Économise ${savings} € (-${savingsPercent} %) par rapport aux achats séparés`;
+    const note = `<p class="bundle-note">${escapeHtml(dynamicNote)}</p>`;
     const missingNames = missing.map(a => a.name).join(', ');
 
     card.innerHTML = `
@@ -1075,10 +1088,11 @@
     // Indice de cliquabilite : revele au hover (CSS), masque sur coming-soon.
     // aria-hidden car c'est un signal purement visuel — la tuile entiere est
     // deja cliquable et le screen reader n'a pas besoin de cette redondance.
-    const hintHtml = app.comingSoon
+    // Indice top-droite discret : juste une fleche, masque sur coming-soon
+    // et sur les tuiles featured (le ribbon "Populaire" prend deja le coin).
+    const hintHtml = (app.comingSoon || (app.featured && tileState === 'not-owned'))
       ? ''
-      : '<span class="tile-hint" aria-hidden="true">Voir la fiche'
-        + '<span class="tile-hint-arrow">&rarr;</span></span>';
+      : '<span class="tile-hint" aria-hidden="true" title="Voir la fiche">&rarr;</span>';
 
     tile.innerHTML = `
       ${featuredRibbon}
