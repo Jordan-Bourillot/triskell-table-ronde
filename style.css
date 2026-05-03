@@ -45,48 +45,105 @@
   --tile-icon-grad-to: #181c2788;
 }
 
-/* === THEME CLAIR (active via data-theme="light" ou systeme en mode clair) === */
+/* === THEME CLAIR (active via data-theme="light" ou systeme en mode clair) ===
+   Choix : bg leger gris clair (#e9ecf2) pour que les cartes blanches (bg-card)
+   ressortent par contraste. Bordures suffisamment marquees pour que les
+   contours soient lisibles. Text-dim assez sombre pour rester lisible sur
+   fond clair (vs dim sur fond sombre). */
 :root[data-theme='light'] {
-  --bg: #f5f5f7;
+  --bg: #e9ecf2;
   --bg-2: #ffffff;
-  --bg-3: #ebecf0;
+  --bg-3: #f3f4f8;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8f8fbcc;
-  --border: #dcdde3;
-  --border-strong: #b8bac3;
-  --text: #1a1d28;
-  --text-dim: #51566a;
-  --text-muted: #797f90;
-  --shadow: 0 6px 24px rgba(20, 22, 35, 0.08);
-  --accent-shadow: rgba(124, 127, 233, 0.18);
-  --gold-shadow: rgba(212, 179, 90, 0.18);
+  --bg-card-hover: #f5f6fa;
+  --border: #d4d7e0;
+  --border-strong: #a8acba;
+  --text: #14171f;
+  --text-dim: #4a4f5e;
+  --text-muted: #6f7484;
+  --shadow: 0 6px 24px rgba(20, 22, 35, 0.10);
+  --accent-shadow: rgba(124, 127, 233, 0.20);
+  --gold-shadow: rgba(212, 179, 90, 0.22);
   --header-grad-from: #ffffff;
-  --header-grad-to: #f5f5f7;
-  --tile-icon-grad-from: rgba(124, 127, 233, 0.08);
-  --tile-icon-grad-to: rgba(167, 139, 250, 0.10);
+  --header-grad-to: #eef0f5;
+  --tile-icon-grad-from: rgba(124, 127, 233, 0.10);
+  --tile-icon-grad-to: rgba(167, 139, 250, 0.12);
 }
 
 /* Auto : si pas de pref explicite ET OS en mode clair, on bascule */
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] {
-    --bg: #f5f5f7;
+    --bg: #e9ecf2;
     --bg-2: #ffffff;
-    --bg-3: #ebecf0;
+    --bg-3: #f3f4f8;
     --bg-card: #ffffff;
-    --bg-card-hover: #f8f8fbcc;
-    --border: #dcdde3;
-    --border-strong: #b8bac3;
-    --text: #1a1d28;
-    --text-dim: #51566a;
-    --text-muted: #797f90;
-    --shadow: 0 6px 24px rgba(20, 22, 35, 0.08);
-    --accent-shadow: rgba(124, 127, 233, 0.18);
-    --gold-shadow: rgba(212, 179, 90, 0.18);
+    --bg-card-hover: #f5f6fa;
+    --border: #d4d7e0;
+    --border-strong: #a8acba;
+    --text: #14171f;
+    --text-dim: #4a4f5e;
+    --text-muted: #6f7484;
+    --shadow: 0 6px 24px rgba(20, 22, 35, 0.10);
+    --accent-shadow: rgba(124, 127, 233, 0.20);
+    --gold-shadow: rgba(212, 179, 90, 0.22);
     --header-grad-from: #ffffff;
-    --header-grad-to: #f5f5f7;
-    --tile-icon-grad-from: rgba(124, 127, 233, 0.08);
-    --tile-icon-grad-to: rgba(167, 139, 250, 0.10);
+    --header-grad-to: #eef0f5;
+    --tile-icon-grad-from: rgba(124, 127, 233, 0.10);
+    --tile-icon-grad-to: rgba(167, 139, 250, 0.12);
   }
+}
+
+/* === Overrides ciblés pour le mode clair === */
+/* En clair, plusieurs elements utilisent rgba blanc semi-transparent comme
+   fond, ce qui devient invisible sur fond clair. On les remplace ici. */
+:root[data-theme='light'] .badge,
+:root[data-theme='light'] .tag-pack,
+:root[data-theme='light'] .onboarding-close:hover {
+  background: rgba(20, 22, 35, 0.05);
+  border-color: rgba(20, 22, 35, 0.10);
+}
+:root[data-theme='light'] .lightbox-prev,
+:root[data-theme='light'] .lightbox-next,
+:root[data-theme='light'] .lightbox-close {
+  background: rgba(20, 22, 35, 0.65);
+  color: #fff;
+}
+:root[data-theme='light'] .lightbox-prev:hover,
+:root[data-theme='light'] .lightbox-next:hover,
+:root[data-theme='light'] .lightbox-close:hover {
+  background: rgba(20, 22, 35, 0.85);
+}
+:root[data-theme='light'] .account-pill-avatar-only .account-avatar {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 14px rgba(20, 22, 35, 0.18),
+              0 0 0 2px rgba(212, 179, 90, 0.30);
+}
+:root[data-theme='light'] .account-pill-avatar-only:hover .account-avatar {
+  border-color: var(--gold);
+  box-shadow: 0 4px 18px rgba(20, 22, 35, 0.25),
+              0 0 0 3px rgba(212, 179, 90, 0.45);
+}
+/* La halo dore autour du logo brand : sur fond clair, l'ombre dans le
+   gradient (rgba(15,18,24,...)) devient un point sombre — on l'attenue. */
+:root[data-theme='light'] .brand-logo {
+  background: radial-gradient(circle at 30% 30%, rgba(212, 179, 90, 0.30), rgba(255, 255, 255, 0.85) 65%);
+  box-shadow: 0 0 0 1px rgba(212, 179, 90, 0.45),
+              0 0 12px rgba(212, 179, 90, 0.25),
+              inset 0 0 0 1px rgba(20, 22, 35, 0.05);
+}
+:root[data-theme='light'] .login-logo {
+  background: radial-gradient(circle at 30% 30%, rgba(212, 179, 90, 0.28), rgba(255, 255, 255, 0.95) 70%);
+  box-shadow: 0 0 0 1px rgba(212, 179, 90, 0.55),
+              0 0 24px rgba(212, 179, 90, 0.30),
+              inset 0 0 0 1px rgba(20, 22, 35, 0.05);
+}
+/* Le backdrop des modals : assez sombre pour signaler le mode focus */
+:root[data-theme='light'] .modal-backdrop {
+  background: rgba(20, 22, 35, 0.45);
+}
+/* Les screenshots dans le carousel : fond clair plutot que noir */
+:root[data-theme='light'] .product-screenshot img {
+  background: #f3f4f8;
 }
 
 * { box-sizing: border-box; }
