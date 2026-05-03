@@ -120,192 +120,119 @@
         <svg viewBox="0 0 900 240" fill="none" stroke="currentColor"
              stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round">
 
-          <!-- ============ SCEAU DE LA TABLE RONDE ============
-               Composition centrale unique : un medaillon vu du dessus,
-               12 sieges autour, triskell au centre, geometrie sacree
-               (pentagramme inscrit + cercles concentriques). Style :
-               plate d'alchimie / sceau heraldique grave a l'eau-forte. -->
+          <!-- ===========================================================
+               PAYSAGE ARTHURIEN — chateau distant + Excalibur dans la
+               pierre, en trait fin (currentColor + opacity geres en CSS).
+               =========================================================== -->
 
-          <!-- ===== HALO LUMINEUX (ombre douce sous le sceau) ===== -->
-          <ellipse cx="450" cy="120" rx="160" ry="14"
-                   opacity="0.10" stroke-width="0.4"/>
-          <ellipse cx="450" cy="120" rx="120" ry="8"
-                   opacity="0.15" stroke-width="0.4"/>
+          <!-- ===== MASSIFS LOINTAINS (3 plans) ===== -->
+          <path d="M 0 158 L 80 122 L 130 138 L 200 110 L 270 132 L 350 118
+                   L 430 138 L 510 116 L 590 134 L 670 118 L 750 138
+                   L 830 122 L 900 130"
+                opacity="0.18" stroke-width="0.55"/>
+          <path d="M 0 175 L 60 145 L 130 165 L 220 135 L 300 158 L 380 142
+                   L 460 160 L 540 142 L 620 162 L 700 144 L 780 162
+                   L 860 152 L 900 158"
+                opacity="0.30" stroke-width="0.65"/>
+          <path d="M 0 192 L 70 170 L 145 188 L 220 168 L 300 188 L 380 172
+                   L 480 192 L 560 178 L 640 196 L 720 178 L 800 196
+                   L 870 184 L 900 190"
+                opacity="0.45" stroke-width="0.75"/>
 
-          <!-- ===== CERCLES CONCENTRIQUES DU SCEAU ===== -->
-          <!-- Anneau exterieur tres fin -->
-          <circle cx="450" cy="120" r="100" opacity="0.22" stroke-width="0.5"/>
-          <!-- Anneau d'inscription (entre 92 et 80) -->
-          <circle cx="450" cy="120" r="92" opacity="0.55"/>
-          <circle cx="450" cy="120" r="80" opacity="0.55"/>
-          <!-- Disque interieur de la table -->
-          <circle cx="450" cy="120" r="58" opacity="0.65" stroke-width="0.7"/>
-          <!-- Anneau decoratif intermediaire (en pointilles courts) -->
-          <circle cx="450" cy="120" r="69"
-                  opacity="0.40" stroke-width="0.55"
-                  stroke-dasharray="1.2 4"/>
-
-          <!-- ===== 12 SIEGES (cercles autour de la table) =====
-               Repartis sur l'anneau a r=86, tous les 30°, position des
-               chevaliers. Les 4 cardinaux (12h, 3h, 6h, 9h) sont
-               legerement plus marques (siege "majeur"). -->
-          <g opacity="0.78">
-            <circle cx="450" cy="34"   r="3.6"/>  <!-- 12h -->
-            <circle cx="493" cy="41.5" r="2.4" opacity="0.7"/>
-            <circle cx="524.4" cy="73" r="2.4" opacity="0.7"/>
-            <circle cx="536"  cy="120" r="3.6"/>  <!-- 3h -->
-            <circle cx="524.4" cy="167" r="2.4" opacity="0.7"/>
-            <circle cx="493" cy="198.5" r="2.4" opacity="0.7"/>
-            <circle cx="450" cy="206" r="3.6"/>  <!-- 6h -->
-            <circle cx="407" cy="198.5" r="2.4" opacity="0.7"/>
-            <circle cx="375.6" cy="167" r="2.4" opacity="0.7"/>
-            <circle cx="364"  cy="120" r="3.6"/>  <!-- 9h -->
-            <circle cx="375.6" cy="73" r="2.4" opacity="0.7"/>
-            <circle cx="407" cy="41.5" r="2.4" opacity="0.7"/>
+          <!-- ===== OISEAUX (V miniatures) ===== -->
+          <g opacity="0.55" stroke-width="0.6">
+            <path d="M 545 88 q 3 -2.5 6 0 q 3 -2.5 6 0"/>
+            <path d="M 568 78 q 2.5 -2 5 0 q 2.5 -2 5 0"/>
+            <path d="M 553 100 q 2 -1.5 4 0 q 2 -1.5 4 0"/>
           </g>
 
-          <!-- ===== PETITS RAYONS DEPUIS LE CENTRE VERS LES SIEGES =====
-               Tres subtils (opacity 0.18) — suggerent l'energie qui
-               unit les chevaliers a la Table. -->
-          <g opacity="0.18" stroke-width="0.4">
-            <line x1="450" y1="120" x2="450" y2="34"/>
-            <line x1="450" y1="120" x2="536" y2="120"/>
-            <line x1="450" y1="120" x2="450" y2="206"/>
-            <line x1="450" y1="120" x2="364" y2="120"/>
-            <line x1="450" y1="120" x2="493" y2="41.5"/>
-            <line x1="450" y1="120" x2="524.4" y2="73"/>
-            <line x1="450" y1="120" x2="524.4" y2="167"/>
-            <line x1="450" y1="120" x2="493" y2="198.5"/>
-            <line x1="450" y1="120" x2="407" y2="198.5"/>
-            <line x1="450" y1="120" x2="375.6" y2="167"/>
-            <line x1="450" y1="120" x2="375.6" y2="73"/>
-            <line x1="450" y1="120" x2="407" y2="41.5"/>
+          <!-- ===== HORIZON / BRUME AU SOL ===== -->
+          <line x1="0" y1="208" x2="900" y2="208" opacity="0.30" stroke-width="0.55"/>
+          <g opacity="0.22" stroke-width="0.5">
+            <path d="M 30 214 H 90"/>
+            <path d="M 200 214 H 260"/>
+            <path d="M 360 214 H 410"/>
+            <path d="M 540 214 H 600"/>
+            <path d="M 700 214 H 760"/>
           </g>
 
-          <!-- ===== PENTAGRAMME INSCRIT (geometrie sacree) =====
-               Cinq pointes etoile a r=58, opacite faible. Pointe vers le haut. -->
-          <g opacity="0.30" stroke-width="0.55">
-            <path d="M 450 62
-                     L 471.7 158.6
-                     L 396 99.4
-                     L 504 99.4
-                     L 428.3 158.6 Z"/>
-          </g>
-
-          <!-- ===== TRISKELL CENTRAL =====
-               Trois spirales partant du centre, separees de 120°. -->
-          <g transform="translate(450, 120)" opacity="0.85">
-            <!-- Cercle de fond du triskell -->
-            <circle r="22" opacity="0.5" stroke-width="0.55"/>
-            <!-- Spirale 1 (en haut) — courbe en S serree -->
-            <path d="M 0 0
-                     C 0 -6, 4 -10, 8 -12
-                     C 12 -14, 14 -10, 11 -7
-                     C 9 -5, 5 -6, 4 -3"
-                  stroke-width="0.85"/>
-            <!-- Spirale 2 (en bas a droite) — rotation 120° -->
-            <path d="M 0 0
-                     C 5.2 3, 6.7 8, 5.2 13.4
-                     C 4 17.7, -1 18.4, -2.6 14
-                     C -3.7 11, -1 8, 1.7 9"
-                  stroke-width="0.85"/>
-            <!-- Spirale 3 (en bas a gauche) — rotation 240° -->
-            <path d="M 0 0
-                     C -5.2 3, -10.7 2, -13.2 -1.4
-                     C -15.7 -3.7, -13 -8.4, -8.4 -7
-                     C -5.7 -6, -4 -3, -5.7 -1.5"
-                  stroke-width="0.85"/>
-            <!-- Petit cercle au centre (axe) -->
-            <circle r="1.6" opacity="0.7"/>
-          </g>
-
-          <!-- ===== INSCRIPTIONS RUNIQUES (4 cardinaux) =====
-               4 paires de petits glyphes graves entre les anneaux. -->
-          <g opacity="0.45" stroke-width="0.55">
-            <!-- Nord (12h) -->
-            <path d="M 446 68 L 450 64 L 454 68"/>
-            <line x1="450" y1="64" x2="450" y2="71"/>
-            <!-- Est (3h) -->
-            <path d="M 502 116 L 506 120 L 502 124"/>
-            <line x1="499" y1="120" x2="506" y2="120"/>
-            <!-- Sud (6h) -->
-            <path d="M 446 172 L 450 176 L 454 172"/>
-            <line x1="450" y1="169" x2="450" y2="176"/>
-            <!-- Ouest (9h) -->
-            <path d="M 398 116 L 394 120 L 398 124"/>
-            <line x1="394" y1="120" x2="401" y2="120"/>
-          </g>
-
-          <!-- ============ RINCEAUX ORNEMENTAUX (LATERAUX) ============
-               Volutes elegantes qui s'etirent depuis le sceau vers les
-               bords gauche et droite, comme une enluminure de manuscrit. -->
-
-          <!-- ===== ORNEMENT GAUCHE ===== -->
-          <g opacity="0.55">
-            <!-- Trait directeur principal -->
-            <path d="M 350 120 C 280 120, 240 90, 180 100"
-                  stroke-width="0.6"/>
-            <!-- Volute au bout (s'enroule en spirale) -->
-            <path d="M 180 100
-                     C 165 96, 158 102, 162 110
-                     C 165 116, 173 116, 175 110
-                     C 176 105, 172 103, 169 105"
-                  stroke-width="0.6"/>
-            <!-- Branchement secondaire avec petite feuille -->
-            <path d="M 250 110 Q 230 100 215 88
-                     Q 208 82 215 80 Q 222 79 220 86"
+          <!-- ===== CHATEAU SUR COLLINE (centre-gauche, distant) ===== -->
+          <g transform="translate(440, 0)">
+            <path d="M -55 208 Q -10 175 30 168 Q 60 162 90 170 Q 130 178 165 208"
+                  opacity="0.55" stroke-width="0.65"/>
+            <path d="M -25 208 Q 5 188 38 184 Q 70 184 100 198"
+                  opacity="0.30" stroke-width="0.55"/>
+            <path d="M 55 174 Q 50 184 42 195 Q 38 202 30 208"
+                  opacity="0.40" stroke-width="0.5"/>
+            <path d="M 55 174 Q 60 184 70 195 Q 75 202 80 208"
+                  opacity="0.40" stroke-width="0.5"/>
+            <path d="M 25 175 V 162 H 92 V 175"/>
+            <path d="M 25 162 V 159 H 28 V 162 H 32 V 159 H 35 V 162
+                     H 39 V 159 H 42 V 162 H 46 V 159 H 49 V 162
+                     H 70 V 159 H 73 V 162 H 77 V 159 H 80 V 162
+                     H 84 V 159 H 87 V 162 H 90 V 159 H 92 V 162"
+                  stroke-width="0.5"/>
+            <path d="M 18 175 V 148 M 28 175 V 148"/>
+            <path d="M 18 148 H 28"/>
+            <path d="M 18 148 V 145 H 21 V 148 H 24 V 145 H 28 V 148"
+                  stroke-width="0.5"/>
+            <path d="M 15 145 L 23 134 L 31 145"/>
+            <path d="M 23 134 V 128"/>
+            <path d="M 88 175 V 148 M 98 175 V 148"/>
+            <path d="M 88 148 H 98"/>
+            <path d="M 88 148 V 145 H 91 V 148 H 94 V 145 H 98 V 148"
+                  stroke-width="0.5"/>
+            <path d="M 85 145 L 93 134 L 101 145"/>
+            <path d="M 93 134 V 128"/>
+            <path d="M 38 162 V 138 H 78 V 162"/>
+            <path d="M 38 138 V 134 H 42 V 138 H 46 V 134 H 50 V 138
+                     H 65 V 134 H 69 V 138 H 73 V 134 H 78 V 138"
+                  stroke-width="0.5"/>
+            <path d="M 34 138 L 58 118 L 82 138"/>
+            <path d="M 58 118 V 102"/>
+            <path d="M 58 102 L 70 105 Q 73 109 70 113 L 58 115 Z"
+                  stroke-linejoin="miter" stroke-width="0.5"/>
+            <path d="M 53 175 V 168 Q 58 162 63 168 V 175"
                   opacity="0.7" stroke-width="0.55"/>
-            <!-- Branchement bas (mirror) -->
-            <path d="M 230 130 Q 215 138 200 142
-                     Q 192 144 196 138 Q 200 132 207 134"
-                  opacity="0.7" stroke-width="0.55"/>
-            <!-- Petites perles ornementales sur la branche principale -->
-            <circle cx="270" cy="118" r="0.9" fill="currentColor" opacity="0.8" stroke="none"/>
-            <circle cx="248" cy="116" r="1.2" fill="currentColor" opacity="0.8" stroke="none"/>
-            <circle cx="220" cy="108" r="0.9" fill="currentColor" opacity="0.8" stroke="none"/>
+            <path d="M 47 152 V 146 Q 49 142 51 146 V 152 Z"
+                  opacity="0.65" stroke-width="0.55"/>
+            <path d="M 65 152 V 146 Q 67 142 69 146 V 152 Z"
+                  opacity="0.65" stroke-width="0.55"/>
           </g>
 
-          <!-- ===== ORNEMENT DROIT (mirror) ===== -->
-          <g opacity="0.55">
-            <path d="M 550 120 C 620 120, 660 90, 720 100"
-                  stroke-width="0.6"/>
-            <path d="M 720 100
-                     C 735 96, 742 102, 738 110
-                     C 735 116, 727 116, 725 110
-                     C 724 105, 728 103, 731 105"
-                  stroke-width="0.6"/>
-            <path d="M 650 110 Q 670 100 685 88
-                     Q 692 82 685 80 Q 678 79 680 86"
-                  opacity="0.7" stroke-width="0.55"/>
-            <path d="M 670 130 Q 685 138 700 142
-                     Q 708 144 704 138 Q 700 132 693 134"
-                  opacity="0.7" stroke-width="0.55"/>
-            <circle cx="630" cy="118" r="0.9" fill="currentColor" opacity="0.8" stroke="none"/>
-            <circle cx="652" cy="116" r="1.2" fill="currentColor" opacity="0.8" stroke="none"/>
-            <circle cx="680" cy="108" r="0.9" fill="currentColor" opacity="0.8" stroke="none"/>
-          </g>
-
-          <!-- ============ ETOILES DISCRETES (constellations en arriere-plan) ============ -->
-          <g opacity="0.40" stroke-width="0.4" fill="currentColor" stroke="none">
-            <circle cx="120"  cy="50"  r="0.8"/>
-            <circle cx="160"  cy="36"  r="0.6"/>
-            <circle cx="220"  cy="28"  r="0.9"/>
-            <circle cx="320"  cy="42"  r="0.5"/>
-            <circle cx="580"  cy="38"  r="0.6"/>
-            <circle cx="660"  cy="28"  r="0.9"/>
-            <circle cx="740"  cy="42"  r="0.5"/>
-            <circle cx="800"  cy="58"  r="0.7"/>
-            <circle cx="100"  cy="180" r="0.7"/>
-            <circle cx="60"   cy="200" r="0.5"/>
-            <circle cx="780"  cy="195" r="0.6"/>
-            <circle cx="840"  cy="175" r="0.8"/>
-          </g>
-          <!-- Quelques etoiles a 4 branches plus marquees (l'oeil les voit) -->
-          <g opacity="0.55" stroke-width="0.5">
-            <path d="M 140 70 L 146 70 M 143 67 L 143 73"/>
-            <path d="M 760 70 L 766 70 M 763 67 L 763 73"/>
-            <path d="M 200 175 L 206 175 M 203 172 L 203 178"/>
-            <path d="M 700 175 L 706 175 M 703 172 L 703 178"/>
+          <!-- ===== EXCALIBUR DANS LA PIERRE (droite) ===== -->
+          <g transform="translate(750, 0)">
+            <path d="M -15 215 Q 35 210 95 215" opacity="0.25" stroke-width="0.5"/>
+            <path d="M 8 200 Q -2 190 8 178 Q 2 168 18 162 Q 14 152 30 152
+                     Q 38 144 52 152 Q 65 148 72 158 Q 82 162 78 172
+                     Q 88 180 80 192 Q 84 202 70 202
+                     Q 50 206 28 204 Q 14 204 8 200 Z"
+                  stroke-width="0.7"/>
+            <path d="M 18 178 Q 22 184 20 192" opacity="0.40" stroke-width="0.55"/>
+            <path d="M 64 175 Q 68 182 66 190" opacity="0.40" stroke-width="0.55"/>
+            <path d="M 38 188 Q 42 192 40 200" opacity="0.32" stroke-width="0.5"/>
+            <g opacity="0.55" stroke-width="0.55">
+              <path d="M -8 215 v -5 M -5 213 v -7 M -2 215 v -5"/>
+              <path d="M 88 215 v -5 M 92 213 v -7 M 96 215 v -5"/>
+              <path d="M 0 217 v -3 M 100 217 v -3"/>
+            </g>
+            <path d="M 47 152 L 45 96 L 47.5 86 L 50.5 86 L 53 96 L 51 152"
+                  stroke-width="0.7"/>
+            <path d="M 47.5 86 Q 49 82 50.5 86" opacity="0.7" stroke-width="0.55"/>
+            <path d="M 49 100 L 49 148" opacity="0.35" stroke-width="0.45"/>
+            <path d="M 36 96 Q 41 94 46 96 H 49"/>
+            <path d="M 36 96 Q 41 99 46 97 H 49"/>
+            <path d="M 49 96 H 52 Q 57 94 62 96"/>
+            <path d="M 49 96 H 52 Q 57 99 62 97"/>
+            <circle cx="36" cy="96" r="1.6"/>
+            <circle cx="62" cy="96" r="1.6"/>
+            <path d="M 47 96 V 78 M 51 96 V 78" stroke-width="0.6"/>
+            <path d="M 47 82 L 51 84" opacity="0.65" stroke-width="0.5"/>
+            <path d="M 47 87 L 51 89" opacity="0.65" stroke-width="0.5"/>
+            <path d="M 47 92 L 51 94" opacity="0.65" stroke-width="0.5"/>
+            <circle cx="49" cy="74" r="3.2" stroke-width="0.65"/>
+            <path d="M 49 71.5 L 51 74 L 49 76.5 L 47 74 Z"
+                  opacity="0.55" stroke-width="0.45"/>
           </g>
         </svg>
       </div>

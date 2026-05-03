@@ -493,10 +493,10 @@ input, button { outline: none; }
 }
 
 .bundle-card {
-  display: grid;
-  /* Body avec une max-width raisonnable : sur grand ecran le bouton reste
-     pres du texte au lieu de partir loin a droite. */
-  grid-template-columns: 72px minmax(auto, 720px) auto;
+  /* Flex au lieu de grid : le body prend sa taille naturelle (pas de 1fr
+     ni minmax qui le faisait s'etirer), donc le bouton vient se coller
+     juste a droite du contenu au lieu de finir au bout du conteneur. */
+  display: flex;
   align-items: center;
   gap: 24px;
   padding: 16px 20px;
@@ -512,6 +512,8 @@ input, button { outline: none; }
   margin-left: auto;
   margin-right: auto;
 }
+.bundle-icon { flex: 0 0 auto; }
+.bundle-body { flex: 0 1 auto; min-width: 0; }
 
 .bundle-card::before {
   content: '';
@@ -608,11 +610,10 @@ input, button { outline: none; }
 .bundle-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  /* Donne au bloc actions une largeur min pour que le bouton "Compléter
-     ma Table" ait de la place. Sans ça la carte le serre quand on a une
-     longue liste de produits manquants à gauche. */
-  min-width: 220px;
+  flex: 0 0 auto;
+  /* Plus de min-width ni de justify-content: flex-end qui poussaient le
+     bouton "Compléter ma Table" loin a droite. Avec le parent en flex,
+     le bouton se positionne naturellement juste apres le body. */
 }
 .bundle-actions button {
   padding: 9px 16px;
@@ -747,12 +748,23 @@ input, button { outline: none; }
   justify-content: center;
   pointer-events: none;
   user-select: none;
+  /* Trait gris doux qui s'adapte au theme : sur fond sombre = trait
+     clair pale, sur fond clair = trait gris fonce. On ne touche pas a
+     `color: var(--text)` mais on ajuste l'opacite via le theme. */
   color: var(--text);
-  opacity: 0.18;
+  opacity: 0.30;
   transition: opacity 0.4s;
 }
 .empty-decor:hover {
-  opacity: 0.28;
+  opacity: 0.45;
+}
+
+/* Theme clair : un peu plus de presence pour rester lisible sur fond gris-blanc */
+:root[data-theme='light'] .empty-decor { opacity: 0.42; }
+:root[data-theme='light'] .empty-decor:hover { opacity: 0.55; }
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] .empty-decor { opacity: 0.42; }
+  :root[data-theme='auto'] .empty-decor:hover { opacity: 0.55; }
 }
 .empty-decor svg {
   width: 100%;
