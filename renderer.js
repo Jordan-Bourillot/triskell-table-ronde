@@ -412,7 +412,7 @@
           <img src="assets/triskell_mark.png" alt="Triskell" style="width:52px;height:52px;border-radius:12px;flex-shrink:0;" />
           <div style="flex:1;min-width:0;">
             <h2 style="margin:0;color:#fff;font-size:20px;font-weight:600;letter-spacing:0.3px;">Mon compte Triskell</h2>
-            <p class="muted small" style="margin:2px 0 0;">Lanceur ${escapeHtml(version)}</p>
+            <p class="muted small" style="margin:2px 0 0;">Table Ronde ${escapeHtml(version)}</p>
           </div>
         </div>
         <p style="text-align:center;color:var(--text);margin:0 0 6px;">Connecté avec <strong style="color:var(--triskell-violet);">${escapeHtml(state.user.email)}</strong></p>
@@ -1072,6 +1072,14 @@
       ? `<span class="tile-ribbon">${escapeHtml(app.featuredLabel || 'Populaire')}</span>`
       : '';
 
+    // Indice de cliquabilite : revele au hover (CSS), masque sur coming-soon.
+    // aria-hidden car c'est un signal purement visuel — la tuile entiere est
+    // deja cliquable et le screen reader n'a pas besoin de cette redondance.
+    const hintHtml = app.comingSoon
+      ? ''
+      : '<span class="tile-hint" aria-hidden="true">Voir la fiche'
+        + '<span class="tile-hint-arrow">&rarr;</span></span>';
+
     tile.innerHTML = `
       ${featuredRibbon}
       <div class="tile-head">
@@ -1084,6 +1092,7 @@
       <div class="tile-tags">${tags.join('')}</div>
       ${priceHtml}
       <div class="tile-actions"></div>
+      ${hintHtml}
     `;
 
     if (app.icon) {
@@ -1131,7 +1140,12 @@
         break;
       }
       case 'update-available': {
-        host.appendChild(makeBtn('Mettre à jour', 'btn-launch', () => onInstall(app)));
+        const localVer = state.installs[app.id]?.version;
+        const latest = state.versions[app.id];
+        const label = latest && latest !== localVer
+          ? `↻ Mettre à jour · v${latest}`
+          : '↻ Mettre à jour';
+        host.appendChild(makeBtn(label, 'btn-update', () => onInstall(app)));
         host.appendChild(makeBtn('Convoquer', 'btn-info', () => onLaunch(app)));
         break;
       }
@@ -1461,6 +1475,181 @@
     if (res.error === 'not-authenticated') return 'Tu n\'es plus connecté. Reconnecte-toi.';
     if (res.error === 'install-failed')    return `Erreur pendant l'installation : ${res.message || ''}`;
     return 'L\'installation a échoué.';
+  }
+
+  // ============================================================================
+  // PAGE PRODUIT (fiche dediee plein ecran)
+  // ============================================================================
+  function bindProductPage() {
+    if (els.productBack) {
+      els.productBack.addEventListener('click', hideProductPage);
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape'
+          && state.openProductId
+          && els.modal.classList.contains('hidden')) {
+        hideProductPage();
+      }
+    });
+  }
+
+  function showProductPage(app) {
+    state.openProductId = app.id;
+    // Memorise la position de scroll de la grille pour la restaurer au retour.
+    const main = document.querySelector('.main');
+    if (main && !main.classList.contains('hidden')) {
+      state.gridScrollY = main.scrollTop;
+    }
+    renderProductPage(app);
+    // Si la fiche etait en cours de fermeture (anim de sortie), on annule pour
+    // eviter une transition incoherente quand l'utilisateur clique vite.
+    els.productScreen.classList.remove('is-leaving');
+    els.productScreen.classList.remove('hidden');
+    els.productScreen.setAttribute('aria-hidden', 'false');
+    // Cache la grille (header reste visible). On scroll la fiche tout en haut.
+    if (main) main.classList.add('hidden');
+    els.productScreen.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
+  function hideProductPage() {
+    // Si la fiche est deja cachee ou en cours de fermeture, ne rien faire
+    // (evite de rejouer l'anim si l'utilisateur spamme Echap ou le bouton).
+    if (els.productScreen.classList.contains('hidden')) return;
+    if (els.productScreen.classList.contains('is-leaving')) return;
+
+    state.openProductId = null;
+    els.productScreen.classList.add('is-leaving');
+
+    const main = document.querySelector('.main');
+
+    // Termine la fermeture apres l'anim de sortie. On ecoute animationend
+    // pour rester en phase avec le CSS, avec un fallback timeout au cas ou
+    // l'event ne firerait pas (anim coupee, prefers-reduced-motion, etc.).
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      els.productScreen.removeEventListener('animationend', finish);
+      els.productScreen.classList.add('hidden');
+      els.productScreen.classList.remove('is-leaving');
+      els.productScreen.setAttribute('aria-hidden', 'true');
+      if (main) {
+        main.classList.remove('hidden');
+        // Restaure la position de scroll memorisee pour ne pas perdre la
+        // place de l'utilisateur dans la grille.
+        main.scrollTop = state.gridScrollY || 0;
+      }
+    };
+    els.productScreen.addEventListener('animationend', finish);
+    setTimeout(finish, 300);
+  }
+
+  function renderProductPage(app) {
+    const tileState = tileStateOf(app);
+    const owned = state.licenses[app.id] || app.tier === 'free';
+    const installed = !!state.installs[app.id];
+
+    // Icone (image si dispo, sinon initiales)
+    const initials = makeInitials(app.name);
+    els.productIcon.innerHTML = '';
+    if (app.icon) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.addEventListener('error', () => {
+        els.productIcon.textContent = initials;
+      });
+      img.src = app.icon;
+      els.productIcon.appendChild(img);
+    } else {
+      els.productIcon.textContent = initials;
+    }
+
+    // Tags (memes regles que la tuile pour rester coherent)
+    const tags = [];
+    if (app.tier === 'free')                          tags.push('<span class="tag tag-free">Gratuit</span>');
+    if (state.licenses[app.id])                       tags.push('<span class="tag tag-owned">Adoubé</span>');
+    if (app.comingSoon)                               tags.push('<span class="tag tag-soon">En quête</span>');
+    if (installed && !app.comingSoon)                 tags.push('<span class="tag tag-installed">À ta Table</span>');
+    if (tileState === 'update-available')             tags.push('<span class="tag tag-update">Mise à jour</span>');
+    if (app.featured && tileState === 'not-owned') {
+      tags.push(`<span class="tag tag-completion">${escapeHtml(app.featuredLabel || 'Populaire')}</span>`);
+    }
+    els.productTags.innerHTML = tags.join('');
+
+    // Identite
+    els.productName.textContent = app.name;
+    els.productTagline.textContent = app.tagline || '';
+
+    // Statut texte
+    let statusBits = [];
+    if (owned)     statusBits.push('<strong style="color:var(--green)">possédé</strong>');
+    else           statusBits.push('non acquis');
+    if (installed) statusBits.push('installé');
+    if (tileState === 'update-available') statusBits.push('mise à jour disponible');
+    els.productStatus.innerHTML = 'Statut : ' + statusBits.join(' · ');
+
+    // Bloc prix (cache si possede ou gratuit)
+    els.productPriceBlock.innerHTML = renderPriceBlock(app, owned);
+    if (!owned && app.price && state.promoNote) {
+      els.productPriceBlock.innerHTML +=
+        `<p class="muted small" style="margin-top:6px;">🎟️ ${escapeHtml(state.promoNote)}</p>`;
+    }
+
+    // CTA principaux : on reutilise la meme logique que la tuile pour eviter
+    // les divergences (un seul endroit ou changer si on ajoute un etat).
+    // On retire ensuite le bouton "Infos / En savoir plus" qui serait
+    // redondant sur la fiche elle-meme (tu es deja sur la page d'info).
+    renderTileActions(els.productActions, app, tileState);
+    els.productActions.querySelectorAll('button').forEach(btn => {
+      const txt = (btn.textContent || '').trim().toLowerCase();
+      if (txt === 'infos' || txt === 'en savoir plus') btn.remove();
+    });
+
+    // Description
+    els.productDescription.textContent = app.description || app.tagline || '';
+
+    // Features
+    if (Array.isArray(app.features) && app.features.length) {
+      els.productFeatures.innerHTML = app.features
+        .map(f => `<li>${escapeHtml(f)}</li>`).join('');
+      els.productFeaturesSection.classList.remove('hidden');
+    } else {
+      els.productFeaturesSection.classList.add('hidden');
+    }
+
+    // Outils inclus (Suite des Heros)
+    if (Array.isArray(app.tools) && app.tools.length) {
+      els.productToolsTitle.textContent = `Les ${app.tools.length} outils inclus`;
+      els.productTools.innerHTML = app.tools.map(t => `
+        <div class="product-tool-card">
+          <strong>${escapeHtml(t.name)}</strong>
+          <span>${escapeHtml(t.tagline || '')}</span>
+        </div>
+      `).join('');
+      els.productToolsSection.classList.remove('hidden');
+    } else {
+      els.productToolsSection.classList.add('hidden');
+    }
+
+    // Liens externes
+    if (Array.isArray(app.links) && app.links.length) {
+      els.productLinks.innerHTML = app.links.map(l =>
+        `<li><a href="#" data-external="${escapeHtml(l.url)}">→ ${escapeHtml(l.label)}</a></li>`
+      ).join('');
+      els.productLinksSection.classList.remove('hidden');
+      els.productLinks.querySelectorAll('[data-external]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const url = link.getAttribute('data-external');
+          if (url && window.triskell && window.triskell.openExternal) {
+            window.triskell.openExternal(url);
+          }
+        });
+      });
+    } else {
+      els.productLinksSection.classList.add('hidden');
+    }
   }
 
   // ============================================================================

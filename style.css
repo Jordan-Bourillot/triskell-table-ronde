@@ -1504,19 +1504,40 @@ details[open] .danger-summary::before {
 .tile { cursor: pointer; }
 .tile-actions button { cursor: pointer; }
 
+/* Indice de cliquabilite "Voir la fiche →" : retire de toutes les tuiles
+   parce qu'il chevauche le bouton "Infos" / "En savoir plus" qui se trouve
+   au meme endroit (bas-droite des tile-actions) et fait deja le meme job.
+   La tuile reste cliquable (cursor: pointer), et le bouton Infos signale
+   explicitement qu'on peut ouvrir la fiche produit. */
+.tile-hint { display: none; }
+
 .product-page {
+  /* Occupe la meme rangee que <main> dans le grid de .app pour que le
+     header reste collé en haut et le footer en bas pendant la fiche. */
+  grid-row: 2;
   padding: 24px 40px 48px;
   overflow-y: auto;
-  max-width: 1100px;
-  margin: 0 auto;
-  width: 100%;
   box-sizing: border-box;
-  animation: product-fade-in 0.25s ease;
+  width: 100%;
+  animation: product-slide-in 0.25s ease both;
+}
+.product-page.is-leaving {
+  animation: product-slide-out 0.22s ease both;
+  pointer-events: none;
+}
+.product-page > * {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-@keyframes product-fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes product-slide-in {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes product-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(40px); }
 }
 
 .product-topbar {
@@ -1812,4 +1833,46 @@ details[open] .danger-summary::before {
   }
   .product-hero-icon { width: 88px; height: 88px; }
   .product-name { font-size: 24px; }
+}
+
+/* ============== BOUTON "Mettre à jour" — identité visuelle dédiée ==============
+   But : qu'on voie au premier coup d'œil qu'une MAJ attend un clic. Vert vif
+   (signal "frais / nouveau"), gradient subtil, icône ↻, et glow pulsé. */
+
+.btn-update {
+  position: relative;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #16a34a 100%);
+  color: #062a13;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: none;
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.45),
+    0 4px 14px rgba(34, 197, 94, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  animation: btn-update-pulse 2.4s ease-in-out infinite;
+  flex: 1.4;          /* un peu plus large que "Convoquer" pour insister */
+}
+
+.btn-update:hover {
+  background: linear-gradient(135deg, #6ee097 0%, #4ade80 50%, #22c55e 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.7),
+    0 8px 22px rgba(34, 197, 94, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+@keyframes btn-update-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.45), 0 4px 14px rgba(34, 197, 94, 0.32), 0 0 0 0 rgba(74, 222, 128, 0); }
+  50%      { box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.6),  0 6px 18px rgba(34, 197, 94, 0.5),  0 0 0 6px rgba(74, 222, 128, 0.10); }
+}
+
+/* Tag "MISE À JOUR" — passe aussi en vert pour cohérence visuelle */
+.tag-update {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.18), rgba(34, 197, 94, 0.10));
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.42);
+  font-weight: 700;
+  letter-spacing: 0.8px;
 }

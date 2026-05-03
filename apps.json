@@ -10,9 +10,9 @@
     "icon": "assets/triskell_mark.png",
     "comingSoon": false,
     "tiers": {
-      "4": { "price": 89,  "priceOriginal": 130, "priceNote": "Économise 41 € — toute la Table d'un coup" },
-      "3": { "price": 69,  "priceOriginal": 100, "priceNote": "Économise 31 € — les 3 manquants" },
-      "2": { "price": 49,  "priceOriginal": 65,  "priceNote": "Économise 16 € — les 2 manquants" }
+      "4": { "price": 99,  "priceOriginal": 122, "priceNote": "Économise 23 € — toute la Table d'un coup" },
+      "3": { "price": 79,  "priceOriginal": 95,  "priceNote": "Économise 16 € — les 3 manquants" },
+      "2": { "price": 55,  "priceOriginal": 66,  "priceNote": "Économise 11 € — les 2 manquants" }
     }
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
