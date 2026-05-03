@@ -771,12 +771,9 @@ input, button { outline: none; }
    au loin. Trait blanc fin a basse opacite, pointer-events: none pour ne pas
    gener les interactions. */
 .empty-decor {
-  /* Désactivé temporairement (demande Jordan 2026-05-03). Pour réactiver,
-     supprimer la ligne `display: none !important` ci-dessous. Le JS continue
-     à toggler la classe `hidden` selon le contexte, donc rien d'autre à faire. */
-  display: none !important;
   margin-top: 60px;
   padding: 0 20px;
+  display: flex;
   justify-content: center;
   pointer-events: none;
   user-select: none;
@@ -784,19 +781,25 @@ input, button { outline: none; }
      clair pale, sur fond clair = trait gris fonce. On ne touche pas a
      `color: var(--text)` mais on ajuste l'opacite via le theme. */
   color: var(--text);
-  opacity: 0.30;
+  /* Illustration "chateau.png" : trait fin gris très clair sur blanc.
+     Une fois inversée + blend screen, le trait reste subtil. On monte
+     un peu l'opacité (vs ancienne illustration épaisse) pour qu'elle
+     soit perceptible sans dominer. */
+  opacity: 0.55;
   transition: opacity 0.4s;
 }
 .empty-decor:hover {
-  opacity: 0.45;
+  opacity: 0.75;
 }
 
-/* Theme clair : un peu plus de presence pour rester lisible sur fond gris-blanc */
-:root[data-theme='light'] .empty-decor { opacity: 0.42; }
-:root[data-theme='light'] .empty-decor:hover { opacity: 0.55; }
+/* Theme clair : trait noir sur fond blanc (filtre identité) avec blend
+   multiply -> transparent sur les blancs. Opacité un peu réduite car le
+   trait noir contraste plus fort sur fond clair. */
+:root[data-theme='light'] .empty-decor { opacity: 0.45; }
+:root[data-theme='light'] .empty-decor:hover { opacity: 0.60; }
 @media (prefers-color-scheme: light) {
-  :root[data-theme='auto'] .empty-decor { opacity: 0.42; }
-  :root[data-theme='auto'] .empty-decor:hover { opacity: 0.55; }
+  :root[data-theme='auto'] .empty-decor { opacity: 0.45; }
+  :root[data-theme='auto'] .empty-decor:hover { opacity: 0.60; }
 }
 .empty-decor svg {
   width: 100%;
