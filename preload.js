@@ -58,7 +58,7 @@ contextBridge.exposeInMainWorld('triskell', {
   // Achat in-app (Stripe Checkout dans une fenetre Electron, retour licence auto)
   purchase: {
     open: (url, productId) => ipcRenderer.invoke('purchase:open', { url, productId }),
-    openCompletion: (tier, productIds) => ipcRenderer.invoke('purchase:completion', { tier, productIds }),
+    openCompletion: (count, productIds, expectedPrice) => ipcRenderer.invoke('purchase:completion', { count, productIds, expectedPrice }),
     onCompleted: (cb) => {
       const handler = (_evt, data) => cb(data);
       ipcRenderer.on('purchase:completed', handler);
@@ -76,7 +76,8 @@ contextBridge.exposeInMainWorld('triskell', {
     setOnboardingDismissed:  (yes)      => ipcRenderer.invoke('prefs:set-onboarding-dismissed', yes),
     setLastSeenVersion:      (v)        => ipcRenderer.invoke('prefs:set-last-seen-version', v),
     setAvatar:               (dataUrl)  => ipcRenderer.invoke('prefs:set-avatar', dataUrl),
-    setTheme:                (theme)    => ipcRenderer.invoke('prefs:set-theme', theme)
+    setTheme:                (theme)    => ipcRenderer.invoke('prefs:set-theme', theme),
+    dismissAnnouncement:     (id)       => ipcRenderer.invoke('prefs:dismiss-announcement', id)
   },
 
   // Changelog : release notes GitHub (fetched par le main pour passer la CSP)

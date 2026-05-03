@@ -771,9 +771,12 @@ input, button { outline: none; }
    au loin. Trait blanc fin a basse opacite, pointer-events: none pour ne pas
    gener les interactions. */
 .empty-decor {
+  /* Désactivé temporairement (demande Jordan 2026-05-03). Pour réactiver,
+     supprimer la ligne `display: none !important` ci-dessous. Le JS continue
+     à toggler la classe `hidden` selon le contexte, donc rien d'autre à faire. */
+  display: none !important;
   margin-top: 60px;
   padding: 0 20px;
-  display: flex;
   justify-content: center;
   pointer-events: none;
   user-select: none;

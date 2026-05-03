@@ -17,6 +17,16 @@
     }
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
+
+  "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion', value: <productId|url> }. Mettre announcement à null pour ne rien afficher.",
+  "announcement": {
+    "id": "delinote-79-2026-05",
+    "kind": "update",
+    "title": "DéliNote passe à 79 €",
+    "message": "Toujours en paiement unique à vie, sans abonnement. Bundle dispo si tu en as plusieurs sur ta liste !",
+    "cta": { "label": "Voir DéliNote", "action": "open-product", "value": "delinote" }
+  },
+
   "apps": [
     {
       "id": "suite-des-heros",

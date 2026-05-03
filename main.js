@@ -601,6 +601,22 @@ ipcMain.handle('prefs:set-onboarding-dismissed', async (_evt, yes) => {
   return { ok: true };
 });
 
+// Liste d'IDs d'annonces que l'utilisateur a dismiss (bouton X). Une annonce
+// déjà dans cette liste ne sera plus affichée. Quand Jordan publie une
+// nouvelle annonce, il change l'id dans apps.json -> non présent dans la
+// liste -> l'annonce s'affiche à nouveau.
+ipcMain.handle('prefs:dismiss-announcement', async (_evt, id) => {
+  if (!id || typeof id !== 'string') return { ok: false, error: 'invalid-id' };
+  const all = store.getPrefs() || {};
+  const list = Array.isArray(all.dismissedAnnouncements) ? all.dismissedAnnouncements : [];
+  if (!list.includes(id)) list.push(id);
+  // Garde-fou : on évite que la liste explose si Jordan publie 1000 annonces
+  // sur la durée. 200 IDs c'est largement assez (et 200 strings = quelques KB).
+  while (list.length > 200) list.shift();
+  store.setPref('dismissedAnnouncements', list);
+  return { ok: true };
+});
+
 // Theme : 'dark' | 'light' | 'auto' (suit l'OS). Persiste localement et le
 // renderer applique data-theme=... sur <html> au boot.
 ipcMain.handle('prefs:set-theme', async (_evt, theme) => {
@@ -654,7 +670,7 @@ ipcMain.handle('purchase:open', async (_evt, { url, productId }) => {
 // backend choisit le bon prix Stripe et cree une session checkout dont
 // l'URL est renvoyee ici. On reutilise le meme flux purchase:open qu'un
 // achat single.
-ipcMain.handle('purchase:completion', async (_evt, { tier, productIds }) => {
+ipcMain.handle('purchase:completion', async (_evt, { count, productIds, expectedPrice }) => {
   const session = store.getSession();
   if (!session) return { ok: false, error: 'not-authenticated' };
 
@@ -665,7 +681,7 @@ ipcMain.handle('purchase:completion', async (_evt, { tier, productIds }) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.token}`
       },
-      body: JSON.stringify({ tier, productIds })
+      body: JSON.stringify({ count, productIds, expectedPrice })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.url) return { ok: false, error: data.error || 'no-url' };
@@ -681,7 +697,7 @@ ipcMain.handle('purchase:completion', async (_evt, { tier, productIds }) => {
     const success = (sessionId) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('purchase:completed', {
-          productId: 'completion-bundle', tier, productIds, sessionId
+          productId: 'completion-bundle', count, productIds, sessionId
         });
       }
       if (!win.isDestroyed()) win.close();

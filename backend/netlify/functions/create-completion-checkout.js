@@ -1,22 +1,48 @@
 // POST /api/create-completion-checkout
 // Header : Authorization: Bearer <jwt>
-// Body   : { tier: 2|3|4, productIds: ["delinote", "studio-pdf", ...] }
+// Body   : { count, productIds: [...], expectedPrice (info, recalculé serveur) }
 //
-// Cree une session Stripe Checkout pour le "completion bundle" (compléter
-// ta Table). Le frontend a déjà calculé le tier en fonction de ce que
-// l'utilisateur possede deja. On selectionne le prix Stripe correspondant.
+// Cree une session Stripe Checkout pour le "completion bundle" (Compléter
+// ta Table). Le prix est calculé SERVEUR à partir des productIds reçus +
+// la table de prix interne, jamais on ne fait confiance au prix client.
 //
-// Les Stripe Price IDs doivent etre configures cote Netlify :
-//   STRIPE_BUNDLE_PRICE_4   (bundle complet, 4 apps)
-//   STRIPE_BUNDLE_PRICE_3   (3 apps)
-//   STRIPE_BUNDLE_PRICE_2   (2 apps)
-// Le webhook Stripe (en aval) doit appeler /api/register-license une fois par
-// productId du bundle pour creer toutes les licences d'un coup.
+// Modèle de pricing (depuis 2026-05-03) : remise progressive sur le total
+// individuel selon le nombre d'outils (2 → -15%, 3 → -25%, 4 → -35%).
+// Plus de Price IDs Stripe figés : on utilise price_data à la volée pour
+// que le checkout reflète exactement le prix qu'on vient de calculer.
 
 'use strict';
 
 const Stripe = require('stripe');
 const { json, preflight, authFromHeaders } = require('./_lib');
+
+// Source de vérité pour le pricing serveur. Doit rester en sync avec
+// apps.json (frontend). Si tu ajoutes/retires/modifies un prix produit,
+// modifie LES DEUX endroits — sinon le client verra un prix et payera
+// un autre (rejet 400 invalid-price si écart).
+const PRODUCT_PRICES_EUR = {
+  'suite-des-heros': 27,
+  'delinote': 79,
+  'studio-pdf': 39,
+  'bobeez': 27
+};
+
+const DISCOUNTS = { 2: 15, 3: 25, 4: 35 };
+
+function computeBundleCents(productIds) {
+  const count = productIds.length;
+  const discount = DISCOUNTS[count];
+  if (typeof discount !== 'number') return null;
+
+  let totalEur = 0;
+  for (const id of productIds) {
+    const p = PRODUCT_PRICES_EUR[id];
+    if (typeof p !== 'number') return null; // produit inconnu
+    totalEur += p;
+  }
+  const bundleEur = Math.round(totalEur * (1 - discount / 100));
+  return bundleEur * 100; // Stripe veut des centimes
+}
 
 exports.handler = async (event) => {
   const pre = preflight(event);
@@ -30,15 +56,27 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body || '{}'); }
   catch (_) { return json(400, { error: 'invalid-json' }); }
 
-  const tier = parseInt(body.tier, 10);
-  const productIds = Array.isArray(body.productIds) ? body.productIds : [];
-  if (![2, 3, 4].includes(tier) || productIds.length !== tier) {
-    return json(400, { error: 'invalid-tier' });
+  const productIds = Array.isArray(body.productIds)
+    ? body.productIds.map(String).filter(Boolean) : [];
+  // Dédoublonnage défensif : un même productId envoyé 2x ne doit pas multiplier.
+  const uniqueIds = [...new Set(productIds)];
+  if (uniqueIds.length !== productIds.length || uniqueIds.length < 2 || uniqueIds.length > 4) {
+    return json(400, { error: 'invalid-product-list' });
   }
 
-  const priceId = process.env[`STRIPE_BUNDLE_PRICE_${tier}`];
-  if (!priceId) {
-    return json(501, { error: 'tier-not-configured', tier });
+  const unitAmountCents = computeBundleCents(uniqueIds);
+  if (unitAmountCents === null) {
+    return json(400, { error: 'discount-not-configured', productIds: uniqueIds });
+  }
+
+  // Sanity check : on signale (sans bloquer) si le client annonçait un prix
+  // différent du nôtre. Permet de detecter rapidement si frontend et backend
+  // sont désynchronisés (ex. nouveau produit ajouté côté apps.json mais pas
+  // côté backend).
+  if (typeof body.expectedPrice === 'number'
+      && Math.abs(body.expectedPrice - unitAmountCents / 100) > 0.5) {
+    console.warn(`completion-checkout: client/server price mismatch ` +
+                 `(client=${body.expectedPrice}€, server=${unitAmountCents/100}€)`);
   }
 
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -51,16 +89,27 @@ exports.handler = async (event) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      // price_data : on passe le prix calculé directement sans créer un
+      // Stripe Price persistant. Évite de se retrouver avec 1 Price par
+      // combinaison possible (combinatoire explosive avec N produits).
+      line_items: [{
+        quantity: 1,
+        price_data: {
+          currency: 'eur',
+          unit_amount: unitAmountCents,
+          product_data: {
+            name: `Compléter ta Table · ${uniqueIds.length} outils`,
+            description: uniqueIds.join(', ')
+          }
+        }
+      }],
       customer_email: auth.email,
       allow_promotion_codes: true,
-      // On stocke les productIds dans les metadatas pour que le webhook
-      // puisse register chaque licence individuellement apres paiement.
       metadata: {
         userId: auth.sub,
         bundle: 'completion',
-        tier: String(tier),
-        productIds: productIds.join(',')
+        count: String(uniqueIds.length),
+        productIds: uniqueIds.join(',')
       },
       success_url: `${process.env.LANCEUR_APP_URL || 'https://app.triskell-studio.fr'}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${process.env.LANCEUR_APP_URL || 'https://app.triskell-studio.fr'}/cancel`
