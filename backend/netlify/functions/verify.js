@@ -79,6 +79,7 @@ exports.handler = async (event) => {
     .maybeSingle();
 
   let user;
+  let isFirstLogin = false;
   if (existing) {
     const { data: u } = await sb.from('users')
       .update({ last_login_at: nowIso })
@@ -91,11 +92,38 @@ exports.handler = async (event) => {
       .insert({ email, last_login_at: nowIso })
       .select('id, email')
       .single();
-    if (insErr || !u) {
-      console.error('verify: insert user failed', insErr);
+    if (insErr) {
+      // Race condition : un autre verify parallele a deja insere ce email
+      // entre notre SELECT et notre INSERT. La contrainte UNIQUE(email)
+      // remonte un 23505 — on retombe sur le user existant, sans renvoyer
+      // de welcome email (l'autre verify s'en chargera).
+      if (insErr.code === '23505') {
+        const { data: raceUser } = await sb
+          .from('users').select('id, email').eq('email', email).single();
+        if (!raceUser) {
+          console.error('verify: race fallback failed', insErr);
+          return json(500, { error: 'server-error' });
+        }
+        const { data: u2 } = await sb.from('users')
+          .update({ last_login_at: nowIso })
+          .eq('id', raceUser.id)
+          .select('id, email')
+          .single();
+        user = u2 || raceUser;
+      } else {
+        console.error('verify: insert user failed', insErr);
+        return json(500, { error: 'server-error' });
+      }
+    } else if (!u) {
+      console.error('verify: insert user returned no row');
       return json(500, { error: 'server-error' });
+    } else {
+      user = u;
+      isFirstLogin = true;
     }
-    user = u;
+  }
+
+  if (isFirstLogin) {
     // Mail de bienvenue (best-effort, on ne bloque jamais le login dessus)
     sendWelcomeEmail(email).catch(err =>
       console.error('welcome email failed (silent):', err && err.message));

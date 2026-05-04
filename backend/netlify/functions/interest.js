@@ -13,7 +13,8 @@
 const { supabase, json, preflight, authFromHeaders } = require('./_lib');
 
 const KNOWN_PRODUCTS = new Set([
-  'suite-des-heros', 'delinote', 'studio-pdf', 'bobeez', 'pirate-life-mail'
+  'suite-des-heros', 'delinote', 'studio-pdf', 'bobeez',
+  'pirate-life-mail', 'le-denicheur'
 ]);
 
 exports.handler = async (event) => {

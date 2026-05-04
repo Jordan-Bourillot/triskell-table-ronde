@@ -19,6 +19,15 @@ function homeDocuments() {
   return path.join(os.homedir(), 'Documents');
 }
 
+// Le backend renvoie expectedExePath avec le placeholder <USER> car il ne
+// connait pas le nom Windows local. On substitue ici avec le username reel
+// avant de stocker mainExe — sinon spawnExe('C:\\Users\\<USER>\\...') echoue
+// avec not-found au prochain "Lancer".
+function resolveLocalUserPath(rawPath) {
+  if (!rawPath || typeof rawPath !== 'string') return null;
+  return rawPath.replace(/<USER>/g, os.userInfo().username);
+}
+
 async function getInstallToken({ apiBase, sessionToken, productId }) {
   const res = await fetch(`${apiBase}/api/install-token?product=${encodeURIComponent(productId)}`, {
     headers: { Authorization: `Bearer ${sessionToken}` }
@@ -181,7 +190,7 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
     // Pour les .exe-installer, c'est le produit qui choisit ou s'installer.
     // Pour V1 on stocke juste un marqueur ; le mainExe sera detecte plus tard
     // (chemin classique dans %ProgramFiles%) ou configure manuellement.
-    const mainExe = tokenInfo.expectedExePath || null;
+    const mainExe = resolveLocalUserPath(tokenInfo.expectedExePath);
     onProgress({ phase: 'done', percent: 100,
       message: `${product.name} a rejoint ta Table`, detail: '' });
     return { installPath: mainExe ? path.dirname(mainExe) : null, mainExe, version, kind };

@@ -18,8 +18,8 @@ const { json, preflight, authFromHeaders } = require('./_lib');
 
 // Source de vérité pour le pricing serveur. Doit rester en sync avec
 // apps.json (frontend). Si tu ajoutes/retires/modifies un prix produit,
-// modifie LES DEUX endroits — sinon le client verra un prix et payera
-// un autre (rejet 400 invalid-price si écart).
+// modifie LES DEUX endroits — sinon le client paiera le prix recalculé
+// serveur (qui prime), et un warning sera loggé en cas d'écart.
 const PRODUCT_PRICES_EUR = {
   'suite-des-heros': 27,
   'delinote': 79,
