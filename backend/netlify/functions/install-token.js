@@ -98,12 +98,16 @@ exports.handler = async (event) => {
   if (!config) return json(501, { error: 'product-not-installable' });
 
   // Admin bypass : un email dans ADMIN_EMAILS (env Netlify, CSV) court-circuite
-  // tout check de licence. Fallback hardcode : contact@triskell-studio.fr
-  // (founder Jordan) — comme ca meme si ADMIN_EMAILS n'est pas configure
-  // sur Netlify, le founder peut quand meme tout installer.
-  const FOUNDER_EMAIL = 'contact@triskell-studio.fr';
+  // tout check de licence. Fallback hardcode : les emails du founder Jordan —
+  // comme ca meme si ADMIN_EMAILS n'est pas configure sur Netlify, le founder
+  // peut quand meme tout installer.
+  const FOUNDER_EMAILS = [
+    'contact@triskell-studio.fr',
+    'jordan.bourillot.bzh@gmail.com',
+    'jordanbourillotbzh@gmail.com'  // variante Gmail sans points
+  ];
   const adminList = [
-    FOUNDER_EMAIL,
+    ...FOUNDER_EMAILS,
     ...(process.env.ADMIN_EMAILS || '')
       .split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
   ];

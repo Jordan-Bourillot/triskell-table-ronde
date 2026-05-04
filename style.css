@@ -393,12 +393,15 @@ input, button { outline: none; }
   color: var(--text-muted);
   font-family: var(--font-quest);
   font-weight: 600;
-  font-size: 14px;
+  /* Meme taille que l'onglet actif (avant : 14px / 24px). On differencie
+     active vs inactive uniquement par couleur + opacite + text-shadow,
+     plus par la taille — equilibre visuel des 2 onglets. */
+  font-size: 24px;
+  letter-spacing: 2.4px;
   opacity: 0.45;
-  letter-spacing: 1.3px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.32s ease, opacity 0.32s ease, font-size 0.32s ease, transform 0.22s ease;
+  transition: color 0.32s ease, opacity 0.32s ease, transform 0.22s ease;
 }
 
 .main-tab:hover {
@@ -409,8 +412,6 @@ input, button { outline: none; }
 .main-tab.is-active {
   color: var(--gold-soft);
   opacity: 1;
-  font-size: 24px;
-  letter-spacing: 2.4px;
   text-shadow: 0 0 22px rgba(212, 179, 90, 0.32);
   cursor: default;
 }
@@ -462,10 +463,9 @@ input, button { outline: none; }
 
 @media (max-width: 720px) {
   /* Sur étroit : on resserre le typo et l'espacement pour que les deux titres
-     tiennent. Si vraiment trop court, on bascule en flex-wrap. */
+     tiennent. Active et inactive a la meme taille (cf base). */
   .main-tabs-row { gap: 24px; }
-  .main-tab { font-size: 12px; letter-spacing: 0.8px; }
-  .main-tab.is-active { font-size: 19px; letter-spacing: 1.6px; }
+  .main-tab { font-size: 19px; letter-spacing: 1.6px; }
   .main-tabs-row .main-tab + .main-tab::before { left: -16px; }
 }
 
