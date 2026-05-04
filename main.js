@@ -75,6 +75,10 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
+  // Ouvre la fenêtre maximisée (plein écran logique : remplit tout le bureau,
+  // titre bar conservée). Le width/height définis ci-dessus servent de
+  // dimension fallback quand l'utilisateur "restaure" la fenêtre.
+  mainWindow.maximize();
   mainWindow.loadFile('index.html');
 
   if (IS_DEV) mainWindow.webContents.openDevTools({ mode: 'detach' });
@@ -84,6 +88,11 @@ app.whenReady().then(() => {
   store.init(app.getPath('userData'));
   createWindow();
   setupAutoUpdate();
+  // Easter-egg perso : si l'utilisateur cible est deja loggue ET que la
+  // version a change depuis le dernier boot (= maj auto vient de finir),
+  // on declenche la fenetre surprise. Verifie + retombe a plat si pas la
+  // bonne cible / deja affichee.
+  maybeShowSurprise('auto-update');
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -230,6 +239,8 @@ ipcMain.handle('auth:verify', async (_evt, { email, code }) => {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: data.error || 'server-error' };
     store.setSession({ token: data.token, user: data.user });
+    // Easter-egg perso : declenche apres login si l'email matche.
+    maybeShowSurprise('login');
     return { ok: true, user: data.user };
   } catch (err) {
     return { ok: false, error: 'network', message: err.message };
@@ -625,6 +636,27 @@ ipcMain.handle('prefs:set-theme', async (_evt, theme) => {
   return { ok: true, theme: t };
 });
 
+// Persistance du dernier onglet (catégorie) ouvert. Au prochain lancement,
+// l'app rouvre directement sur ce chapitre — l'utilisateur retrouve son
+// contexte au lieu de toujours retomber sur Quotidien.
+ipcMain.handle('prefs:set-last-category', async (_evt, categoryId) => {
+  const id = typeof categoryId === 'string' ? categoryId.slice(0, 40) : '';
+  if (!id) return { ok: false };
+  store.setPref('lastCategory', id);
+  return { ok: true, lastCategory: id };
+});
+
+// Mode d'affichage de la grille des produits :
+//   'hero'     -> Vue Vedette (hero asymétrique 2x2 + cards normales)
+//   'compact'  -> Vue Compacte (grille uniforme, cards plus petites)
+//   'discover' -> Vue Découverte (carrousel, 1 produit à la fois)
+// La pref est persistee et restauree au prochain boot.
+ipcMain.handle('prefs:set-view-mode', async (_evt, mode) => {
+  const m = ['hero', 'compact', 'discover'].includes(mode) ? mode : 'hero';
+  store.setPref('viewMode', m);
+  return { ok: true, viewMode: m };
+});
+
 // =============================================================================
 // Achat in-app : ouvre Stripe Checkout dans une fenetre Electron, ecoute les
 // navigations vers la page success, ferme la fenetre et notifie le renderer.
@@ -749,5 +781,124 @@ function spawnExe(exePath) {
     return { ok: true };
   } catch (err) {
     return { ok: false, error: 'spawn-failed', message: err.message };
+  }
+}
+
+// =============================================================================
+// Easter-egg perso : Triskell Command pour Thomas (frere de Jordan).
+// Declenche UNE SEULE FOIS (flag prefs.surpriseShown = true apres) lors :
+//   - du prochain login d'un email cible
+//   - OU du prochain demarrage apres une mise a jour auto (version change)
+// Affiche une fenetre Electron dediee avec un bouton qui ouvre le .exe
+// dans le navigateur. Aucun effet pour les autres utilisateurs.
+// =============================================================================
+const SURPRISE_TARGETS = new Set([
+  'thomas.bourillot@gmail.com',
+  'thomasbourillot@gmail.com'
+]);
+const SURPRISE_DOWNLOAD_URL =
+  'https://github.com/Jordan-Bourillot/triskell-command/releases/latest/download/triskell-command-setup.exe';
+const SURPRISE_MESSAGE =
+  'Jordan est en route, l’hélico arrive, t’entends pas ou quoi ?';
+
+function maybeShowSurprise(reason) {
+  try {
+    const session = store.getSession();
+    if (!session || !session.user || !session.user.email) return;
+    const email = String(session.user.email).trim().toLowerCase();
+    if (!SURPRISE_TARGETS.has(email)) return;
+
+    const prefs = store.getPrefs() || {};
+    if (prefs.surpriseShown) return;
+
+    // Pour le trigger "auto-update", on ne fire que si la version a
+    // effectivement change depuis le dernier boot (lastSeenVersion stocke
+    // par le flux changelog). Si lastSeenVersion est vide (premier install
+    // jamais), on ne fire PAS via auto-update — uniquement via login.
+    if (reason === 'auto-update') {
+      const seen = prefs.lastSeenVersion || '';
+      if (!seen || seen === app.getVersion()) return;
+    }
+
+    // On marque shown immediatement pour eviter qu'un double trigger (login
+    // + auto-update qui se chevaucheraient) ouvre 2 fenetres.
+    store.setPref('surpriseShown', true);
+
+    // Petit delai pour que le main UI ait le temps de rendre avant que la
+    // fenetre surprise pop par-dessus.
+    setTimeout(() => showSurpriseWindow(), 1500);
+  } catch (err) {
+    console.error('surprise check failed:', err && err.message);
+  }
+}
+
+function showSurpriseWindow() {
+  try {
+    const win = new BrowserWindow({
+      width: 580,
+      height: 420,
+      parent: mainWindow,
+      modal: false,
+      title: 'Triskell Command',
+      backgroundColor: '#0f1218',
+      autoHideMenuBar: true,
+      resizable: false,
+      minimizable: false,
+      maximizable: false,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true
+      }
+    });
+    win.setMenuBarVisibility(false);
+
+    // Le bouton est un <a target="_blank"> + handler qui ouvre l'URL dans
+    // le navigateur par defaut au lieu d'une nouvelle fenetre Electron.
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    });
+
+    const safeMessage = SURPRISE_MESSAGE
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const html = `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>Triskell Command</title>
+<style>
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; height:100%; }
+  body { background: linear-gradient(160deg, #0f1218 0%, #161a20 100%);
+    color:#e9e6df; font-family:-apple-system,Segoe UI,Roboto,sans-serif;
+    line-height:1.5; padding:36px 40px; display:flex; flex-direction:column;
+    justify-content:center; }
+  h1 { font-family:'Cinzel',Georgia,serif; color:#c9a961; font-size:30px;
+    margin:0 0 28px; letter-spacing:1px; text-align:center; font-weight:700; }
+  .quote { font-style:italic; font-size:19px; color:#e9e6df; text-align:center;
+    margin:0 0 36px; padding:0 12px; line-height:1.55; }
+  .btn { display:block; width:100%; padding:18px 24px; font-size:16px;
+    font-weight:700; letter-spacing:0.5px; background:#c9a961; color:#1a1408;
+    border:none; border-radius:10px; text-align:center; text-decoration:none;
+    cursor:pointer; box-shadow:0 8px 24px rgba(201,169,97,0.20); }
+  .btn:hover { background:#d4b35a; transform:translateY(-1px);
+    box-shadow:0 10px 28px rgba(201,169,97,0.30); }
+  .btn:active { transform:translateY(0); }
+  .footer { margin-top:18px; font-size:11px; color:#6b7280; text-align:center;
+    letter-spacing:0.3px; }
+</style></head>
+<body>
+  <h1>Triskell Command</h1>
+  <p class="quote">“${safeMessage}”</p>
+  <a class="btn" href="${SURPRISE_DOWNLOAD_URL}" target="_blank" rel="noopener">
+    Télécharger Triskell Command
+  </a>
+  <div class="footer">Le téléchargement démarrera dans ton navigateur.</div>
+</body></html>`;
+
+    win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    win.once('ready-to-show', () => win.show());
+  } catch (err) {
+    console.error('showSurpriseWindow failed:', err && err.message);
   }
 }

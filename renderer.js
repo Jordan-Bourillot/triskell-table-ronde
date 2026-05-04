@@ -47,10 +47,7 @@
     // app
     appScreen:    $('app-screen'),
     grid:         $('grid'),
-    title:        $('main-title'),
-    subtitle:     $('main-subtitle'),
     tabs:         $('main-tabs'),
-    count:        $('main-count'),
     empty:        $('empty-state'),
     loading:      $('loading-state'),
     accountBtn:   $('account-btn'),
@@ -119,6 +116,7 @@
     bindInstallProgress();
     bindUpdateStatus();
     bindPurchaseCompleted();
+    bindViewSwitcher();
 
     // Theme : lit la pref (dark/light/auto) et l'applique sur <html>
     // AVANT le 1er render pour eviter le flash de theme.
@@ -355,6 +353,11 @@
   async function enterApp() {
     hideLogin();
     els.loading.classList.remove('hidden');
+    // Splash immersif des l'entree : logo + titre + barre de chargement.
+    // Le picker d'univers viendra remplacer la barre une fois le min time
+    // ecoule (cf awaitUniverseChoice).
+    showImmersiveSplash();
+    const splashStartedAt = Date.now();
 
     const cat = await window.triskell.getApps();
     if (cat.error) {
@@ -367,13 +370,6 @@
     state.promoNote = cat.promoNote || '';
     state.announcement = cat.announcement || null;
     state.categories = Array.isArray(cat.categories) ? cat.categories : [];
-
-    // Catégorie active : on prend la première marquée default, sinon la
-    // première de la liste, sinon null (mode "tous les produits").
-    if (state.categories.length > 0) {
-      const def = state.categories.find(c => c.default) || state.categories[0];
-      state.activeCategory = def.id;
-    }
     state.versions = (cat.apps || []).reduce((acc, a) => {
       if (a.latestVersion) acc[a.id] = a.latestVersion;
       return acc;
@@ -385,8 +381,21 @@
       window.triskell.prefs ? window.triskell.prefs.get() : Promise.resolve({}),
       window.triskell.versions ? window.triskell.versions.fetch() : Promise.resolve({})
     ]);
-    state.prefs = { autoLaunch: false, telemetry: false, lastUsed: [], ...prefs };
+    state.prefs = { autoLaunch: false, telemetry: false, lastUsed: [], viewMode: 'hero', ...prefs };
+    if (!['hero', 'compact', 'discover'].includes(state.prefs.viewMode)) {
+      state.prefs.viewMode = 'hero';
+    }
     state.versions = { ...state.versions, ...(versions || {}) };
+
+    // Catégorie active : priorité au lastCategory persistant (l'utilisateur
+    // retrouve l'onglet où il était), sinon la première marquée default,
+    // sinon la première de la liste.
+    if (state.categories.length > 0) {
+      const valid = (id) => state.categories.some(c => c.id === id);
+      const last = valid(state.prefs.lastCategory) ? state.prefs.lastCategory : null;
+      const def = state.categories.find(c => c.default) || state.categories[0];
+      state.activeCategory = last || def.id;
+    }
 
     if (!licRes.ok && licRes.error === 'session-expired') {
       state.user = null;
@@ -405,7 +414,12 @@
 
     bindHeader();
     render();
-    els.loading.classList.add('hidden');
+    // On laisse la barre de chargement finir visuellement (min 3s depuis
+    // le debut du splash), puis on bascule sur le picker d'univers dans le
+    // meme overlay. Le scan auto continue en background pendant ce temps.
+    const elapsed = Date.now() - splashStartedAt;
+    const minSplashMs = 3000;
+    setTimeout(awaitUniverseChoice, Math.max(0, minSplashMs - elapsed));
 
     // Scan auto en arriere-plan : detecte les .exe installes ailleurs
     // (par ex. Suite des Heros installee via productivite.triskell-studio.fr
@@ -525,6 +539,159 @@
     out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
     return out;
+  }
+
+  // ============================================================================
+  // SPLASH IMMERSIF : entree dans l'univers Triskell
+  // ============================================================================
+  // Etape 1 (showImmersiveSplash) : logo Triskell + titre Cinzel + barre de
+  // chargement qui se remplit. Affiche TOUT DE SUITE des l'entree dans
+  // enterApp, avant meme que les donnees soient chargees.
+  // Etape 2 (awaitUniverseChoice) : la barre disparait, les 2 cartes
+  // d'univers (Quotidien / Pro) prennent le relais avec une transition
+  // fade in. L'overlay reste plein ecran tout le long.
+  let splashRevealed = false;
+
+  function showImmersiveSplash() {
+    const host = els.loading;
+    if (!host) return;
+    host.classList.add('is-splash');
+    host.classList.remove('hidden');
+    host.innerHTML = `
+      <div class="splash-logo-wrap">
+        <img class="splash-logo" src="assets/triskell_mark_taskbar.png" alt="Triskell"
+             onerror="this.style.display='none';" />
+      </div>
+      <div class="splash-content">
+        <h1 class="splash-title">La Table Ronde</h1>
+        <p class="splash-sub">Le lieu où tes outils Triskell se réunissent</p>
+        <div class="splash-stage" id="immersive-splash-stage">
+          <div class="splash-loading">
+            <div class="splash-progress" aria-label="Chargement">
+              <div class="splash-progress-bar" id="splash-progress-bar"></div>
+            </div>
+            <p class="splash-status" id="splash-status">Convocation de tes compagnons...</p>
+          </div>
+        </div>
+      </div>
+    `;
+    // Lance l'animation de remplissage de la barre (CSS transition)
+    requestAnimationFrame(() => {
+      const bar = document.getElementById('splash-progress-bar');
+      if (bar) bar.style.width = '100%';
+    });
+  }
+
+  function awaitUniverseChoice() {
+    if (splashRevealed) return;
+    const host = els.loading;
+    if (!host) return;
+
+    const cats = state.categories || [];
+    if (cats.length < 2) {
+      splashRevealed = true;
+      host.classList.add('hidden');
+      host.classList.remove('is-splash');
+      return;
+    }
+
+    // Transition : on remplace UNIQUEMENT le contenu du stage (barre +
+    // statut) par les cartes, en gardant le logo + titre du splash. Effet
+    // "fade out -> fade in" pour rester immersif.
+    // Bug fix 2026-05-04 : le boot splash (HTML) utilisait aussi
+    // id="splash-stage", donc getElementById renvoyait le boot deja cache
+    // et l'innerHTML etait remplace au mauvais endroit. On utilise un id
+    // dedie cote splash immersif et on query depuis le host.
+    const stage = host.querySelector('#immersive-splash-stage') || host.querySelector('.splash-stage');
+    if (!stage) {
+      // Fallback si le stage n'existe pas (cas edge)
+      splashRevealed = true;
+      host.classList.add('hidden');
+      host.classList.remove('is-splash');
+      return;
+    }
+
+    // Numerotation romaine de chaque chapitre (I, II, ...) — petit detail
+     // manuscrit qui ancre l'idee de "tomes" plutot que d'onglets banals.
+    const toRoman = (n) => {
+      const map = [['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]];
+      let out = '', x = n;
+      for (const [g, v] of map) { while (x >= v) { out += g; x -= v; } }
+      return out;
+    };
+
+    stage.classList.add('is-leaving');
+    setTimeout(() => {
+      stage.innerHTML = `
+        <div class="splash-picker">
+          <p class="splash-picker-prompt">Quelle table veux-tu rejoindre ?</p>
+          <div class="splash-picker-cards">
+            ${cats.map((c, i) => {
+              const chapter = toRoman(i + 1);
+              // Texte court qui décrit l'univers du chapitre. Défini sur la
+              // catégorie dans apps.json (champ "description"). Ancien
+              // "subtitle" gardé en fallback pour rétro-compatibilité.
+              const desc = c.description || c.subtitle || '';
+              return `
+              <button type="button" class="splash-card" data-universe="${escapeHtml(c.id)}">
+                <span class="splash-card-aura" aria-hidden="true"></span>
+                <span class="splash-card-numeral" aria-hidden="true">${chapter}</span>
+                <span class="splash-card-eyebrow">Chapitre ${chapter}</span>
+                <span class="splash-card-label">${escapeHtml(c.label)}</span>
+                <span class="splash-card-rule" aria-hidden="true">
+                  <span class="splash-card-rule-line"></span>
+                  <span class="splash-card-rule-glyph">&#9670;</span>
+                  <span class="splash-card-rule-line"></span>
+                </span>
+                <span class="splash-card-desc">${escapeHtml(desc)}</span>
+                <span class="splash-card-cta">
+                  <span class="splash-card-cta-text">Entrer</span>
+                  <span class="splash-card-cta-arrow" aria-hidden="true">&rarr;</span>
+                </span>
+              </button>
+            `;}).join('')}
+          </div>
+        </div>
+      `;
+      stage.classList.remove('is-leaving');
+      stage.classList.add('is-entering');
+
+      stage.querySelectorAll('.splash-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (splashRevealed) return;
+          splashRevealed = true;
+          const id = btn.dataset.universe;
+          if (id) setActiveCategory(id);
+
+          // Animation "ouverture du livre" via View Transitions API :
+          // - état AVANT : la carte cliquée porte view-transition-name=portal
+          // - état APRÈS : c'est la grille qui porte le même nom
+          // → l'API morphe le rectangle de la carte vers celui de la grille.
+          // Effet : on a l'impression que la carte se déploie pour devenir
+          // l'écran principal. Fallback fade-out simple si l'API manque.
+          btn.style.viewTransitionName = 'chapter-portal';
+          const apply = () => {
+            host.classList.add('hidden');
+            host.classList.remove('is-splash');
+            btn.style.viewTransitionName = '';
+            render();
+            const grid = document.getElementById('grid');
+            if (grid) {
+              grid.style.viewTransitionName = 'chapter-portal';
+              // Retire le name après l'animation pour ne pas piéger les
+              // futures view-transitions (dismiss d'annonce, etc.).
+              setTimeout(() => { grid.style.viewTransitionName = ''; }, 800);
+            }
+          };
+          if (typeof document.startViewTransition === 'function') {
+            document.startViewTransition(apply);
+          } else {
+            host.classList.add('is-leaving');
+            setTimeout(() => { apply(); host.classList.remove('is-leaving'); }, 280);
+          }
+        });
+      });
+    }, 240);
   }
 
   // ============================================================================
@@ -947,6 +1114,33 @@
     });
   }
 
+  // Selecteur de vue (Vedette / Compacte / Découverte). Click -> change
+  // state.prefs.viewMode + persiste + re-render. La classe .is-active sur
+  // le bouton correspondant est maintenue via syncViewSwitcher().
+  function bindViewSwitcher() {
+    document.querySelectorAll('.view-switch').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const mode = btn.dataset.view;
+        if (!mode || mode === state.prefs.viewMode) return;
+        state.prefs.viewMode = mode;
+        syncViewSwitcher();
+        render();
+        if (window.triskell.prefs && window.triskell.prefs.setViewMode) {
+          window.triskell.prefs.setViewMode(mode).catch(err =>
+            console.error('setViewMode failed', err));
+        }
+      });
+    });
+    syncViewSwitcher();
+  }
+
+  function syncViewSwitcher() {
+    const current = state.prefs?.viewMode || 'hero';
+    document.querySelectorAll('.view-switch').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.view === current);
+    });
+  }
+
   // Quand un achat in-app aboutit (page success Stripe atteinte) on rafraichit
   // les licences pour que la tuile passe de "Acheter" a "Installer".
   function bindPurchaseCompleted() {
@@ -1011,48 +1205,77 @@
     const owned = (id) => !!state.licenses[id]
                       || (state.apps.find(a => a.id === id)?.tier === 'free');
 
-    // 1) DéliNote en priorité s'il manque
-    const delinote = state.apps.find(a => a.id === 'delinote');
+    // On limite la sélection à la catégorie active : sur l'onglet Pro, le
+    // hero doit être un produit Pro (pas DéliNote qui est Quotidien). Sinon
+    // les modes Vedette et Compacte rendent le même layout dans Pro.
+    const cat = state.activeCategory;
+    const inCat = (a) => !cat || (a.category || '') === cat;
+    const catApps = state.apps.filter(inCat);
+
+    // 1) Priorité commerciale : DéliNote pour Quotidien (s'il manque),
+    //    sinon le 1er produit "premium installable" non-possédé de la
+    //    catégorie pour donner un point d'ancrage.
+    const delinote = catApps.find(a => a.id === 'delinote');
     if (delinote && !owned('delinote')) {
       return { id: 'delinote', label: 'À découvrir', reason: 'commercial-priority' };
     }
 
-    // 2) App "featured: true" dans apps.json si non possédée
-    const commercial = state.apps.find(a => a.featured);
+    // 2) App "featured: true" dans apps.json (catégorie active) si non possédée
+    const commercial = catApps.find(a => a.featured);
     if (commercial && !owned(commercial.id)) {
       return { id: commercial.id, label: commercial.featuredLabel || 'Populaire', reason: 'commercial' };
     }
 
-    // 3) Plus récemment utilisée (premium uniquement)
+    // 3) Plus récemment utilisée (premium uniquement, dans la catégorie)
     const lastUsed = (state.prefs.lastUsed || [])
-      .map(id => state.apps.find(a => a.id === id))
+      .map(id => catApps.find(a => a.id === id))
       .filter(a => a && a.tier === 'premium' && !a.comingSoon);
     if (lastUsed[0]) {
       return { id: lastUsed[0].id, label: 'Tu y reviens souvent', reason: 'usage' };
     }
 
-    // 4) Fallback
+    // 4) Fallback dans la catégorie : un service avec une offre, sinon
+    //    n'importe quel premium non possédé (Le Dénicheur en Pro), sinon
+    //    le 1er premium tout court.
     if (commercial) {
       return { id: commercial.id, label: commercial.featuredLabel || 'Populaire', reason: 'fallback-commercial' };
     }
-    const firstPremium = state.apps.find(a => a.tier === 'premium' && !a.comingSoon);
-    return firstPremium
-      ? { id: firstPremium.id, label: 'Populaire', reason: 'fallback-first' }
+    const service = catApps.find(a => (a.kind === 'service' || a.tier === 'service') && !a.comingSoon);
+    if (service) {
+      return { id: service.id, label: 'À découvrir', reason: 'fallback-service' };
+    }
+    const firstPremium = catApps.find(a => a.tier === 'premium' && !a.comingSoon && !owned(a.id));
+    if (firstPremium) {
+      return { id: firstPremium.id, label: 'À découvrir', reason: 'fallback-first-unowned' };
+    }
+    const anyPremium = catApps.find(a => a.tier === 'premium' && !a.comingSoon);
+    return anyPremium
+      ? { id: anyPremium.id, label: 'Populaire', reason: 'fallback-first' }
       : null;
   }
 
   function render() {
     renderTabs();
-    renderSubtitle();
+
+    // Marque l'univers actif sur le conteneur principal pour basculer
+    // l'ambiance visuelle (Quotidien = lumiere doree chaude, Pro = lueur
+    // indigo froide). Le CSS targe .main[data-active-category="pro"] pour
+    // override les accents (tiles, hover, fond, sous-titre tabs).
+    const mainEl = document.querySelector('.main');
+    if (mainEl) {
+      if (state.activeCategory) mainEl.dataset.activeCategory = state.activeCategory;
+      else delete mainEl.dataset.activeCategory;
+    }
 
     const apps = filteredApps();
-    els.count.textContent = `${apps.length} outil${apps.length > 1 ? 's' : ''}`;
     state.hero = pickHero();
 
     renderHomeBanner();
     renderOfflineBadge();
-    renderSearchBar();
     renderBundles();
+    // Resync après que bundles soient peints : si la catégorie active n'a pas
+    // de bundle (ex. onglet Pro), on doit revenir en mode normal.
+    syncHomeRowLayout();
 
     els.grid.innerHTML = '';
     if (apps.length === 0) {
@@ -1062,6 +1285,17 @@
     }
     els.empty.classList.add('hidden');
     if (els.emptyDecor) els.emptyDecor.classList.remove('hidden');
+
+    // Applique le mode de vue choisi par l'utilisateur (Vedette / Compacte /
+    // Découverte). La classe sur .grid pilote le layout CSS.
+    const mode = state.prefs?.viewMode || 'hero';
+    els.grid.classList.remove('grid-mode-hero', 'grid-mode-compact', 'grid-mode-discover');
+    els.grid.classList.add(`grid-mode-${mode}`);
+
+    if (mode === 'discover') {
+      renderDiscoverView(apps);
+      return;
+    }
 
     const frag = document.createDocumentFragment();
     apps.forEach((app, i) => {
@@ -1081,35 +1315,64 @@
     }
   }
 
-  // Onglets de catégories ("Les outils du quotidien" / "L'Atelier des Pros").
-  // Source : state.categories chargé depuis apps.json. Si une seule catégorie
-  // (ou aucune), on n'affiche pas la barre d'onglets.
+  // Onglets de catégories — design "section magazine" : titres Cinzel
+  // côte-à-côte, soulignement doré qui glisse de l'un à l'autre, compteur en
+  // chiffre romain italique discret. Pas de container en pilule, pas de bouton
+  // "tab" classique : on assume le côté éditorial de la Table Ronde.
+  //
+  // Le glider est un élément absolu unique qui se positionne sous l'onglet
+  // actif et s'anime via translateX/scaleX. Donne une sensation de fluidité
+  // qu'on n'aurait pas avec un ::after par tab.
   function renderTabs() {
     const host = els.tabs;
     if (!host) return;
     const cats = state.categories || [];
     if (cats.length < 2) { host.innerHTML = ''; host.classList.add('hidden'); return; }
     host.classList.remove('hidden');
-    host.innerHTML = cats.map(c => {
-      const isActive = c.id === state.activeCategory;
-      // Compteur par catégorie pour aider la lecture
-      const count = state.apps.filter(a => (a.category || '') === c.id).length;
-      return `
-        <button type="button" role="tab"
-                class="main-tab${isActive ? ' is-active' : ''}"
-                data-cat="${escapeHtml(c.id)}"
-                aria-selected="${isActive ? 'true' : 'false'}">
-          <span class="main-tab-label">${escapeHtml(c.label)}</span>
-          <span class="main-tab-count">${count}</span>
-        </button>
-      `;
-    }).join('');
 
-    host.querySelectorAll('.main-tab').forEach(btn => {
+    // Convertit un nombre en chiffres romains pour l'esthétique manuscrite.
+    // Limite raisonnable (jusqu'à 30 pour l'instant) ; au-delà on tombe sur
+    // le chiffre arabe pour ne pas avoir de chaîne illisible.
+    const toRoman = (n) => {
+      if (!n || n < 1 || n > 30) return String(n || 0);
+      const map = [
+        ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]
+      ];
+      let out = '';
+      for (const [glyph, val] of map) {
+        while (n >= val) { out += glyph; n -= val; }
+      }
+      return out;
+    };
+
+    const activeCat = cats.find(c => c.id === state.activeCategory);
+    const activeSubtitle = activeCat ? (activeCat.subtitle || activeCat.description || '') : '';
+
+    host.innerHTML = `
+      <div class="main-tabs-row">
+        <span class="main-tab-glider" aria-hidden="true"></span>
+        ${cats.map(c => {
+          const isActive = c.id === state.activeCategory;
+          const count = state.apps.filter(a => (a.category || '') === c.id).length;
+          return `
+            <button type="button" role="tab"
+                    class="main-tab${isActive ? ' is-active' : ''}"
+                    data-cat="${escapeHtml(c.id)}"
+                    aria-selected="${isActive ? 'true' : 'false'}">
+              <span class="main-tab-label">${escapeHtml(c.label)}</span>
+              <span class="main-tab-count">${toRoman(count)}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+      <div class="main-tabs-subtitle">${escapeHtml(activeSubtitle)}</div>
+    `;
+
+    host.querySelectorAll('.main-tabs-row .main-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.cat;
         if (!id || id === state.activeCategory) return;
-        state.activeCategory = id;
+        setActiveCategory(id);
         // On scroll en haut quand on change d'onglet pour ne pas atterrir
         // au milieu d'une grille plus courte.
         const main = document.querySelector('.main');
@@ -1117,26 +1380,50 @@
         render();
       });
     });
+
+    // Positionne le glider sous l'onglet actif après la peinture du DOM.
+    // requestAnimationFrame pour que les getBoundingClientRect soient corrects.
+    requestAnimationFrame(() => positionTabGlider());
   }
 
-  function renderSubtitle() {
-    if (!els.subtitle) return;
-    const cat = (state.categories || []).find(c => c.id === state.activeCategory);
-    els.subtitle.textContent = (cat && cat.subtitle) ? cat.subtitle : '';
+  // Place et dimensionne le trait doré sous l'onglet actif. La transition CSS
+  // (left + width) anime le glissement quand on change d'onglet.
+  function positionTabGlider() {
+    const host = els.tabs;
+    if (!host) return;
+    const row = host.querySelector('.main-tabs-row') || host;
+    const active = row.querySelector('.main-tab.is-active');
+    const glider = row.querySelector('.main-tab-glider');
+    if (!active || !glider) return;
+    const rowRect = row.getBoundingClientRect();
+    const tabRect = active.getBoundingClientRect();
+    glider.style.left = `${tabRect.left - rowRect.left}px`;
+    glider.style.width = `${tabRect.width}px`;
+  }
+
+  // Le glider doit aussi se repositionner si la fenêtre est redimensionnée
+  // (largeur des onglets qui change avec la police, viewport, etc.).
+  window.addEventListener('resize', () => positionTabGlider());
+
+  // Bascule de catégorie active + persistance dans les prefs (le user
+  // retrouve son onglet à la prochaine ouverture de l'app). Fire-and-forget
+  // sur l'IPC : si ça échoue, c'est juste qu'au prochain lancement il
+  // tombera sur l'onglet par défaut, pas dramatique.
+  function setActiveCategory(id) {
+    if (!id) return;
+    state.activeCategory = id;
+    state.prefs = state.prefs || {};
+    state.prefs.lastCategory = id;
+    if (window.triskell?.prefs?.setLastCategory) {
+      window.triskell.prefs.setLastCategory(id).catch(() => {});
+    }
   }
 
   function filteredApps() {
-    const q = (state.searchQuery || '').toLowerCase();
     const cat = state.activeCategory;
     let list = state.apps.slice();
     // Filtre par onglet (catégorie). Si pas de catégorie active, on montre tout.
     if (cat) list = list.filter(a => (a.category || '') === cat);
-    if (q) {
-      list = list.filter(a => {
-        const hay = (a.name + ' ' + (a.tagline || '')).toLowerCase();
-        return hay.includes(q);
-      });
-    }
     return list.sort(compareAppsByImportance);
   }
 
@@ -1241,15 +1528,35 @@
     return `Salut ${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}`;
   }
 
+  // Crée (ou réutilise) le wrapper qui héberge le bandeau d'accueil et le
+  // bundle "Compléter ta Table". Permet d'avoir un mode compact où les deux
+  // se mettent côte-à-côte centrés quand l'annonce est dismissée.
+  function ensureHomeRow() {
+    const main = document.querySelector('.main');
+    let row = document.getElementById('home-row');
+    if (!row) {
+      row = document.createElement('div');
+      row.id = 'home-row';
+      row.className = 'home-row';
+      // Place le row juste après les onglets, avant la grille.
+      const grid = document.getElementById('grid');
+      main.insertBefore(row, grid);
+    }
+    return row;
+  }
+
   // Bandeau personnalisé en haut : salutation + compte rendu + raccourcis derniers utilisés.
   function renderHomeBanner() {
-    const main = document.querySelector('.main');
+    const row = ensureHomeRow();
     let host = document.getElementById('home-banner');
     if (!host) {
       host = document.createElement('section');
       host.id = 'home-banner';
       host.className = 'home-banner';
-      main.insertBefore(host, main.children[1] || null);
+      row.insertBefore(host, row.firstChild);
+    } else if (host.parentElement !== row) {
+      // Si le bandeau existait ailleurs (ancien comportement), on le rapatrie.
+      row.insertBefore(host, row.firstChild);
     }
     const installedCount = Object.keys(state.installs).length;
     const ownedCount = Object.keys(state.licenses).length;
@@ -1285,6 +1592,27 @@
     renderAnnouncement();
     // Onboarding : bandeau extra pour les nouveaux comptes (0 licence + 0 install)
     renderOnboardingHint(ownedCount, installedCount);
+    // Bascule éventuelle en mode compact (côte-à-côte avec le bundle)
+    syncHomeRowLayout();
+  }
+
+  // Bascule le wrapper .home-row entre 2 modes :
+  //  - mode normal (colonne) : bandeau pleine largeur en haut, bundle dessous
+  //  - mode compact (ligne)  : bandeau réduit à son contenu + bundle, côte-à-côte
+  //                            centrés sur la page.
+  // Le mode compact s'active uniquement quand l'annonce a été dismissée ET qu'il
+  // y a un bundle à afficher à droite. Sans bundle, on garde le bandeau seul
+  // pleine largeur.
+  function syncHomeRowLayout() {
+    const row = document.getElementById('home-row');
+    if (!row) return;
+    const hasAnnouncement = !!document.getElementById('announcement-banner');
+    const bundles = document.getElementById('bundles-section');
+    const hasBundle = !!(bundles && bundles.children.length > 0);
+    const shouldBeCompact = !hasAnnouncement && hasBundle;
+    const isCompact = row.classList.contains('is-compact');
+    if (shouldBeCompact === isCompact) return;
+    row.classList.toggle('is-compact', shouldBeCompact);
   }
 
   // Bandeau d'annonce edite par Triskell dans apps.json. Affiche la derniere
@@ -1352,7 +1680,15 @@
       state.prefs.dismissedAnnouncements = [
         ...(state.prefs.dismissedAnnouncements || []), a.id
       ];
-      host.remove();
+      // Animation de bascule : on utilise View Transitions API pour que la
+      // disparition de l'annonce ET la réorganisation banner+bundle (passage
+      // côte-à-côte) soient interpolées en douceur. Fallback: pas d'anim.
+      const apply = () => { host.remove(); syncHomeRowLayout(); };
+      if (typeof document.startViewTransition === 'function') {
+        document.startViewTransition(apply);
+      } else {
+        apply();
+      }
       window.triskell.prefs.dismissAnnouncement(a.id).catch(err => {
         console.error('dismissAnnouncement failed', err);
       });
@@ -1374,7 +1710,7 @@
           }
         } else if (action === 'open-category' && value) {
           // Active l'onglet ciblé et redessine la grille filtrée.
-          state.activeCategory = value;
+          setActiveCategory(value);
           const main = document.querySelector('.main');
           if (main) main.scrollTop = 0;
           render();
@@ -1454,26 +1790,6 @@
     host.innerHTML = `<span>📡</span> Mode hors-ligne — licences chargées depuis le cache local.`;
   }
 
-  // Affiche la barre de recherche uniquement quand le catalogue depasse 6 produits.
-  function renderSearchBar() {
-    const main = document.querySelector('.main');
-    let host = document.getElementById('main-search');
-    const shouldShow = state.apps.length >= 6;
-    if (!shouldShow) { if (host) host.remove(); return; }
-    if (!host) {
-      host = document.createElement('div');
-      host.id = 'main-search';
-      host.className = 'main-search';
-      host.innerHTML = `<input type="search" id="search-input" placeholder="Rechercher un outil..." autocomplete="off" />`;
-      const grid = document.getElementById('grid');
-      main.insertBefore(host, grid);
-      host.querySelector('#search-input').addEventListener('input', (e) => {
-        state.searchQuery = e.target.value.trim();
-        render();
-      });
-    }
-  }
-
   // Liste des apps payantes manquantes (premium, non possedees, non gratuites).
   // Sert de base au bundle dynamique "Compléter ta Table". On la cantonne a la
   // catégorie active : pas question de bundler du Dénicheur (Pro) avec
@@ -1492,15 +1808,16 @@
   // figees, ex. campagnes saisonnieres) ; (2) le completionBundle dynamique
   // qui s'adapte a ce que l'utilisateur possede deja.
   function renderBundles() {
-    const host = document.getElementById('bundles-section')
-      || (() => {
-        const el = document.createElement('section');
-        el.id = 'bundles-section';
-        el.className = 'bundles';
-        const main = document.querySelector('.main');
-        main.insertBefore(el, document.getElementById('grid'));
-        return el;
-      })();
+    const row = ensureHomeRow();
+    let host = document.getElementById('bundles-section');
+    if (!host) {
+      host = document.createElement('section');
+      host.id = 'bundles-section';
+      host.className = 'bundles';
+      row.appendChild(host);
+    } else if (host.parentElement !== row) {
+      row.appendChild(host);
+    }
 
     host.innerHTML = '';
 
@@ -1602,7 +1919,10 @@
           ${cb.comingSoon ? '<span class="tag tag-soon">En quête</span>' : ''}
         </div>
         <h3 class="bundle-title">${escapeHtml(cb.name)}</h3>
-        <p class="bundle-tagline">${escapeHtml(cb.tagline || '')}</p>
+        <p class="bundle-tagline">${escapeHtml(
+          (cb.taglineByCategory && cb.taglineByCategory[state.activeCategory])
+            || cb.tagline || ''
+        )}</p>
         <p class="bundle-missing muted small">Il te manque : <strong>${escapeHtml(missingNames)}</strong></p>
         <div class="bundle-price">
           <span class="price-current">${calc.bundle} €</span>
@@ -1824,6 +2144,96 @@
     return 'not-owned';
   }
 
+  // Vue Découverte : un seul produit a la fois en grand, navigation flèches.
+  // L'index courant est garde dans state.discoverIndex (par categorie pour
+  // que basculer d'onglet reset proprement).
+  function renderDiscoverView(apps) {
+    const safeApps = apps.filter(a => !a.comingSoon);
+    const list = safeApps.length ? safeApps : apps;
+    if (list.length === 0) return;
+
+    const key = state.activeCategory || 'all';
+    state.discoverIndex = state.discoverIndex || {};
+    if (typeof state.discoverIndex[key] !== 'number'
+        || state.discoverIndex[key] >= list.length
+        || state.discoverIndex[key] < 0) {
+      state.discoverIndex[key] = 0;
+    }
+    let idx = state.discoverIndex[key];
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'discover-wrapper';
+    wrapper.innerHTML = `
+      <button type="button" class="discover-nav discover-nav-prev" aria-label="Précédent">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+      </button>
+      <div class="discover-stage" id="discover-stage"></div>
+      <button type="button" class="discover-nav discover-nav-next" aria-label="Suivant">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+      </button>
+      <div class="discover-dots" role="tablist" aria-label="Naviguer entre les produits">
+        ${list.map((_, i) => `<button type="button" class="discover-dot${i === idx ? ' is-active' : ''}" data-i="${i}" aria-label="Aller à ${escapeHtml(list[i].name)}"></button>`).join('')}
+      </div>
+    `;
+    els.grid.appendChild(wrapper);
+
+    function paint() {
+      const app = list[idx];
+      const stage = wrapper.querySelector('#discover-stage');
+      stage.innerHTML = '';
+      // On reutilise buildTile + on lui colle la classe is-featured pour
+      // beneficier du grand layout hero (icône XL, titre Cinzel, etc.).
+      const tile = buildTile(app);
+      tile.classList.add('is-featured', 'discover-card');
+      tile.style.setProperty('--tile-index', 0);
+      stage.appendChild(tile);
+      wrapper.querySelectorAll('.discover-dot').forEach((d, i) => {
+        d.classList.toggle('is-active', i === idx);
+      });
+      wrapper.querySelector('.discover-nav-prev').disabled = list.length < 2;
+      wrapper.querySelector('.discover-nav-next').disabled = list.length < 2;
+    }
+
+    function go(delta) {
+      if (list.length < 2) return;
+      idx = (idx + delta + list.length) % list.length;
+      state.discoverIndex[key] = idx;
+      paint();
+    }
+
+    wrapper.querySelector('.discover-nav-prev').addEventListener('click', () => go(-1));
+    wrapper.querySelector('.discover-nav-next').addEventListener('click', () => go(1));
+    wrapper.querySelectorAll('.discover-dot').forEach(d => {
+      d.addEventListener('click', () => {
+        const i = parseInt(d.dataset.i, 10);
+        if (!isNaN(i) && i !== idx) {
+          idx = i;
+          state.discoverIndex[key] = idx;
+          paint();
+        }
+      });
+    });
+
+    // Navigation au clavier (flèches gauche/droite)
+    if (!state._discoverKeyBound) {
+      state._discoverKeyBound = true;
+      document.addEventListener('keydown', (e) => {
+        if (state.prefs?.viewMode !== 'discover') return;
+        if (state.openProductId) return; // fiche produit ouverte
+        if (e.target.matches('input, textarea, [contenteditable]')) return;
+        if (e.key === 'ArrowLeft') {
+          const prev = document.querySelector('.discover-nav-prev');
+          if (prev) prev.click();
+        } else if (e.key === 'ArrowRight') {
+          const next = document.querySelector('.discover-nav-next');
+          if (next) next.click();
+        }
+      });
+    }
+
+    paint();
+  }
+
   function buildTile(app) {
     const tile = document.createElement('div');
     const tileState = tileStateOf(app);
@@ -1840,7 +2250,9 @@
     tile.dataset.id = app.id;
 
     const tags = [];
-    if (app.tier === 'free')                                     tags.push('<span class="tag tag-free">Gratuit</span>');
+    const isService = app.kind === 'service' || app.tier === 'service';
+    if (isService)                                               tags.push('<span class="tag tag-service">Service</span>');
+    if (app.tier === 'free' && !isService)                       tags.push('<span class="tag tag-free">Gratuit</span>');
     if (state.licenses[app.id])                                  tags.push('<span class="tag tag-owned">Adoubé</span>');
     if (app.comingSoon)                                          tags.push('<span class="tag tag-soon">En quête</span>');
     if (state.installs[app.id] && !app.comingSoon)               tags.push('<span class="tag tag-installed">À ta Table</span>');
@@ -1918,6 +2330,29 @@
       }
     }
 
+    // Pull-quote "argument de vente" : phrase courte et marquante qui occupe
+    // la zone hero entre les features et le prix. Edite via apps.json
+    // (champ `salesPitch`). La devise (`motto`) est rendue dans le même
+    // blockquote, en signature italique sous la citation principale, façon
+    // épigraphe de vieux livre. Les deux phrases forment un bloc cohérent.
+    // 2 variantes selon que la card est en mode hero ou normale :
+    // - hero : grand blockquote avec mark + signature
+    // - card normale : pitch court en italique sous la tagline (plus discret)
+    let salesPitchHtml = '';
+    if (isHero && (app.salesPitch || app.motto)) {
+      salesPitchHtml = `<blockquote class="tile-hero-pitch">
+          ${app.salesPitch ? `<span class="tile-hero-pitch-mark" aria-hidden="true">&#8220;</span>${escapeHtml(app.salesPitch)}` : ''}
+          ${app.motto ? `<cite class="tile-hero-pitch-cite">— ${escapeHtml(app.motto)}</cite>` : ''}
+        </blockquote>`;
+    } else if (!isHero && (app.salesPitch || app.motto)) {
+      // Sur les cards normales : pitch + motto comme sur DéliNote (hero), mais
+      // dans un format compact. Le motto en cite italique sous le pitch.
+      salesPitchHtml = `<p class="tile-pitch">
+        ${app.salesPitch ? `<span class="tile-pitch-mark" aria-hidden="true">&#8220;</span>${escapeHtml(app.salesPitch)}` : ''}
+        ${app.motto ? `<cite class="tile-pitch-cite">— ${escapeHtml(app.motto)}</cite>` : ''}
+      </p>`;
+    }
+
     tile.innerHTML = `
       ${featuredRibbon}
       ${isHero ? '<span class="tile-hero-watermark" aria-hidden="true"></span>' : ''}
@@ -1930,6 +2365,7 @@
       </div>
       <div class="tile-tags">${tags.join('')}</div>
       ${heroBlockHtml}
+      ${salesPitchHtml}
       ${priceHtml}
       <div class="tile-actions"></div>
       ${hintHtml}
@@ -1971,17 +2407,17 @@
         break;
       }
       case 'service': {
-        // Produit-service (agence, growth) : on offre 2 chemins simples,
-        // visiter le site externe ou écrire à l'équipe par email.
+        // Produit-service (agence, growth) : CTA primaire vers le site
+        // externe + raccourci vers la fiche dediee. Le "Nous ecrire" est
+        // disponible depuis la fiche (section "En savoir plus" -> mailto)
+        // pour eviter de saturer la tuile et garder le focus sur la
+        // decision (visiter ou en savoir plus).
         const svc = app.service || {};
         const primaryLabel = svc.ctaPrimaryLabel || 'Voir l\'offre';
-        const secondaryLabel = svc.ctaSecondaryLabel || 'Nous écrire';
         if (svc.url) {
           host.appendChild(makeBtn(primaryLabel, 'btn-buy', () => onOpenService(app)));
         }
-        if (svc.contactEmail) {
-          host.appendChild(makeBtn(secondaryLabel, 'btn-info', () => onContactService(app)));
-        }
+        host.appendChild(makeBtn('Voir la fiche', 'btn-info', () => showProductPage(app)));
         break;
       }
       case 'installing': {
@@ -2069,9 +2505,13 @@
   }
 
   // Bloc prix d'une tuile : barre l'ancien prix s'il y a une promo, masque tout
-  // si le user possede deja le produit ou que c'est gratuit.
+  // si le user possede deja le produit ou que c'est gratuit. Si l'outil est
+  // deja installé sur la machine (détecté par le scan ou installé via le
+  // Lanceur), on masque aussi le prix : afficher "27 €" sous une tuile "À ta
+  // Table" est visuellement contradictoire et perturbe la lecture.
   function renderPriceBlock(app, ownedAlready) {
     if (ownedAlready) return '';
+    if (state.installs && state.installs[app.id]) return '';
     if (app.tier === 'free') return '';
     // Produit-service : pas de prix unique, on affiche un libellé "à partir de"
     // (priceFrom) avec la note tarifaire en dessous.
@@ -2529,24 +2969,43 @@
     renderTileActions(els.productActions, app, tileState);
     els.productActions.querySelectorAll('button').forEach(btn => {
       const txt = (btn.textContent || '').trim().toLowerCase();
-      if (txt === 'infos' || txt === 'en savoir plus') btn.remove();
+      if (txt === 'infos' || txt === 'en savoir plus' || txt === 'voir la fiche') btn.remove();
     });
 
     // Galerie de screenshots (remplace le placeholder quand l'app a des
     // visuels). On ouvre une lightbox au clic pour zoomer.
     renderProductMedia(app);
 
-    // Description
-    els.productDescription.textContent = app.description || app.tagline || '';
+    // Description : supporte les paragraphes (separes par \n\n) en creant
+    // un <span> par paragraphe. Sinon retombe sur la tagline.
+    const rawDesc = app.description || app.tagline || '';
+    if (rawDesc.includes('\n\n')) {
+      els.productDescription.innerHTML = rawDesc
+        .split(/\n\n+/)
+        .map(p => `<span class="product-description-para">${escapeHtml(p.trim())}</span>`)
+        .join('');
+    } else {
+      els.productDescription.textContent = rawDesc;
+    }
 
-    // Features
+    // Features (supporte 2 formats : string OU { title, detail })
     if (Array.isArray(app.features) && app.features.length) {
-      els.productFeatures.innerHTML = app.features
-        .map(f => `<li>${escapeHtml(f)}</li>`).join('');
+      els.productFeatures.innerHTML = app.features.map(f => {
+        if (typeof f === 'string') {
+          return `<li class="product-feature-simple">${escapeHtml(f)}</li>`;
+        }
+        const title = escapeHtml(f.title || '');
+        const detail = f.detail ? `<span class="product-feature-detail">${escapeHtml(f.detail)}</span>` : '';
+        return `<li class="product-feature-rich"><strong>${title}</strong>${detail}</li>`;
+      }).join('');
       els.productFeaturesSection.classList.remove('hidden');
     } else {
       els.productFeaturesSection.classList.add('hidden');
     }
+
+    // Personas ("Pour qui ?") — slot dynamique injecte dans la fiche si
+    // l'app expose un tableau personas[]. Chaque item : { name, description }.
+    renderPersonas(app);
 
     // Outils inclus (Suite des Heros)
     if (Array.isArray(app.tools) && app.tools.length) {
@@ -2580,6 +3039,45 @@
     } else {
       els.productLinksSection.classList.add('hidden');
     }
+  }
+
+  // Section "Pour qui ?" : injectee dynamiquement entre les features et les
+  // outils si l'app expose `personas: [{ name, description }]`. On la cree
+  // a la volee (pas de marqueur HTML dedie) pour ne pas alourdir index.html.
+  function renderPersonas(app) {
+    let host = document.getElementById('product-personas-section');
+    const personas = Array.isArray(app.personas) ? app.personas.filter(p => p && p.name) : [];
+
+    if (personas.length === 0) {
+      if (host) host.remove();
+      return;
+    }
+
+    if (!host) {
+      host = document.createElement('section');
+      host.id = 'product-personas-section';
+      host.className = 'product-section product-personas-section';
+      // Inserer apres les features (ou juste avant les outils si pas de features).
+      const featuresSection = els.productFeaturesSection;
+      const toolsSection = els.productToolsSection;
+      const anchor = !featuresSection.classList.contains('hidden') ? featuresSection : toolsSection;
+      anchor.parentNode.insertBefore(host, anchor.nextSibling);
+    }
+
+    host.innerHTML = `
+      <h2 class="product-section-title">Pour qui ?</h2>
+      <div class="product-personas-grid">
+        ${personas.map(p => `
+          <div class="product-persona-card">
+            ${p.icon ? `<span class="product-persona-icon" aria-hidden="true">${escapeHtml(p.icon)}</span>` : ''}
+            <div>
+              <strong class="product-persona-name">${escapeHtml(p.name)}</strong>
+              ${p.description ? `<span class="product-persona-desc">${escapeHtml(p.description)}</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   // Galerie de screenshots de la fiche produit. Si l'app a un champ
@@ -2870,4 +3368,163 @@
       `<div class="empty-mark">!</div><h2>Erreur</h2><p>${escapeHtml(msg)}</p>`;
     els.loading.classList.remove('hidden');
   }
+
+  // ============================================================================
+  // COMMAND PALETTE — raccourci Ctrl+K (ou Cmd+K)
+  // ============================================================================
+  // Palette de commandes inspirée de Raycast / Linear / VSCode : on ouvre par
+  // raccourci, on tape pour filtrer, flèches pour naviguer, Entrée pour
+  // ouvrir la fiche du produit. Indépendante des onglets — cherche dans
+  // tout le catalogue.
+  let paletteOpen = false;
+  let paletteFilter = '';
+  let paletteSelectedIndex = 0;
+
+  function paletteResults() {
+    const q = paletteFilter;
+    const all = state.apps.slice();
+    if (!q) return all;
+    return all.filter(a => {
+      const hay = (a.name + ' ' + (a.tagline || '') + ' ' + (a.description || '')).toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function renderPaletteList() {
+    const list = document.getElementById('command-palette-list');
+    if (!list) return;
+    const items = paletteResults();
+    if (items.length === 0) {
+      list.innerHTML = '<li class="command-palette-empty">Aucun compagnon ne répond à cet appel.</li>';
+      return;
+    }
+    // Borne l'index pour éviter de pointer hors-liste après filtre
+    if (paletteSelectedIndex >= items.length) paletteSelectedIndex = items.length - 1;
+    if (paletteSelectedIndex < 0) paletteSelectedIndex = 0;
+
+    list.innerHTML = items.map((app, i) => {
+      const isSelected = i === paletteSelectedIndex;
+      const cat = (state.categories || []).find(c => c.id === app.category);
+      const catLabel = cat?.label || '';
+      const initials = makeInitials(app.name);
+      const iconHtml = app.icon
+        ? `<img src="${escapeHtml(app.icon)}" alt="" onerror="this.replaceWith(document.createTextNode('${escapeHtml(initials)}'))" />`
+        : escapeHtml(initials);
+      return `
+        <li class="command-palette-item${isSelected ? ' is-selected' : ''}" data-index="${i}" data-id="${escapeHtml(app.id)}">
+          <span class="command-palette-item-icon">${iconHtml}</span>
+          <span class="command-palette-item-text">
+            <span class="command-palette-item-name">${escapeHtml(app.name)}</span>
+            <span class="command-palette-item-tagline">${escapeHtml(app.tagline || '')}</span>
+          </span>
+          ${catLabel ? `<span class="command-palette-item-cat">${escapeHtml(catLabel)}</span>` : ''}
+        </li>
+      `;
+    }).join('');
+
+    list.querySelectorAll('.command-palette-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.id;
+        const app = state.apps.find(a => a.id === id);
+        if (app) { closeCommandPalette(); showProductPage(app); }
+      });
+      el.addEventListener('mouseenter', () => {
+        paletteSelectedIndex = parseInt(el.dataset.index, 10) || 0;
+        list.querySelectorAll('.command-palette-item').forEach((e, i) => {
+          e.classList.toggle('is-selected', i === paletteSelectedIndex);
+        });
+      });
+    });
+
+    // Auto-scroll de l'item sélectionné dans la viewport de la liste
+    const sel = list.querySelector('.command-palette-item.is-selected');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+
+  function openCommandPalette() {
+    if (paletteOpen) return;
+    if (!Array.isArray(state.apps) || state.apps.length === 0) return;
+    paletteOpen = true;
+    paletteFilter = '';
+    paletteSelectedIndex = 0;
+
+    let palette = document.getElementById('command-palette');
+    if (!palette) {
+      palette = document.createElement('div');
+      palette.id = 'command-palette';
+      palette.className = 'command-palette';
+      palette.innerHTML = `
+        <div class="command-palette-backdrop" data-close></div>
+        <div class="command-palette-card">
+          <div class="command-palette-search">
+            <span class="command-palette-icon" aria-hidden="true">⌕</span>
+            <input id="command-palette-input" type="text"
+                   placeholder="Rechercher un compagnon, un service..."
+                   autocomplete="off" spellcheck="false" />
+            <kbd class="command-palette-esc">Esc</kbd>
+          </div>
+          <ul id="command-palette-list" class="command-palette-list"></ul>
+          <div class="command-palette-footer">
+            <span><kbd>↑</kbd><kbd>↓</kbd> naviguer</span>
+            <span><kbd>↵</kbd> ouvrir</span>
+            <span><kbd>Esc</kbd> fermer</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(palette);
+      palette.addEventListener('click', (e) => {
+        if (e.target.dataset && 'close' in e.target.dataset) closeCommandPalette();
+      });
+      const input = palette.querySelector('#command-palette-input');
+      input.addEventListener('input', (e) => {
+        paletteFilter = e.target.value.trim().toLowerCase();
+        paletteSelectedIndex = 0;
+        renderPaletteList();
+      });
+    } else {
+      palette.querySelector('#command-palette-input').value = '';
+    }
+    palette.classList.remove('hidden');
+    renderPaletteList();
+    setTimeout(() => palette.querySelector('#command-palette-input')?.focus(), 30);
+  }
+
+  function closeCommandPalette() {
+    if (!paletteOpen) return;
+    paletteOpen = false;
+    const palette = document.getElementById('command-palette');
+    if (palette) palette.classList.add('hidden');
+  }
+
+  // Listener global. Ctrl+K (ou Cmd+K sur macOS) ouvre/ferme la palette.
+  // Quand la palette est ouverte, on capture aussi flèches/Entrée/Esc.
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (paletteOpen) closeCommandPalette();
+      else openCommandPalette();
+      return;
+    }
+    if (!paletteOpen) return;
+    if (e.key === 'Escape')    { e.preventDefault(); closeCommandPalette(); return; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const len = paletteResults().length;
+      paletteSelectedIndex = Math.min(len - 1, paletteSelectedIndex + 1);
+      renderPaletteList();
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      paletteSelectedIndex = Math.max(0, paletteSelectedIndex - 1);
+      renderPaletteList();
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const items = paletteResults();
+      const app = items[paletteSelectedIndex];
+      if (app) { closeCommandPalette(); showProductPage(app); }
+    }
+  });
 })();

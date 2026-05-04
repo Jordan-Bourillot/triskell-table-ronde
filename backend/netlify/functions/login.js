@@ -14,6 +14,7 @@ const {
   hashCode,
   normalizeEmail
 } = require('./_lib');
+const { emailText, emailHtml } = require('./_login_email');
 
 const CODE_TTL_MIN = 15;
 const RATE_LIMIT_PER_HOUR = parseInt(process.env.LOGIN_RATE_LIMIT_PER_HOUR || '20', 10);
@@ -72,7 +73,7 @@ exports.handler = async (event) => {
       from: process.env.FROM_EMAIL || 'login@triskell-studio.fr',
       to: email,
       reply_to: process.env.REPLY_TO_EMAIL || 'contact@triskell-studio.fr',
-      subject: `Ton code Triskell : ${code}`,
+      subject: `${code} — Ton sceau pour la Table Ronde`,
       text: emailText(code),
       html: emailHtml(code)
     });
@@ -83,30 +84,3 @@ exports.handler = async (event) => {
 
   return json(200, { ok: true, expiresIn: CODE_TTL_MIN * 60 });
 };
-
-function emailText(code) {
-  return `Bienvenue chez Triskell.
-
-Ton code de connexion : ${code}
-
-Recopie-le dans le Lanceur Triskell. Le code expire dans 15 minutes.
-
-Si tu n'as rien demandé, ignore cet email.
-
-— Triskell Studio
-`;
-}
-
-function emailHtml(code) {
-  return `<!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#0d0f12;color:#e9e6df;padding:32px;">
-  <div style="max-width:480px;margin:0 auto;background:#161a20;border:1px solid #262b34;border-radius:12px;padding:32px;">
-    <h1 style="color:#c9a961;margin:0 0 8px;font-size:20px;">Ton code Triskell</h1>
-    <p style="color:#9aa0ab;font-size:14px;margin:0 0 24px;">Recopie ce code dans le Lanceur Triskell pour te connecter.</p>
-    <div style="font-size:36px;font-weight:700;letter-spacing:8px;text-align:center;color:#c9a961;background:#0d0f12;border:1px solid #c9a961;padding:18px;border-radius:8px;font-family:Menlo,Consolas,monospace;">
-      ${code}
-    </div>
-    <p style="color:#6b7280;font-size:12px;margin:24px 0 0;">Valable 15 minutes. Si tu n'as rien demandé, ignore cet email.</p>
-  </div>
-</body></html>`;
-}

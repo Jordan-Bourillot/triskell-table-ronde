@@ -20,11 +20,14 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') return json(405, { error: 'method' });
 
   const versions = {
-    'suite-des-heros':  process.env.SUITE_VERSION       || '1.0.0',
-    'delinote':         process.env.DELINOTE_VERSION    || null,
-    'studio-pdf':       process.env.STUDIO_PDF_VERSION  || null,
-    'bobeez':           process.env.BOBEEZ_VERSION      || null,
-    'pirate-life-mail': process.env.PLM_VERSION         || null
+    'suite-des-heros':         process.env.SUITE_VERSION                   || '1.0.0',
+    'delinote':                process.env.DELINOTE_VERSION                || null,
+    'studio-pdf':              process.env.STUDIO_PDF_VERSION              || null,
+    'bobeez':                  process.env.BOBEEZ_VERSION                  || null,
+    'pirate-life-mail':        process.env.PLM_VERSION                     || null,
+    // ID interne 'ultimate-prompt-builder' = display name AlphaBeast
+    'ultimate-prompt-builder': process.env.ALPHABEAST_VERSION              || null,
+    'alphapitch':              process.env.ALPHAPITCH_VERSION              || null
   };
 
   // On filtre les nulls pour ne pas envoyer de bruit

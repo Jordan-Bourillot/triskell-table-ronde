@@ -48,8 +48,40 @@ const PRODUCT_CONFIG = {
     version: '0.9.9',
     validityHours: 24,
     expectedExePath: 'C:\\Users\\<USER>\\AppData\\Local\\Programs\\delinote\\DeliNote.exe'
+  },
+  // Display name : AlphaBeast. ID interne reste 'ultimate-prompt-builder'
+  // pour ne pas casser les licences DB existantes.
+  // TODO Jordan : verifier que /_dl/alphabeast-setup.exe existe sur le CDN
+  // (sinon ajuster assetPath). Idem expectedExePath selon ce que ton NSIS pose.
+  'ultimate-prompt-builder': {
+    kind: 'exe-installer',
+    downloadHost: SUITE_HOST,
+    assetPath: '/_dl/alphabeast-setup.exe',
+    version: '1.0.0',
+    validityHours: 24,
+    expectedExePath: 'C:\\Users\\<USER>\\AppData\\Local\\Programs\\AlphaBeast\\AlphaBeast.exe'
+  },
+  // AlphaPitch (ex 'triskell-sales-tunnel') : gratuit mais on passe par le meme flux pour
+  // tracker les installs et delivrer les MAJ auto.
+  // TODO Jordan : verifier que /_dl/alphapitch-setup.exe existe sur le CDN
+  // (sinon ajuster assetPath). Idem expectedExePath selon ce que ton NSIS pose.
+  'alphapitch': {
+    kind: 'exe-installer',
+    downloadHost: SUITE_HOST,
+    assetPath: '/_dl/alphapitch-setup.exe',
+    version: '1.0.0',
+    validityHours: 24,
+    expectedExePath: 'C:\\Users\\<USER>\\AppData\\Local\\Programs\\AlphaPitch\\AlphaPitch.exe',
+    isFree: true   // pas de license a verifier (gratuit, pas de webhook Stripe)
   }
 };
+
+// Produits gratuits : on skip la verification de license puisqu'aucun
+// paiement Stripe ne crée de license en DB. L'auth JWT seule suffit a
+// gater le download (un user non-connecte n'aura jamais de session valide).
+const FREE_PRODUCTS = new Set(
+  Object.entries(PRODUCT_CONFIG).filter(([, c]) => c.isFree).map(([k]) => k)
+);
 
 exports.handler = async (event) => {
   const pre = preflight(event);
@@ -65,26 +97,49 @@ exports.handler = async (event) => {
   const config = PRODUCT_CONFIG[productKey];
   if (!config) return json(501, { error: 'product-not-installable' });
 
-  // 1. Verifie que l'utilisateur a une licence active sur ce produit.
-  const sb = supabase();
-  const { data: licenses, error } = await sb
-    .from('licenses')
-    .select('id, stripe_session_id, purchased_at')
-    .eq('user_id', session.sub)
-    .eq('product_key', productKey)
-    .eq('status', 'active')
-    .order('purchased_at', { ascending: false })
-    .limit(1);
+  // Admin bypass : un email dans ADMIN_EMAILS (env Netlify, CSV) court-circuite
+  // tout check de licence. Fallback hardcode : contact@triskell-studio.fr
+  // (founder Jordan) — comme ca meme si ADMIN_EMAILS n'est pas configure
+  // sur Netlify, le founder peut quand meme tout installer.
+  const FOUNDER_EMAIL = 'contact@triskell-studio.fr';
+  const adminList = [
+    FOUNDER_EMAIL,
+    ...(process.env.ADMIN_EMAILS || '')
+      .split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+  ];
+  const isAdmin = !!session.email
+    && adminList.includes(String(session.email).toLowerCase());
 
-  if (error) {
-    console.error('install-token: select failed', error);
-    return json(500, { error: 'server-error' });
-  }
-  if (!licenses || licenses.length === 0) {
-    return json(403, { error: 'no-license' });
-  }
+  // Produits gratuits OU admin : on saute le check license (aucun webhook
+  // Stripe ne crée de license pour un produit gratuit, et un admin n'a pas
+  // a en avoir une). L'auth JWT du user suffit a gater le download. On
+  // utilise un faux objet license avec un id stable dans le HMAC du
+  // download URL si la strategie A est utilisee plus tard.
+  let license;
+  if (FREE_PRODUCTS.has(productKey) || isAdmin) {
+    const tag = isAdmin ? 'admin' : 'free';
+    license = { id: `${tag}-${session.sub}`, stripe_session_id: null };
+  } else {
+    // 1. Verifie que l'utilisateur a une licence active sur ce produit.
+    const sb = supabase();
+    const { data: licenses, error } = await sb
+      .from('licenses')
+      .select('id, stripe_session_id, purchased_at')
+      .eq('user_id', session.sub)
+      .eq('product_key', productKey)
+      .eq('status', 'active')
+      .order('purchased_at', { ascending: false })
+      .limit(1);
 
-  const license = licenses[0];
+    if (error) {
+      console.error('install-token: select failed', error);
+      return json(500, { error: 'server-error' });
+    }
+    if (!licenses || licenses.length === 0) {
+      return json(403, { error: 'no-license' });
+    }
+    license = licenses[0];
+  }
 
   // 2. Genere l'URL de telechargement selon la strategie du produit.
   // Strategie A : assetPath = '/api/download' -> on signe un token HMAC pour

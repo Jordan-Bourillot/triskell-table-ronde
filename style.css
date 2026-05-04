@@ -32,7 +32,10 @@
   --bg-2: #161a23;
   --bg-3: #1d222e;
   --bg-card: #181c27;
-  --bg-card-hover: #20253092;
+  /* Bg de survol opaque (avant : #20253092 avec alpha ~57%, qui laissait
+     bleed le voile indigo de l'onglet Atelier des Pros à travers la tuile
+     au survol — résidu violet visible derrière les icônes). */
+  --bg-card-hover: #202530;
   --border: #262c39;
   --border-strong: #353c4d;
   --text: #ecebf5;
@@ -318,89 +321,407 @@ input, button { outline: none; }
   font-size: 24px;
 }
 
-.main-head-text {
+/* ========== ONGLETS DE CATEGORIES — chapitre actif vs chapitre dormant ===== */
+/* On veut qu'on sente immédiatement deux univers distincts. L'onglet actif
+   est traité comme un titre de chapitre (gros, doré, sous-titre italique
+   visible). L'onglet dormant est rétréci, en retrait — visiblement secondaire,
+   cliquable mais pas dominant. La bascule entre les deux dramatise la
+   distinction Quotidien / Pro. */
+.main-tabs {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.main-subtitle {
-  margin: 0;
-  font-style: italic;
-  letter-spacing: 0.3px;
-  opacity: 0.85;
-}
-
-/* ========== ONGLETS DE CATEGORIES ========================================= */
-/* Barre d'onglets en haut du contenu : "Les outils du quotidien" /
-   "L'Atelier des Pros". Visible seulement si plus d'une catégorie. */
-.main-tabs {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
-  margin: 0 0 18px;
-  padding: 5px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  width: max-content;
-  max-width: 100%;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18) inset;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 28px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--border);
 }
 .main-tabs.hidden { display: none; }
 
+.main-tabs-row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 40px;
+  padding: 4px 0 12px;
+}
+
+/* Petit point doré entre les onglets — discret, juste pour rythmer l'œil
+   et marquer la séparation sans grosse barre verticale. */
+.main-tabs-row .main-tab + .main-tab::before {
+  content: '·';
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-55%);
+  color: var(--gold);
+  opacity: 0.45;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* Trait doré qui glisse sous l'onglet actif. Position et largeur sont
+   recalculées en JS à chaque changement d'onglet (positionTabGlider). */
+.main-tab-glider {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  left: 0;
+  width: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--gold) 18%,
+    var(--gold-soft) 50%,
+    var(--gold) 82%,
+    transparent 100%);
+  box-shadow: 0 0 14px var(--gold-shadow);
+  transition: left 0.42s cubic-bezier(0.32, 0.72, 0.24, 1.0),
+              width 0.42s cubic-bezier(0.32, 0.72, 0.24, 1.0);
+  pointer-events: none;
+  border-radius: 2px;
+}
+
 .main-tab {
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border: none;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border: 0;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-quest);
   font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.4px;
-  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0.45;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  transition: color 0.32s ease, opacity 0.32s ease, font-size 0.32s ease, transform 0.22s ease;
 }
 
 .main-tab:hover {
   color: var(--text);
-  background: var(--bg-card-hover);
+  opacity: 0.85;
 }
 
 .main-tab.is-active {
-  background: linear-gradient(180deg,
-    rgba(212, 179, 90, 0.18) 0%,
-    rgba(212, 179, 90, 0.08) 100%);
   color: var(--gold-soft);
-  box-shadow:
-    0 0 0 1px rgba(212, 179, 90, 0.35),
-    0 6px 16px -10px var(--gold-shadow);
+  opacity: 1;
+  font-size: 24px;
+  letter-spacing: 2.4px;
+  text-shadow: 0 0 22px rgba(212, 179, 90, 0.32);
+  cursor: default;
 }
 
+.main-tab-label {
+  /* Petit lift au hover des onglets non-actifs pour suggérer la cliquabilité
+     sans le caractère "bouton" classique. */
+  transition: transform 0.22s ease;
+}
+.main-tab:not(.is-active):hover .main-tab-label {
+  transform: translateY(-1px);
+}
+
+/* Compteur en chiffres romains italiques — comme la pagination d'un livre.
+   Toujours visible, mais s'illumine pour l'onglet actif. */
 .main-tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 20px;
-  padding: 0 7px;
+  display: inline-block;
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 500;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: 0.6px;
+  text-transform: none;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  opacity: 0.55;
+  transition: color 0.32s ease, opacity 0.32s ease, font-size 0.32s ease;
 }
 
 .main-tab.is-active .main-tab-count {
   color: var(--gold);
-  border-color: rgba(212, 179, 90, 0.4);
-  background: rgba(212, 179, 90, 0.10);
+  opacity: 1;
+  font-size: 14px;
+}
+
+/* Sous-titre du chapitre actif — italique discret, comme une glose
+   manuscrite sous le titre. Renforce la sensation d'univers. */
+.main-tabs-subtitle {
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.6px;
+  color: var(--gold-soft);
+  opacity: 0.72;
+  margin-left: 2px;
+  margin-top: 14px;
+  min-height: 18px;
+}
+
+@media (max-width: 720px) {
+  /* Sur étroit : on resserre le typo et l'espacement pour que les deux titres
+     tiennent. Si vraiment trop court, on bascule en flex-wrap. */
+  .main-tabs-row { gap: 24px; }
+  .main-tab { font-size: 12px; letter-spacing: 0.8px; }
+  .main-tab.is-active { font-size: 19px; letter-spacing: 1.6px; }
+  .main-tabs-row .main-tab + .main-tab::before { left: -16px; }
+}
+
+/* ========== UNIVERSE PICKER — choix Quotidien / Pro au demarrage ========== */
+/* Remplace le "Appuie sur une touche pour entrer". Deux cartes cliquables
+   cote a cote : on choisit son univers d'entree avant d'arriver sur la grille.
+   Ancre le sentiment qu'il y a deux espaces distincts des le boot. */
+.universe-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 8px 0;
+}
+
+.universe-picker-title {
+  font-family: var(--font-quest);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 1.6px;
+  color: var(--gold-soft);
+  margin: 0;
+  text-align: center;
+  text-shadow: 0 0 18px rgba(212, 179, 90, 0.18);
+}
+
+.universe-picker-cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.universe-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 280px;
+  max-width: 340px;
+  padding: 26px 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.18));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease, background 0.28s ease;
+}
+
+.universe-card:hover,
+.universe-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--gold-soft);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45),
+              0 0 0 1px var(--gold-soft) inset,
+              0 0 26px rgba(212, 179, 90, 0.18);
+  background: linear-gradient(180deg, rgba(212, 179, 90, 0.06), rgba(0, 0, 0, 0.18));
+  outline: none;
+}
+
+.universe-card-label {
+  font-family: var(--font-quest);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+
+.universe-card-sub {
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+  .universe-picker-cards { flex-direction: column; }
+  .universe-card { min-width: 0; width: 100%; max-width: 360px; }
+}
+
+/* ============================================================================
+   ATELIER DES PROS — bascule complete d'ambiance pour la categorie "pro"
+   ============================================================================
+   Quand l'utilisateur entre dans l'Atelier, on glisse vers une lumiere
+   indigo froide ("scriptorium nocturne") au lieu du gold chaud du Quotidien
+   ("table de banquet"). Meme architecture, deux lumieres : on doit sentir
+   qu'on a change de salle dans le meme chateau, pas qu'on a change d'app.
+
+   Le data-active-category est pose sur .main par render() (cf renderer.js).
+   Toutes les regles ici overrident les accents gold par leurs equivalents
+   indigo. */
+
+.main[data-active-category="pro"] {
+  position: relative;
+}
+/* Voile indigo qui descend du haut comme la lumiere d'une rosace nocturne */
+.main[data-active-category="pro"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 360px;
+  background:
+    radial-gradient(ellipse 900px 280px at 50% 0%,
+      rgba(167, 139, 250, 0.12) 0%,
+      rgba(120, 90, 220, 0.06) 40%,
+      transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+/* On garde les enfants au-dessus du voile */
+.main[data-active-category="pro"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Onglets : l'actif passe en violet pale, le glider devient indigo ---- */
+.main[data-active-category="pro"] .main-tab.is-active {
+  color: #d6c5f0;
+  text-shadow: 0 0 22px rgba(167, 139, 250, 0.32);
+}
+.main[data-active-category="pro"] .main-tab.is-active .main-tab-count {
+  color: rgba(200, 180, 238, 0.95);
+}
+.main[data-active-category="pro"] .main-tab-glider {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(167, 139, 250, 0.45) 18%,
+    rgba(200, 180, 238, 0.85) 50%,
+    rgba(167, 139, 250, 0.45) 82%,
+    transparent 100%);
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.45);
+}
+.main[data-active-category="pro"] .main-tabs-row .main-tab + .main-tab::before {
+  color: rgba(167, 139, 250, 0.55);
+}
+.main[data-active-category="pro"] .main-tabs-subtitle {
+  color: rgba(200, 180, 238, 0.78);
+}
+
+/* ---- Tiles : trait gauche et hover virent au indigo ---- */
+.main[data-active-category="pro"] .tile {
+  border-color: rgba(167, 139, 250, 0.22);
+}
+/* (override violet de l'accent gauche supprime — il apparaissait au hover
+   comme un residu/courbe violet dans le coin haut-gauche de chaque tuile
+   pro. On garde l'accent gold de base, coherent avec le reste de l'UI.) */
+.main[data-active-category="pro"] .tile:not(.is-featured):hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.32),
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    0 0 36px rgba(167, 139, 250, 0.20);
+}
+.main[data-active-category="pro"] .tile.is-featured:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.32),
+    0 22px 56px rgba(167, 139, 250, 0.20),
+    0 22px 56px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- Tiles services dans l'Atelier des Pros : on garde l'accent DORE
+        (au lieu du violet/indigo des autres tuiles) pour différencier
+        IMMEDIATEMENT les prestations humaines des apps installables.
+        Mental model : violet/indigo = .exe a installer ; doré = humain. */
+.main[data-active-category="pro"] .tile.is-service {
+  border-color: rgba(212, 179, 90, 0.42);
+  background: linear-gradient(180deg,
+    rgba(212, 179, 90, 0.06) 0%,
+    var(--bg-card) 60%);
+}
+/* Accent vertical de gauche (.tile::after) en or au lieu du gold-default */
+.main[data-active-category="pro"] .tile.is-service::after {
+  background: linear-gradient(180deg,
+    rgba(212, 179, 90, 0.0) 0%,
+    var(--gold-soft) 25%,
+    var(--gold) 75%,
+    rgba(212, 179, 90, 0.0) 100%);
+}
+/* Hover : halo doré (au lieu du violet des apps pro) */
+.main[data-active-category="pro"] .tile.is-service:hover {
+  border-color: rgba(212, 179, 90, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.32),
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    0 0 36px rgba(212, 179, 90, 0.22);
+}
+/* Icone de service : halo doré plus marqué */
+.main[data-active-category="pro"] .tile.is-service .tile-icon {
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.30),
+    0 0 16px rgba(212, 179, 90, 0.25);
+}
+.main[data-active-category="pro"] .tile.is-service:hover .tile-icon {
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.55),
+    0 0 22px rgba(212, 179, 90, 0.40);
+}
+/* Titre des services en or pâle (vs blanc cassé pour les apps) */
+.main[data-active-category="pro"] .tile.is-service .tile-title {
+  color: var(--gold-soft);
+}
+
+/* ---- Ruban "À découvrir / Populaire" en indigo ---- */
+/* Bg opaque (au lieu de rgba transparent) pour que le voile indigo derriere
+   ne bleed pas a travers via backdrop-filter — sinon halo violet diffus
+   visible autour du badge. */
+.main[data-active-category="pro"] .tile-ribbon {
+  background: linear-gradient(135deg, rgba(58, 42, 110, 0.95), rgba(40, 28, 80, 0.95));
+  border-color: rgba(167, 139, 250, 0.55);
+  color: #e0d3f6;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ---- Pull-quote hero : barre verticale indigo ---- */
+.main[data-active-category="pro"] .tile-hero-pitch {
+  border-left-color: rgba(167, 139, 250, 0.65);
+  text-shadow: 0 0 14px rgba(167, 139, 250, 0.10);
+}
+.main[data-active-category="pro"] .tile-hero-pitch-mark {
+  color: rgba(200, 180, 238, 0.7);
+}
+.main[data-active-category="pro"] .tile.is-featured:hover .tile-hero-pitch {
+  border-left-color: #d6c5f0;
+}
+.main[data-active-category="pro"] .tile.is-featured:hover .tile-hero-pitch-mark {
+  color: #e0d3f6;
+}
+
+/* ---- Hero block : count + pills en indigo ---- */
+.main[data-active-category="pro"] .tile-hero-count strong {
+  color: #d6c5f0;
+}
+.main[data-active-category="pro"] .tile-hero-pill {
+  border-color: rgba(167, 139, 250, 0.22);
+}
+.main[data-active-category="pro"] .tile.is-featured:hover .tile-hero-pill {
+  background: rgba(167, 139, 250, 0.10);
+  border-color: rgba(167, 139, 250, 0.40);
+  color: var(--text);
+}
+.main[data-active-category="pro"] .tile-hero-pill-more {
+  background: rgba(167, 139, 250, 0.18);
+  color: #d6c5f0;
+}
+
+/* ---- Watermark hero : passe au violet leger pour rester dans la palette ---- */
+.main[data-active-category="pro"] .tile-hero-watermark {
+  filter: hue-rotate(220deg) saturate(0.7);
 }
 
 /* ========== TUILE PRODUIT-SERVICE ========================================= */
@@ -415,6 +736,18 @@ input, button { outline: none; }
 }
 .tile.is-service .tile-title {
   color: var(--gold-soft);
+}
+
+/* (Watermark heraldique des tuiles services supprime sur demande de Jordan.
+   Auparavant : un grand sceau circulaire dore en bas-droite + un glyphe
+   chevron au centre, pour distinguer les services des .exe. Si besoin de
+   le restaurer, voir l'historique git.) */
+/* Le contenu doit passer au-dessus du watermark.
+   IMPORTANT : on exclut .tile-ribbon, sinon le badge "À DÉCOUVRIR" perd
+   son position:absolute et atterrit a gauche (au lieu de top-right). */
+.tile.is-service > *:not(.tile-ribbon):not(.tile-hero-watermark) {
+  position: relative;
+  z-index: 1;
 }
 
 .price-block-service {
@@ -434,18 +767,35 @@ input, button { outline: none; }
 
 .grid {
   display: grid;
-  /* Layout asymétrique : 4 colonnes sur grand écran. La tile featured
-     prend 2x2 (= un Hero) et les autres se rangent autour en 1x1.
-     Avec 5 apps (1 hero + 4 normales) → 2 lignes parfaites. */
+  /* Layout asymétrique : 4 colonnes par défaut. La tile featured prend
+     2x2 (= un Hero) et les autres se rangent autour en 1x1. Avec 5 apps
+     (1 hero + 4 normales) → 2 lignes parfaites en quotidien. */
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 220px;        /* hauteur fixe par "cellule" pour cohérence */
+  /* minmax(220px, auto) : 220px minimum (cohérence visuelle), auto si
+     une tuile a besoin de plus (cas de la featured 2x2 qui a beaucoup
+     de contenu — pitch + motto + price + boutons + garantie — qui sinon
+     déborderait et serait coupé par overflow:hidden). */
+  grid-auto-rows: minmax(220px, auto);
+  /* dense : si une tuile 1x1 peut combler un trou laisse par la featured
+     2x2, elle s'y place plutot que d'aller en fin de grille. Evite les
+     cellules vides moches. */
+  grid-auto-flow: dense;
   gap: 18px;
-  max-width: 1500px;
+  /* Aligné avec le home-row au-dessus (Salut Jordan + Compléter ta Table)
+     pour une page verticalement centrée et homogène. */
+  max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
 }
+/* L'Atelier des Pros a 6 tuiles + 1 featured 2x2 → 3 colonnes pavent
+   parfaitement (3+3+3 = 9 cells, 4 pour featured + 5 pour les normales).
+   Quotidien garde 4 colonnes (5 tuiles + featured 2x2 = 8 cells, fit). */
+.main[data-active-category="pro"] .grid {
+  grid-template-columns: repeat(3, 1fr);
+}
 @media (max-width: 1280px) {
   .grid { grid-template-columns: repeat(3, 1fr); }
+  .main[data-active-category="pro"] .grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 900px) {
   .grid {
@@ -577,6 +927,15 @@ input, button { outline: none; }
 .tag-premium   { background: rgba(167, 139, 250, 0.15); color: var(--triskell-violet); }
 .tag-pack      { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
 .tag-completion{ background: var(--gold-shadow); color: var(--gold); }
+/* Tag "Service" — dore avec une teinte plus marquee que tag-completion,
+   pour distinguer immediatement les prestations humaines des apps. */
+.tag-service {
+  background: linear-gradient(135deg, rgba(212, 179, 90, 0.22), rgba(212, 179, 90, 0.10));
+  color: var(--gold-soft);
+  border: 1px solid rgba(212, 179, 90, 0.35);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
 
 .price-block {
   display: flex;
@@ -605,11 +964,21 @@ input, button { outline: none; }
   flex-basis: 100%;
 }
 
+/* Boutons alignés proprement : grid 1fr 1fr → les 2 CTA font toujours
+   exactement la meme largeur (peu importe le contenu / featured / compact /
+   service). La garantie passe sur sa propre rangee via grid-column 1/-1.
+   Avant : flex avec ratio 1.6/1 dependant du contenu et de la largeur,
+   donnait des proportions incoherentes selon la tuile. */
 .tile-actions {
   margin-top: auto;
-  display: flex;
-  flex-wrap: wrap;     /* permet à la garantie de passer sur sa propre ligne */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+/* Quand il n'y a qu'un seul bouton (ex. "En quête..."), il prend toute la
+   largeur. */
+.tile-actions > button:only-child {
+  grid-column: 1 / -1;
 }
 
 /* ============== BUNDLES (cartes pleine-largeur au-dessus de la grille) ============== */
@@ -618,6 +987,7 @@ input, button { outline: none; }
   flex-direction: column;
   gap: 14px;
   margin-bottom: 22px;
+  view-transition-name: bundles-section;
 }
 
 .bundle-card {
@@ -813,7 +1183,11 @@ input, button { outline: none; }
 }
 
 .tile-actions button {
-  flex: 1;
+  /* En grid les boutons prennent automatiquement toute la largeur de leur
+     cellule (1fr). Plus besoin de flex/flex-grow. min-width: 0 pour que
+     le bouton puisse rétrécir si le texte est long, sinon white-space:
+     nowrap fait déborder. */
+  min-width: 0;
   padding: 9px 12px;
   font-size: 12px;
   border-radius: var(--radius-sm);
@@ -822,14 +1196,6 @@ input, button { outline: none; }
   white-space: nowrap;
   transition: all 0.15s;
 }
-
-/* Le primaire prend ~1.6x la place du secondaire pour un rythme propre.
-   Le secondaire reste accessible mais ne tire pas l'oeil. */
-.tile-actions .btn-launch,
-.tile-actions .btn-buy,
-.tile-actions .btn-update,
-.tile-actions .btn-installing,
-.tile-actions .btn-disabled { flex: 1.6; }
 
 .btn-launch {
   background: var(--accent);
@@ -878,6 +1244,593 @@ input, button { outline: none; }
 
 .empty.hidden { display: none; }
 
+/* ============================================================================
+   SPLASH IMMERSIF — entree dans l'univers Triskell
+   ============================================================================
+   Chargement initial : logo + titre + barre de progression. Une fois la
+   barre pleine, transition vers le picker d'univers (Quotidien / Pro).
+   Plein ecran, par-dessus tout. Disparait via .hidden au choix utilisateur.
+*/
+#loading-state.is-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  /* Override `.main > * { max-width: 1500px }` plus bas dans le fichier qui
+     capait la largeur du splash et laissait voir l'app a droite (bug
+     2026-05-04). Avec position fixed le splash doit couvrir tout l'ecran. */
+  width: 100vw;
+  max-width: none;
+  /* COUCHES (du fond vers le dessus) :
+     1) Image du paysage (chateau / lune / lac / epee) en cover.
+     2) Vignettes radiales SOMBRES centrees sur les zones ou les elements
+        flotteront (logo top-left + contenu centre) : assombrit le fond a
+        ces endroits pour que logo / titre / cartes restent lisibles.
+     3) Halo dore-violet du soleil-logo en haut-gauche.
+     4) Couche de fond noir-violet de secours.
+     L'image elle-meme est rendue avec opacity controlee via .splash-bg
+     en pseudo separe (voir ::before plus bas). */
+  background: linear-gradient(135deg, #0e1118 0%, #0a0c10 50%, #050608 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  overflow: hidden;
+  animation: splash-fade-in 0.4s ease;
+  transition: opacity 0.28s ease;
+}
+
+/* Couche FOND + VIGNETTE :
+   3 couches dans le meme background :
+     1) Vignette FORTE (drawn on top) → assombrit franchement les coins et
+        les bords pour qu'on sente vraiment "que la lumiere ne vient que
+        du logo".
+     2) Voile sombre uniforme → diminue la visibilite de l'image.
+     3) Image chateau au fond.
+   Le cone de lumiere (::after) est rendu par-dessus, donc eclaircit la
+   zone centrale pile ou se trouve le contenu (titre + cartes). */
+#loading-state.is-splash::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* Vignette centree sur les CARTES (50%, 60%) — pas sur le centre
+       geometrique. Zone transparente tres petite (10%), assombrissement
+       franc et rapide → tout ce qui n'est pas la zone cards plonge dans
+       l'ombre, pour que l'oeil soit attire pile sur les cartes. */
+    radial-gradient(ellipse 95% 95% at 50% 60%,
+      transparent 10%,
+      rgba(0, 0, 0, 0.50) 32%,
+      rgba(0, 0, 0, 0.78) 60%,
+      rgba(0, 0, 0, 0.93) 90%,
+      rgba(0, 0, 0, 0.97) 100%),
+    /* Voile sombre plus dense sur l'image fond → chateau/epee plus
+       discrets, ne volent plus la vedette aux cartes. */
+    linear-gradient(rgba(8, 9, 13, 0.78), rgba(8, 9, 13, 0.78)),
+    url('assets/splash-bg.png') center/cover no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Couche FAISCEAU CONIQUE :
+   Vrai cone angulaire via conic-gradient (wedge sud-est qui pointe du
+   logo vers les cartes, ~140 degres en angle CSS conic), masque par un
+   gradient radial qui fait s'eteindre la lumiere avec la distance.
+   Resultat : forme triangulaire/conique propre, qui ne deborde PAS
+   au-dessus du logo ni a gauche, et qui s'eteint avant d'atteindre les
+   bords de la fenetre.
+
+   Plus un hot-spot intense au logo pour la brillance de la source. Avec
+   la vignette dense (::before), donne un vrai effet "spot pointe sur la
+   scene" plutot qu'un halo qui se diffuse partout. */
+#loading-state.is-splash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* CONE angulaire : pointe HORS-CADRE en haut-gauche (-15% -15%), comme
+       un projecteur place a distance qui balaie la scene en diagonale.
+       Le faisceau entre deja avec une certaine largeur dans le cadre,
+       rendu plus naturel qu'un cone qui demarrait pile au coin.
+       Direction : depuis (-15%, -15%) vers les cartes (50% 60%) ≈ 140deg
+       absolu. 'from 110deg' + peak a 32deg → peak a 142deg abs. */
+    conic-gradient(from 110deg at -15% -15%,
+      transparent 0deg,
+      rgba(255, 215, 130, 0.20) 10deg,
+      rgba(255, 205, 115, 0.30) 22deg,
+      rgba(255, 200, 110, 0.36) 32deg,
+      rgba(255, 205, 115, 0.30) 42deg,
+      rgba(255, 215, 130, 0.20) 54deg,
+      transparent 68deg,
+      transparent 360deg);
+  /* Masque radial centre au sommet hors-cadre : la lumiere s'etend sur
+     ~2800px depuis (-15%, -15%). Les cartes sont a ~1470px du sommet
+     (sqrt((65%*1920)^2 + (75%*1040)^2)) → bien dans la zone opaque
+     (solide jusqu'a 60% = 1680px). */
+  -webkit-mask: radial-gradient(circle 2800px at -15% -15%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 60%,
+    rgba(0, 0, 0, 0.72) 78%,
+    rgba(0, 0, 0, 0.32) 92%,
+    transparent 100%);
+          mask: radial-gradient(circle 2800px at -15% -15%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 60%,
+    rgba(0, 0, 0, 0.72) 78%,
+    rgba(0, 0, 0, 0.32) 92%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#loading-state.is-splash.is-leaving { opacity: 0; }
+
+/* Filigrane "Excalibur + chateau" en bas du splash : meme illustration que
+   sous la grille principale, plus discrete (opacite faible) pour rester
+   un decor et ne pas voler la vedette au logo + barre. Apparait apres un
+   court delai pour laisser le logo s'installer en premier. */
+.splash-decor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  opacity: 0;
+  animation: splash-decor-rise 1.4s ease 0.5s forwards;
+}
+.splash-decor img {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  display: block;
+  /* Trait blanc sur fond sombre via brightness(0) invert(1) — meme traitement
+     que .empty-decor img sur la grille principale. */
+  filter: brightness(0) invert(1);
+}
+:root[data-theme='light'] .splash-decor img { filter: none; }
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] .splash-decor img { filter: none; }
+}
+@keyframes splash-decor-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 0.16; transform: translateY(0); }
+}
+
+@keyframes splash-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.splash-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 820px;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+/* Logo Triskell positionne en HAUT-GAUCHE comme un astre. Place en absolu
+   par rapport a #loading-state.is-splash (parent fixe), donc colle au coin
+   haut-gauche de l'ecran. Halo dore + violet propre au logo, qui respire. */
+#loading-state.is-splash > .splash-logo-wrap {
+  position: absolute;
+  top: 32px;
+  left: 36px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  z-index: 4;
+  animation: splash-logo-pulse 3.4s ease-in-out infinite;
+}
+.splash-logo-wrap::before {
+  /* Halo dore intense colle au logo (le SOLEIL). Bien plus large pour que
+     la lumiere s'etende vers le centre comme un faisceau. */
+  content: '';
+  position: absolute;
+  inset: -180px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 230, 160, 0.55) 0%,
+    rgba(255, 200, 110, 0.35) 18%,
+    rgba(212, 179, 90, 0.22) 38%,
+    rgba(167, 139, 250, 0.12) 62%,
+    transparent 85%);
+  filter: blur(22px);
+  z-index: -1;
+  animation: splash-halo-breathe 3.4s ease-in-out infinite;
+}
+.splash-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 130, 0.55))
+          drop-shadow(0 0 40px rgba(212, 179, 90, 0.35));
+}
+
+@keyframes splash-logo-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+@keyframes splash-halo-breathe {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.10); }
+}
+
+/* Titre Cinzel doré majestueux */
+.splash-title {
+  font-family: var(--font-quest);
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  margin: 0 0 8px;
+  color: var(--text);
+  text-shadow: 0 0 24px rgba(212, 179, 90, 0.20);
+}
+.splash-sub {
+  margin: 0 0 44px;
+  color: var(--text-dim);
+  font-size: 15px;
+  letter-spacing: 0.4px;
+  font-style: italic;
+}
+
+/* Stage : conteneur du contenu changeant (loading -> picker).
+   Transition fade pour le swap. Scope au splash immersif uniquement
+   (le boot #splash en HTML utilise aussi .splash-stage mais avec un
+   layout vertical natif, pas besoin de flex-row). */
+#loading-state.is-splash .splash-stage {
+  width: 100%;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.24s ease;
+  opacity: 1;
+}
+#loading-state.is-splash .splash-stage.is-leaving { opacity: 0; }
+#loading-state.is-splash .splash-stage.is-entering { animation: splash-stage-in 0.3s ease both; }
+@keyframes splash-stage-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Etape 1 : barre de chargement */
+.splash-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+}
+.splash-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.splash-progress-bar {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--triskell-violet) 0%,
+    var(--triskell-indigo) 50%,
+    var(--gold) 100%);
+  border-radius: 999px;
+  /* CSS transition pilote l'animation : on passe width 0 -> 100% en 2.7s.
+     Le timing est ajuste pour s'aligner avec minSplashMs cote JS (3000ms). */
+  transition: width 2.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.45);
+}
+.splash-status {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   ETAPE 2 — PICKER DES UNIVERS (Quotidien / Pro)
+   ============================================================================
+   Pas une simple paire de boutons : chaque carte est traitee comme la
+   page de garde d'un tome — chiffre romain, eyebrow "Chapitre", titre
+   Cinzel, regle ornementale avec losange central, glose italique, decompte
+   des compagnons en chiffres romains, et un CTA "Entrer →" qui s'eveille
+   au hover. Quotidien = lumiere doree chaude, Pro = lueur indigo froide :
+   meme univers, deux ambiances. */
+.splash-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+}
+.splash-picker-prompt {
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  color: var(--text-dim);
+  margin: 0;
+  text-transform: uppercase;
+}
+.splash-picker-cards {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ---------- Carte ---------- */
+.splash-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 320px;
+  min-height: 320px;
+  padding: 30px 30px 26px;
+  border: 1px solid rgba(212, 179, 90, 0.22);
+  border-radius: 4px;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(212, 179, 90, 0.05) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(0, 0, 0, 0.32) 100%);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0.24, 1),
+              border-color 0.36s ease,
+              box-shadow 0.36s ease;
+}
+
+/* Cadre interieur fin (style page enluminee) */
+.splash-card::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(212, 179, 90, 0.10);
+  border-radius: 2px;
+  pointer-events: none;
+  transition: border-color 0.36s ease;
+  z-index: 0;
+}
+
+/* Aura souffle au hover : monte par le bas comme une braise qui s'anime */
+.splash-card-aura {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 110%,
+    rgba(212, 179, 90, 0.20) 0%,
+    rgba(212, 179, 90, 0.08) 30%,
+    transparent 65%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.4s ease;
+}
+
+.splash-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(212, 179, 90, 0.65);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.50),
+    0 0 0 1px rgba(212, 179, 90, 0.18) inset;
+}
+.splash-card:hover::before {
+  border-color: rgba(212, 179, 90, 0.32);
+}
+.splash-card:hover .splash-card-aura { opacity: 1; }
+.splash-card:focus-visible {
+  outline: none;
+  border-color: rgba(212, 179, 90, 0.75);
+  box-shadow: 0 0 0 3px rgba(212, 179, 90, 0.18);
+}
+
+/* Chiffre romain en filigrane dans le coin sup. droit — ornement
+   manuscrit, plus prononce au hover. */
+.splash-card-numeral {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  opacity: 0.28;
+  transition: opacity 0.36s ease, transform 0.36s ease;
+  z-index: 1;
+}
+.splash-card:hover .splash-card-numeral {
+  opacity: 0.85;
+  transform: scale(1.06);
+}
+
+/* Eyebrow "Chapitre I" — petit kicker italique */
+.splash-card-eyebrow {
+  position: relative;
+  z-index: 1;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  opacity: 0.55;
+}
+
+/* Titre du chapitre — coeur de la carte */
+.splash-card-label {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-quest);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  line-height: 1.35;
+  margin: 0;
+  text-shadow: 0 0 22px rgba(212, 179, 90, 0.20);
+  transition: text-shadow 0.36s ease, color 0.36s ease;
+}
+.splash-card:hover .splash-card-label {
+  color: var(--gold-soft);
+  text-shadow: 0 0 28px rgba(212, 179, 90, 0.45);
+}
+
+/* Regle ornementale ─ ◆ ─ */
+.splash-card-rule {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 14px;
+  width: 140px;
+  height: 12px;
+}
+.splash-card-rule-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+  opacity: 0.55;
+}
+.splash-card-rule-glyph {
+  font-size: 7px;
+  color: var(--gold);
+  opacity: 0.75;
+  transform: translateY(-1px);
+  transition: transform 0.5s ease;
+}
+.splash-card:hover .splash-card-rule-glyph {
+  transform: translateY(-1px) rotate(180deg);
+}
+
+/* Description du chapitre — la "glose" qui dit ce qu'on trouve dans cet
+   univers. .splash-card-sub gardé en alias pour rétro-compatibilité. */
+.splash-card-sub,
+.splash-card-desc {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  max-width: 280px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+/* Decompte "V compagnons" en chiffres romains italiques */
+.splash-card-tally {
+  position: relative;
+  z-index: 1;
+  margin-top: 18px;
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--gold-soft);
+  opacity: 0.45;
+  text-transform: uppercase;
+}
+
+/* CTA "Entrer →" — fleche qui glisse au hover */
+.splash-card-cta {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-quest);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.55;
+  transition: opacity 0.36s ease, gap 0.36s ease, color 0.36s ease;
+}
+.splash-card-cta-arrow {
+  display: inline-block;
+  font-size: 14px;
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.splash-card:hover .splash-card-cta {
+  opacity: 1;
+  gap: 16px;
+  color: var(--gold-soft);
+}
+.splash-card:hover .splash-card-cta-arrow {
+  transform: translateX(6px);
+}
+
+/* ----- Variation Pro : meme structure, lueur indigo au lieu d'or pur ----- */
+.splash-card[data-universe="pro"] .splash-card-aura {
+  background: radial-gradient(ellipse at 50% 110%,
+    rgba(167, 139, 250, 0.22) 0%,
+    rgba(167, 139, 250, 0.08) 32%,
+    transparent 65%);
+}
+.splash-card[data-universe="pro"]:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow:
+    0 22px 52px rgba(0, 0, 0, 0.50),
+    0 0 0 1px rgba(167, 139, 250, 0.18) inset;
+}
+.splash-card[data-universe="pro"]:hover::before {
+  border-color: rgba(167, 139, 250, 0.32);
+}
+.splash-card[data-universe="pro"] .splash-card-numeral {
+  color: #c8b4ee;
+}
+.splash-card[data-universe="pro"] .splash-card-rule-line {
+  background: linear-gradient(90deg, transparent, #b89cdf, transparent);
+}
+.splash-card[data-universe="pro"] .splash-card-rule-glyph {
+  color: #b89cdf;
+}
+.splash-card[data-universe="pro"]:hover .splash-card-label {
+  color: #d6c5f0;
+  text-shadow: 0 0 28px rgba(167, 139, 250, 0.45);
+}
+.splash-card[data-universe="pro"]:hover .splash-card-cta {
+  color: #c8b4ee;
+}
+
+@media (max-width: 720px) {
+  .splash-picker-cards { flex-direction: column; gap: 20px; }
+  .splash-card { width: 100%; max-width: 360px; min-height: 0; padding: 26px 24px 22px; }
+}
+
 .empty-mark {
   font-size: 48px;
   color: var(--accent);
@@ -892,8 +1845,18 @@ input, button { outline: none; }
    au loin. Trait blanc fin a basse opacite, pointer-events: none pour ne pas
    gener les interactions. */
 .empty-decor {
-  margin-top: 18px;     /* etait 60px : on colle l'illustration sous les apps */
-  padding: 0 20px;
+  /* Remontée généreuse pour que l'illustration embrasse vraiment la grille
+     au lieu de tomber tout en bas. Largeur 100vw + centrage absolu (left
+     50% + translateX -50%) pour deborder totalement les paddings de main
+     et prendre toute la largeur du viewport sans laisser de bande noire. */
+  margin-top: -160px;
+  margin-left: 0;
+  margin-right: 0;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
   display: flex;
   justify-content: center;
   pointer-events: none;
@@ -932,8 +1895,14 @@ input, button { outline: none; }
    en blanc (en respectant l'alpha) → trait blanc propre, pas de rectangle.
    En light : pas de filtre, le trait gris se voit bien sur fond clair. */
 .empty-decor img {
-  width: 100%;
-  max-width: 1400px;
+  /* Image largement agrandie (180% viewport) + margin-left negative pour
+     que les debuts/fins de l'illustration partent franchement hors-ecran.
+     Le PNG a un peu de padding transparent autour de l'artwork, donc il
+     faut scaler costaud pour que le contenu (montagnes, sword) deborde
+     vraiment du viewport et donne un panorama infini. */
+  width: 180vw;
+  max-width: none;
+  margin-left: -40vw;
   height: auto;
   display: block;
   filter: brightness(0) invert(1);
@@ -944,6 +1913,10 @@ input, button { outline: none; }
 }
 
 .empty-decor.hidden { display: none; }
+
+/* (les anciens overrides .main[data-active-category="pro"] .empty-decor
+   ont ete supprimes : leur traitement est maintenant la regle de base
+   .empty-decor / .empty-decor img qui s'applique a tous les onglets.) */
 
 .spinner {
   width: 28px;
@@ -1308,11 +2281,37 @@ input, button { outline: none; }
 .login-foot a:hover { color: var(--accent); }
 
 /* ============== BOUTONS DE TUILES (états supplémentaires) ============== */
+/* Bouton primaire "Recruter" : on l'a passé sur la palette or pour
+   coller à l'identité Table Ronde (les onglets, le badge "À découvrir",
+   le glider — tout est doré). Le violet/indigo précédent jurait avec
+   l'univers héraldique. Cinzel + or qui pulse subtilement au hover. */
 .btn-buy {
-  background: var(--accent);
-  color: #ffffff;
+  background: linear-gradient(135deg,
+    var(--gold) 0%,
+    var(--gold-soft) 60%,
+    var(--gold) 100%);
+  color: #1a1408;
+  font-family: var(--font-quest);
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  border: 1px solid rgba(212, 179, 90, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 6px 18px -8px var(--gold-shadow);
+  transition: filter 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
-.btn-buy:hover { background: var(--accent-hot); }
+.btn-buy:hover {
+  filter: brightness(1.08) saturate(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 10px 26px -6px var(--gold-shadow);
+  transform: translateY(-1px);
+}
+.btn-buy:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
+}
 
 .btn-installing {
   background: var(--bg-3);
@@ -1352,18 +2351,54 @@ input, button { outline: none; }
 }
 
 /* ============== HOME BANNER (salutation + raccourcis) ============== */
+/* Wrapper qui contient le bandeau d'accueil + la card "Compléter ta Table".
+   Mode normal : colonne (banner pleine largeur en haut, bundle dessous).
+   Mode compact (.is-compact) : ligne, deux items côte-à-côte, centrés.
+   Le passage entre les deux est animé via View Transitions API
+   (déclenché côté JS quand l'utilisateur dismiss l'annonce). */
+.home-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 auto 22px;
+  max-width: 1100px;
+  /* view-transition-name permet à l'API de morpher l'élément lors du
+     changement de classe is-compact. Le navigateur capture l'avant/après
+     et anime automatiquement les différences (taille, position). */
+  view-transition-name: home-row;
+}
+
+.home-row.is-compact {
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;     /* repli sur petite largeur */
+  gap: 18px;
+}
+
 .home-banner {
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 14px 18px;
-  margin: 0 auto 18px;
   background: linear-gradient(135deg, rgba(124, 127, 233, 0.10), rgba(167, 139, 250, 0.06));
   border: 1px solid rgba(124, 127, 233, 0.22);
   border-radius: var(--radius);
   flex-wrap: wrap;
-  /* Aligne avec la grille en dessous (max 1100px). */
-  max-width: 1100px;
+  view-transition-name: home-banner;
+}
+
+/* Compact : le bandeau se rétrécit à son contenu (juste "Salut Jordan…") */
+.home-row.is-compact .home-banner {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+}
+
+/* Compact : le bundle prend la place restante mais reste limité */
+.home-row.is-compact #bundles-section {
+  flex: 0 1 auto;
+  margin-bottom: 0;
 }
 .banner-text h2 {
   margin: 0 0 2px;
@@ -1405,27 +2440,6 @@ input, button { outline: none; }
   border-radius: var(--radius-sm);
   font-size: 12px;
   color: var(--triskell-orange);
-}
-
-/* ============== SEARCH (re-injectee si N+ apps) ============== */
-.main-search {
-  margin-bottom: 14px;
-}
-#search-input {
-  width: 100%;
-  max-width: 420px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-#search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-shadow);
-  outline: none;
 }
 
 /* ============== TOOL PICKER (sous-menu Suite des Heros) ============== */
@@ -1740,6 +2754,16 @@ input, button { outline: none; }
   overflow: visible;
 }
 .tile[data-id="pirate-life-mail"] .tile-icon::after { display: none; }
+
+/* AlphaBeast (id: ultimate-prompt-builder) + AlphaCast (id: le-heraut)
+   + AlphaPitch : leurs PNG ont beaucoup de padding transparent autour du
+   visuel, donc l'icone apparait toute petite dans le carre. On les scale
+   a 1.4x pour que le visuel remplisse mieux le conteneur. */
+.tile[data-id="ultimate-prompt-builder"] .tile-icon img,
+.tile[data-id="le-heraut"] .tile-icon img,
+.tile[data-id="alphapitch"] .tile-icon img {
+  transform: scale(1.4);
+}
 .tile[data-id="pirate-life-mail"] .tile-icon img {
   filter:
     drop-shadow(0 0 6px rgba(167, 139, 250, 0.85))
@@ -1749,12 +2773,20 @@ input, button { outline: none; }
 /* Tuile "Populaire" — petit ruban en haut à droite, halo discret */
 /* HERO TILE : la tuile featured prend 2×2 dans la grille → layout interne
    plus généreux (icône XL, titre Cinzel grand, tagline visible en entier,
-   boutons larges). Donne une vraie hiérarchie visuelle. */
+   boutons larges). Donne une vraie hiérarchie visuelle. La grille utilise
+   grid-auto-flow: dense + une colonne adaptée par catégorie pour qu'il
+   n'y ait jamais de trou (cf .grid plus bas). */
 .tile.is-featured {
   grid-column: span 2;
   grid-row: span 2;
   border-color: rgba(212, 179, 90, 0.40);
-  background: linear-gradient(135deg,
+  /* Bg = solide --bg-card EN BAS, gradient or/violet PAR-DESSUS. Avant :
+     juste le gradient avec alpha ~0.04-0.08, donc 92-96% transparent →
+     dans l'onglet Atelier des Pros, le voile indigo du <main> bleed à
+     travers et apparaît comme une tache violette en haut-gauche de la
+     featured. Le solide en arriere coupe le bleed. */
+  background-color: var(--bg-card);
+  background-image: linear-gradient(135deg,
     rgba(212, 179, 90, 0.08),
     rgba(167, 139, 250, 0.05) 60%,
     rgba(99, 102, 241, 0.04) 100%);
@@ -1805,9 +2837,11 @@ input, button { outline: none; }
   margin-top: auto;
 }
 
+/* Featured : meme dimensions que les autres tuiles pour un alignement
+   coherent (avant : padding 12px 20px qui rendait les boutons hero plus
+   grands que les normaux). On garde juste font-weight 700 pour signaler
+   le CTA hero sans casser l'alignement vertical des CTA de la grille. */
 .tile.is-featured .tile-actions button {
-  padding: 12px 20px;
-  font-size: 14px;
   font-weight: 700;
 }
 
@@ -1843,20 +2877,56 @@ input, button { outline: none; }
 }
 
 .tile-ribbon {
-  position: absolute;
-  top: 12px;
-  right: -32px;
-  transform: rotate(35deg);
-  background: linear-gradient(135deg, var(--triskell-orange), var(--triskell-violet));
-  color: #fff;
+  /* APPROCHE : badge en FLUX NORMAL aligné a droite via align-self. Avant :
+     position: absolute qui creait des chevauchements/clipping selon le
+     contenu et le mode (compact/featured/service/discover). En flux normal
+     il ne peut PAS chevaucher le head puisque c'est le 1er item du flex
+     column de la card et tous les autres se placent dessous. */
+  position: relative;
+  align-self: flex-end;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  white-space: nowrap;
+  background: linear-gradient(135deg,
+    rgba(212, 179, 90, 0.20),
+    rgba(212, 179, 90, 0.08));
+  color: var(--gold-soft);
+  border: 1px solid rgba(212, 179, 90, 0.42);
+  font-family: var(--font-quest);
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
   text-transform: uppercase;
-  padding: 4px 36px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  padding: 5px 11px;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1px rgba(212, 179, 90, 0.06),
+    0 6px 16px -8px var(--gold-shadow);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 2;
   pointer-events: none;
+}
+.tile-ribbon::before {
+  /* Petit point doré qui pulse légèrement, pour signaler la mise en avant
+     sans agresser l'œil — un signal vivant mais sobre. */
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 6px var(--gold);
+  animation: tile-ribbon-pulse 2.4s ease-in-out infinite;
+}
+@keyframes tile-ribbon-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.10); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-ribbon::before { animation: none; }
 }
 
 /* Tag "Adoubé" — accentue le or pour qu'il soit le plus visible */
@@ -2118,7 +3188,7 @@ details[open] .danger-summary::before {
 }
 .tile:hover .tile-hint {
   opacity: 1;
-  color: var(--accent);
+  color: var(--gold-soft);
   transform: translateX(3px);
 }
 
@@ -2988,8 +4058,10 @@ details[open] .danger-summary::before {
    quand isRealBuyButton). flex-basis 100% : passe à la ligne pour ne pas
    bousculer les boutons côte à côte. */
 .tile-guarantee {
-  flex-basis: 100%;
-  width: 100%;          /* fallback si flex-wrap n'est pas honore */
+  /* Avec .tile-actions en grid, on prend toute la largeur (les 2 colonnes). */
+  grid-column: 1 / -1;
+  flex-basis: 100%;     /* fallback si .tile-actions devait redevenir flex */
+  width: 100%;
   margin-top: 6px;
   font-size: 11px;
   color: var(--green);
@@ -3001,6 +4073,18 @@ details[open] .danger-summary::before {
   font-weight: 500;
   opacity: 0.85;
   text-align: center;
+}
+
+/* Bug-fix : .tile a overflow:hidden et la grille fige la hauteur des cartes ;
+   quand .tile-guarantee passe à la ligne sous les CTA, elle se fait tronquer.
+   On réserve l'espace nécessaire en padding-bottom pour les cartes qui ont
+   une garantie (selector :has supporté par Electron récent). */
+.tile:has(.tile-guarantee) {
+  padding-bottom: 32px;
+}
+@supports not selector(:has(*)) {
+  /* Fallback : padding-bottom global légèrement augmenté pour toutes les tiles */
+  .tile { padding-bottom: 28px; }
 }
 .tile-guarantee-icon {
   display: inline-flex;
@@ -3234,8 +4318,11 @@ details[open] .danger-summary::before {
   opacity: 0.12;
   transform: rotate(-12deg) scale(1.05);
 }
-/* On remonte le contenu au-dessus du watermark */
-.tile.is-featured > *:not(.tile-hero-watermark) { position: relative; z-index: 1; }
+/* On remonte le contenu au-dessus du watermark. Le ruban "À découvrir" est
+   exclu de l'override : il a besoin de garder son position: absolute pour
+   rester ancré dans le coin haut-droit, sinon il tombe dans le flux
+   et s'écrase contre le logo en haut-gauche. */
+.tile.is-featured > *:not(.tile-hero-watermark):not(.tile-ribbon) { position: relative; z-index: 1; }
 
 /* --- CARDS NORMALES : liseré gold au hover + lift plus marqué --- */
 .tile {
@@ -3244,33 +4331,43 @@ details[open] .danger-summary::before {
   animation-delay: calc(var(--tile-index, 0) * 60ms);
 }
 
+/* Liseré gauche subtil au hover — on reste sur le doré pur, sans descente
+   en violet qui créait des artefacts visuels (gradient de 220px qui pouvait
+   "bavé" en transition). Trait fin, ancré à gauche, animé via scaleY. */
 .tile::after {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--gold-soft), var(--triskell-violet));
+  width: 2px;
+  background: linear-gradient(180deg,
+    rgba(212, 179, 90, 0.0) 0%,
+    var(--gold-soft) 25%,
+    var(--gold) 75%,
+    rgba(212, 179, 90, 0.0) 100%);
   border-radius: var(--radius) 0 0 var(--radius);
   opacity: 0;
-  transform: scaleY(0.2);
+  transform: scaleY(0.4);
   transform-origin: center;
   transition: opacity 0.22s ease, transform 0.32s cubic-bezier(0.34, 1.5, 0.64, 1);
   pointer-events: none;
 }
 .tile:hover::after {
-  opacity: 1;
+  opacity: 0.9;
   transform: scaleY(1);
 }
 
-/* Hover plus marqué sur cards normales */
+/* Hover plus marqué sur cards normales — passé en or pour cohérence avec
+   l'identité héraldique (onglets, badge, glider). Le violet précédent
+   créait une dissonance avec le reste de l'UI. */
 .tile:not(.is-featured):hover {
   transform: translateY(-4px);
   box-shadow:
-    0 0 0 1px rgba(167, 139, 250, 0.25),
-    0 16px 40px rgba(0, 0, 0, 0.45);
-  border-color: rgba(167, 139, 250, 0.35);
+    0 0 0 1px rgba(212, 179, 90, 0.30),
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(212, 179, 90, 0.12);
+  border-color: rgba(212, 179, 90, 0.40);
 }
 
 /* Hover hero : lift + glow doré plus prononcé */
@@ -3324,6 +4421,46 @@ details[open] .danger-summary::before {
   left: 130%;
 }
 
+/* Pull-quote "argument de vente" sur la card hero — occupe la zone
+   centrale entre les features et le prix. Style citation enluminee :
+   barre verticale doree a gauche, guillemet ornemental, italique Cinzel.
+   Pas de fond, pas de border-radius : on reste sur un trait fin pour ne
+   pas alourdir la card et garder l'allure manuscrit. */
+.tile-hero-pitch {
+  position: relative;
+  margin: 14px 0 0;
+  padding: 8px 6px 8px 22px;
+  border-left: 2px solid var(--gold-soft);
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(212, 179, 90, 0.10);
+  transition: border-color 0.32s ease, color 0.32s ease;
+}
+.tile-hero-pitch-mark {
+  position: absolute;
+  left: 8px;
+  top: -8px;
+  font-family: var(--font-quest);
+  font-style: normal;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--gold);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.tile.is-featured:hover .tile-hero-pitch {
+  border-color: var(--gold);
+  color: #fff;
+}
+.tile.is-featured:hover .tile-hero-pitch-mark {
+  opacity: 0.85;
+}
+
 /* Variante hero : si l'app n'a ni tools ni features, on affiche sa
    description courte. Style plus aere pour qu'elle respire. */
 .tile-hero-description {
@@ -3335,20 +4472,136 @@ details[open] .danger-summary::before {
 }
 
 /* ============================================================================
-   SPLASH SCREEN — boot de l'app, ~1.2s avec fadeOut
+   FICHE PRODUIT — features détaillées (titre + détail) + section "Pour qui ?"
    ============================================================================ */
+
+/* Features format objet { title, detail } : titre en gras + ligne de detail
+   sous (vs ancien format string : juste un bullet point). */
+.product-feature-rich {
+  list-style: none;
+  position: relative;
+  padding: 12px 0 12px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.product-feature-rich:last-child { border-bottom: none; }
+
+.product-feature-rich::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(212, 179, 90, 0.15);
+  color: var(--gold-soft);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.product-feature-rich strong {
+  display: block;
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.product-feature-detail {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+/* Format simple (rétrocompat) */
+.product-feature-simple {
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* Section "Pour qui ?" : 2-3 cards en grille. Chaque card = persona avec
+   nom + description courte + emoji icon optionnel. */
+.product-personas-section { /* hérite de .product-section */ }
+
+.product-personas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.product-persona-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg,
+    rgba(212, 179, 90, 0.04),
+    rgba(167, 139, 250, 0.03));
+  border: 1px solid rgba(212, 179, 90, 0.18);
+  border-radius: var(--radius);
+  transition: border-color 0.18s, transform 0.18s;
+}
+.product-persona-card:hover {
+  border-color: rgba(212, 179, 90, 0.35);
+  transform: translateY(-2px);
+}
+
+.product-persona-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
+.product-persona-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold-soft);
+  margin-bottom: 3px;
+  letter-spacing: 0.2px;
+}
+
+.product-persona-desc {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* Paragraphes de description longue (split sur \n\n dans renderer) */
+.product-description-para {
+  display: block;
+  margin-bottom: 14px;
+}
+.product-description-para:last-child { margin-bottom: 0; }
+
+/* ============================================================================
+   SPLASH SCREEN — racine
+   ============================================================================
+   Container plein ecran. Le LOGO est en absolute top-left (cf
+   .splash-logo-wrap), tout le RESTE (titre, sous-titre, picker) est
+   centre via flex sur .splash. */
 .splash {
   position: fixed;
   inset: 0;
   z-index: 10000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 35%,
-    #1a1f2e 0%,
-    #0f1218 60%,
-    #08090d 100%);
-  /* Apparait instantanement, fadeOut au signal 'ready' (cf classe .is-leaving) */
+  padding: 0 32px;
+  text-align: center;
+  /* Fond sombre laisse les .splash-decor (illustration medievale) apparaitre
+     a travers. Si tu veux un fond uni, decommente la ligne background
+     ci-dessous. */
+  background: radial-gradient(ellipse at 50% 35%, #1a1f2e 0%, #0f1218 60%, #08090d 100%);
   opacity: 1;
   transition: opacity 0.5s ease;
 }
@@ -3358,113 +4611,497 @@ details[open] .danger-summary::before {
 }
 .splash.hidden { display: none; }
 
-.splash-stage {
+/* ============================================================================
+   COMMAND PALETTE — Ctrl+K (cherche dans tout le catalogue, navigation clavier)
+   ============================================================================ */
+.command-palette {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 18px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 11vh;
+}
+.command-palette.hidden { display: none; }
+
+.command-palette-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 10, 16, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: palette-backdrop-in 0.18s ease-out both;
+}
+@keyframes palette-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+.command-palette-card {
+  position: relative;
+  width: min(680px, 92vw);
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgba(212, 179, 90, 0.12),
+    0 30px 80px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  animation: palette-card-in 0.22s cubic-bezier(0.32, 1.0, 0.34, 1.0) both;
+}
+@keyframes palette-card-in {
+  from { transform: translateY(-12px) scale(0.985); opacity: 0; }
+  to   { transform: translateY(0) scale(1);          opacity: 1; }
 }
 
-.splash-logo-wrap {
-  position: relative;
-  width: 120px;
-  height: 120px;
+.command-palette-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.command-palette-icon {
+  font-size: 18px;
+  color: var(--gold-soft);
+  opacity: 0.7;
+}
+.command-palette-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+  letter-spacing: 0.2px;
+  outline: none;
+  padding: 0;
+}
+.command-palette-search input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.65;
+}
+.command-palette-esc {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.command-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.command-palette-item.is-selected {
+  background: linear-gradient(90deg,
+    rgba(212, 179, 90, 0.18),
+    rgba(212, 179, 90, 0.06));
+  box-shadow: inset 0 0 0 1px rgba(212, 179, 90, 0.20);
+}
+.command-palette-item-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 4px;
-}
-
-.splash-logo {
-  width: 96px;
-  height: 96px;
-  object-fit: contain;
-  border-radius: 22px;
-  /* Animation d'entree : scale + fade + leger flot vertical */
-  animation: splash-logo-in 0.9s cubic-bezier(0.34, 1.5, 0.64, 1) both,
-             splash-logo-float 3.5s ease-in-out 0.9s infinite;
-  filter: drop-shadow(0 8px 24px rgba(124, 127, 233, 0.30))
-          drop-shadow(0 0 30px rgba(212, 179, 90, 0.18));
-}
-
-/* Halo dore qui pulse derriere le logo */
-.splash-glow {
-  position: absolute;
-  inset: -20px;
-  border-radius: 50%;
-  background: radial-gradient(circle,
-    rgba(212, 179, 90, 0.25) 0%,
-    rgba(167, 139, 250, 0.10) 35%,
-    transparent 70%);
-  animation: splash-glow-pulse 2.4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.splash-title {
-  font-family: var(--font-quest);
-  font-size: 28px;
   font-weight: 700;
-  letter-spacing: 1.5px;
-  color: var(--gold-soft);
-  margin: 0;
-  opacity: 0;
-  animation: splash-text-in 0.6s ease 0.35s forwards;
-}
-
-.splash-sub {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin: 0;
-  letter-spacing: 0.5px;
-  opacity: 0;
-  animation: splash-text-in 0.6s ease 0.55s forwards;
-}
-
-/* Petite barre de progression decorative (pas reelle - juste evocateur) */
-.splash-bar {
-  width: 180px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
+  font-size: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
   overflow: hidden;
-  margin-top: 14px;
-  opacity: 0;
-  animation: splash-text-in 0.4s ease 0.7s forwards;
 }
-.splash-bar-fill {
-  width: 30%;
+.command-palette-item-icon img {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg,
-    transparent,
-    var(--gold-soft) 50%,
-    transparent);
-  animation: splash-bar-slide 1.4s ease-in-out infinite;
+  object-fit: contain;
+}
+.command-palette-item-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.command-palette-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  letter-spacing: 0.1px;
+}
+.command-palette-item.is-selected .command-palette-item-name {
+  color: var(--gold-soft);
+}
+.command-palette-item-tagline {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-palette-item-cat {
+  font-family: var(--font-quest);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  opacity: 0.55;
+  flex-shrink: 0;
+  padding-left: 8px;
+}
+.command-palette-empty {
+  padding: 28px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  font-family: var(--font-quest);
+  font-size: 13px;
+}
+.command-palette-footer {
+  display: flex;
+  gap: 22px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.command-palette-footer kbd {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  margin: 0 3px;
 }
 
-@keyframes splash-logo-in {
-  from { opacity: 0; transform: scale(0.5) translateY(20px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+/* ============================================================================
+   VIEW TRANSITIONS — splash card → grille (effet "ouverture du livre")
+   On personnalise la durée et l'easing du morph automatique.
+   ============================================================================ */
+::view-transition-old(chapter-portal),
+::view-transition-new(chapter-portal) {
+  animation-duration: 0.62s;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0.24, 1.0);
 }
-@keyframes splash-logo-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+::view-transition-old(chapter-portal) {
+  animation-name: portal-zoom-out;
 }
-@keyframes splash-glow-pulse {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.08); }
+::view-transition-new(chapter-portal) {
+  animation-name: portal-zoom-in;
 }
-@keyframes splash-text-in {
+@keyframes portal-zoom-out {
+  to { opacity: 0; transform: scale(1.06); }
+}
+@keyframes portal-zoom-in {
+  from { opacity: 0; transform: scale(0.94); }
+}
+
+/* L'animation par défaut du root (le reste de l'écran) reste un crossfade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.42s;
+  animation-timing-function: ease-out;
+}
+
+/* ============================================================================
+   SÉLECTEUR DE VUE — 3 modes (Vedette / Compacte / Découverte)
+   ============================================================================ */
+.view-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+  margin-right: 8px;
+}
+
+.view-switch {
+  width: 30px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.view-switch:hover {
+  background: var(--bg-3);
+  color: var(--text-dim);
+}
+.view-switch.is-active {
+  background: var(--accent-shadow);
+  color: var(--accent);
+}
+.view-switch svg { display: block; }
+
+/* ============================================================================
+   VUE COMPACTE — grille uniforme, cards plus petites, pas de hero
+   ============================================================================
+   Active via .grid.grid-mode-compact. Surcharge les regles du mode "hero"
+   (qui utilise auto-fit + .tile.is-featured 2x2). Ici toutes les cards font
+   la meme taille pour montrer plus de produits d'un coup. */
+.grid.grid-mode-compact {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 240px));
+  grid-auto-rows: auto;
+  /* Centre les colonnes dans le conteneur — sans ca les tuiles se collent
+     a gauche et l'espace vide reste a droite quand le grid n'est pas plein. */
+  justify-content: center;
+}
+.grid.grid-mode-compact .tile {
+  padding: 14px;
+  gap: 10px;
+}
+/* En compact : on neutralise totalement le layout hero */
+.grid.grid-mode-compact .tile.is-featured {
+  grid-column: auto;
+  grid-row: auto;
+  background: var(--bg-card);          /* meme fond que les autres */
+  border-color: var(--border);
+  box-shadow: none;
+  padding: 14px;
+}
+.grid.grid-mode-compact .tile.is-featured .tile-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 16px;
+  box-shadow: none;
+}
+.grid.grid-mode-compact .tile.is-featured .tile-title {
+  font-size: 14px;
+  font-family: var(--font-quest);
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.grid.grid-mode-compact .tile.is-featured .tile-tagline {
+  font-size: 12px;
+  -webkit-line-clamp: 2;
+}
+/* En compact, on cache le bloc "X outils dans ta Suite" + les pastilles
+   features + le watermark : trop chargé pour des cards petites. */
+.grid.grid-mode-compact .tile-hero-block,
+.grid.grid-mode-compact .tile-hero-watermark { display: none; }
+/* En compact, les boutons featured gardent les memes dimensions que les
+   boutons normaux (alignement coherent demande par Jordan — avant on
+   avait padding 7px 10px qui creait un decalage vertical). */
+.grid.grid-mode-compact .tile.is-featured .tile-actions button {
+  font-weight: 600;
+}
+/* Le ribbon "À découvrir" / "Populaire" en compact : juste plus discret
+   en taille (le ribbon est en flux normal aligné a droite via .tile-ribbon
+   de base, plus besoin de top/right). */
+.grid.grid-mode-compact .tile-ribbon {
+  font-size: 9px;
+  padding: 3px 10px;
+  letter-spacing: 0.6px;
+}
+
+/* ============================================================================
+   VUE DÉCOUVERTE — carrousel un produit a la fois
+   ============================================================================
+   Active via .grid.grid-mode-discover. La grille devient un container flex
+   qui met en avant un seul produit (la card .is-featured), avec des fleches
+   <-> et des dots de navigation. */
+.grid.grid-mode-discover {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+
+.discover-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 12px 0;
+}
+
+.discover-stage {
+  flex: 1;
+  min-width: 0;
+  max-width: 720px;
+  /* anim de transition entre les produits */
+  animation: discover-stage-in 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+@keyframes discover-stage-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes splash-bar-slide {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
+
+/* La card en mode discover : utilise .tile.is-featured en plus grand */
+.discover-card {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  min-height: 460px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .splash-logo,
-  .splash-glow,
-  .splash-bar-fill { animation: none; }
+.discover-nav {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
 }
+.discover-nav:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: rgba(212, 179, 90, 0.40);
+  color: var(--gold-soft);
+  transform: scale(1.06);
+}
+.discover-nav:active:not(:disabled) { transform: scale(0.96); }
+.discover-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.discover-dots {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+.discover-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+}
+.discover-dot:hover { background: var(--text-muted); }
+.discover-dot.is-active {
+  background: var(--gold-soft);
+  width: 22px;
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   TILE HERO PITCH-CITE — signature italique sous la citation principale
+   La motto vient en attribution sous la citation (salesPitch), façon
+   épigraphe. Les deux dans un seul blockquote pour rester visuellement
+   compacts et ne pas pousser les boutons hors de la carte.
+   ============================================================================ */
+.tile-hero-pitch-cite {
+  display: block;
+  margin-top: 8px;
+  padding-left: 4px;
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: 0.3px;
+  color: var(--gold-soft);
+  opacity: 0.65;
+}
+
+/* ============================================================================
+   Pitch compact sur les cards NORMALES (vs hero qui a son blockquote XL)
+   ============================================================================ */
+/* Aligne la typo du pitch sur celle de DéliNote (tile-hero-pitch) :
+   Cinzel italique 15px, blanc cassé. Cinzel ne contient que des glyphes
+   capitales, donc le texte s'affiche naturellement en majuscules — meme
+   look que sur la card hero. */
+.tile-pitch {
+  margin: 4px 0 6px;
+  padding: 8px 0 8px 12px;
+  border-left: 2px solid rgba(212, 179, 90, 0.40);
+  font-family: var(--font-quest);
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+  text-shadow: 0 0 14px rgba(212, 179, 90, 0.10);
+  position: relative;
+}
+.tile-pitch-mark {
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--gold);
+  opacity: 0.55;
+  font-size: 28px;
+  font-style: normal;
+  margin-right: 3px;
+  line-height: 1;
+  vertical-align: -4px;
+}
+
+/* Le motto sous le pitch — meme reglage que tile-hero-pitch-cite pour que
+   la signature ait le meme rythme typographique sur toutes les cards. */
+.tile-pitch-cite {
+  display: block;
+  margin-top: 8px;
+  padding-left: 4px;
+  font-family: var(--font-quest);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: 0.3px;
+  color: var(--gold-soft);
+  opacity: 0.65;
+}
+
+/* En vue Compacte : le pitch garde la meme typo que sur DéliNote (Cinzel
+   15px). On laisse les valeurs par défaut de .tile-pitch — pas de
+   réduction, sinon les cards normales perdraient l'identité visuelle
+   "comme DéliNote" demandée par Jordan. */
+
+/* ============================================================================
+   FIX : centrage de la grille + ribbon "À découvrir" qui débordait
+   ============================================================================ */
+
+/* Le ribbon hero — en flux normal aligné a droite (cf .tile-ribbon de
+   base). On garde juste un padding/font-size un poil plus généreux que
+   les autres ribbons pour matcher la prestance featured. */
+.tile.is-featured .tile-ribbon {
+  padding: 5px 14px;
+  font-size: 10.5px;
+  letter-spacing: 1px;
+}
+
+/* Centrage de la grille — déjà avec margin auto, on s'assure que le main
+   et la grille respectent le centrage horizontal sans dérive à gauche. */
+.main { display: flex; flex-direction: column; align-items: center; }
+.main > * { width: 100%; max-width: 1500px; }

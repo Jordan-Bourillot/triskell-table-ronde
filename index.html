@@ -13,11 +13,15 @@
 
   <!-- ============== SPLASH SCREEN (visible au boot, masque apres chargement) ============== -->
   <div id="splash" class="splash" aria-hidden="true">
-    <div class="splash-stage">
-      <div class="splash-logo-wrap">
-        <img src="assets/triskell_mark.png" alt="" class="splash-logo" />
-        <span class="splash-glow" aria-hidden="true"></span>
-      </div>
+    <!-- Logo HORS du stage : positionne en absolute top-left, ne participe
+         pas au centrage flex du contenu principal. -->
+    <div class="splash-logo-wrap">
+      <img src="assets/triskell_mark.png" alt="" class="splash-logo" />
+      <span class="splash-glow" aria-hidden="true"></span>
+    </div>
+    <!-- Stage : titre + sous-titre + zone changeante (loading -> picker),
+         centre verticalement et horizontalement par .splash (flex). -->
+    <div id="splash-stage" class="splash-stage">
       <h1 class="splash-title">La Table Ronde</h1>
       <p class="splash-sub" id="splash-message">Allumage des chandelles…</p>
       <div class="splash-bar" aria-hidden="true">
@@ -96,6 +100,35 @@
       </div>
 
       <div class="header-actions">
+        <!-- Selecteur de vue : 3 modes au choix de l'utilisateur. La pref
+             est persistee. Les icones sont des SVG inline pour cohérence visuelle. -->
+        <div class="view-switcher" role="tablist" aria-label="Mode d'affichage">
+          <button type="button" class="view-switch" data-view="hero" title="Vue Vedette" aria-label="Vue Vedette">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="1" y="1" width="9" height="9" rx="1"/>
+              <rect x="11" y="1" width="4" height="4" rx="1"/>
+              <rect x="11" y="6" width="4" height="4" rx="1"/>
+              <rect x="1" y="11" width="4" height="4" rx="1"/>
+              <rect x="6" y="11" width="4" height="4" rx="1"/>
+              <rect x="11" y="11" width="4" height="4" rx="1"/>
+            </svg>
+          </button>
+          <button type="button" class="view-switch" data-view="compact" title="Vue Compacte" aria-label="Vue Compacte">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="1" y="1" width="6.5" height="6.5" rx="1"/>
+              <rect x="8.5" y="1" width="6.5" height="6.5" rx="1"/>
+              <rect x="1" y="8.5" width="6.5" height="6.5" rx="1"/>
+              <rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1"/>
+            </svg>
+          </button>
+          <button type="button" class="view-switch" data-view="discover" title="Vue Découverte" aria-label="Vue Découverte">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="3" y="2" width="10" height="12" rx="1.5"/>
+              <line x1="0.5" y1="8" x2="2" y2="8"/>
+              <line x1="14" y1="8" x2="15.5" y2="8"/>
+            </svg>
+          </button>
+        </div>
         <button class="account-pill account-pill-avatar-only" id="account-btn" title="Mon compte Triskell">
           <span class="account-avatar" id="account-avatar"></span>
           <span class="account-meta hidden">
@@ -109,14 +142,6 @@
     <main class="main">
       <nav id="main-tabs" class="main-tabs" role="tablist" aria-label="Catégories de produits"></nav>
 
-      <div class="main-head">
-        <div class="main-head-text">
-          <h1 id="main-title" class="hidden">Les compagnons de ta Table</h1>
-          <p id="main-subtitle" class="muted small main-subtitle"></p>
-        </div>
-        <span id="main-count" class="muted"></span>
-      </div>
-
       <section id="grid" class="grid" aria-live="polite"></section>
 
       <div id="empty-state" class="empty hidden">
@@ -127,7 +152,7 @@
 
       <div id="loading-state" class="empty">
         <div class="spinner"></div>
-        <p>Convocation de tes compagnons...</p>
+        <p id="loading-text">Convocation de tes compagnons...</p>
       </div>
 
       <!-- Decoration empty-state : illustration "Excalibur + chateau + montagnes".

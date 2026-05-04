@@ -77,6 +77,8 @@ contextBridge.exposeInMainWorld('triskell', {
     setLastSeenVersion:      (v)        => ipcRenderer.invoke('prefs:set-last-seen-version', v),
     setAvatar:               (dataUrl)  => ipcRenderer.invoke('prefs:set-avatar', dataUrl),
     setTheme:                (theme)    => ipcRenderer.invoke('prefs:set-theme', theme),
+    setLastCategory:         (catId)    => ipcRenderer.invoke('prefs:set-last-category', catId),
+    setViewMode:             (mode)     => ipcRenderer.invoke('prefs:set-view-mode', mode),
     dismissAnnouncement:     (id)       => ipcRenderer.invoke('prefs:dismiss-announcement', id)
   },
 

@@ -37,6 +37,20 @@ const PRODUCT_HINTS = {
     exeNames: ['Pirate Life Mail.exe', 'PirateLifeMail.exe'],
     programFilesNames: ['Pirate Life Mail', 'PirateLifeMail'],
   },
+  // Display name : AlphaBeast (ID interne 'ultimate-prompt-builder' garde
+  // pour ne pas casser les licences DB existantes).
+  'ultimate-prompt-builder': {
+    folderInDocuments: [],
+    exeNames: ['AlphaBeast.exe', 'UltimatePromptBuilder.exe', 'Ultimate Prompt Builder.exe'],
+    programFilesNames: ['AlphaBeast', 'UltimatePromptBuilder', 'Ultimate Prompt Builder'],
+  },
+  // Display name : AlphaPitch (ID interne change pour 'alphapitch' — l'app
+  // est gratuite et pas encore deployee, donc safe de renommer l'ID).
+  'alphapitch': {
+    folderInDocuments: [],
+    exeNames: ['AlphaPitch.exe', 'Alphapitch.exe', 'Triskell Sales Tunnel.exe', 'TriskellSalesTunnel.exe'],
+    programFilesNames: ['AlphaPitch', 'Alphapitch', 'Triskell Sales Tunnel', 'TriskellSalesTunnel'],
+  },
 };
 
 function exists(p) {
