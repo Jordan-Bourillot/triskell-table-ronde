@@ -25,7 +25,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 const KNOWN_PRODUCTS = new Set([
-  'suite-des-heros', 'delinote', 'studio-pdf', 'bobeez'
+  // Quotidien
+  'suite-des-heros', 'delinote', 'studio-pdf', 'bobeez',
+  // Pro (alignés avec PRODUCT_PRICES_EUR de create-completion-checkout.js)
+  'le-denicheur',
+  'ultimate-prompt-builder',     // alias display : AlphaBeast
+  'pack-electricien-pro'
 ]);
 
 exports.handler = async (event) => {

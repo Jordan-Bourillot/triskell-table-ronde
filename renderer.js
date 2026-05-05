@@ -1889,6 +1889,8 @@
     const cat = state.activeCategory;
     return state.apps.filter(a =>
       a.tier === 'premium'
+      && !a.comingSoon              // pas vendable encore (AlphaCast, etc.)
+      && a.price                    // exige un prix unique (pas un service)
       && !state.licenses[a.id]
       && (!cat || (a.category || '') === cat)
     );
@@ -2342,7 +2344,10 @@
 
     const tags = [];
     const isService = app.kind === 'service' || app.tier === 'service';
-    if (isService)                                               tags.push('<span class="tag tag-service">Service</span>');
+    // Le tag "Service" doré est volontairement RETIRÉ ici : le bandeau
+    // ✦ SERVICE ✦ horizontal en haut de la card (CSS .tile.is-service::before)
+    // signale déjà clairement que c'est un service. Doubler les signaux
+    // brouillerait la hiérarchie visuelle.
     if (app.tier === 'free' && !isService)                       tags.push('<span class="tag tag-free">Gratuit</span>');
     if (state.licenses[app.id])                                  tags.push('<span class="tag tag-owned">Adoubé</span>');
     if (app.comingSoon)                                          tags.push('<span class="tag tag-soon">En quête</span>');
@@ -3178,15 +3183,15 @@
     const shots = Array.isArray(app.screenshots) ? app.screenshots : [];
     const host = els.productMedia;
     if (shots.length === 0) {
+      // Pas de screenshots : on cache complètement la section (au lieu
+      // d'afficher un placeholder "Bientôt visibles ici"). Demande Jordan :
+      // tant qu'on n'a pas de visuels, on ne montre rien.
       host.classList.remove('product-media-gallery');
-      host.innerHTML = `
-        <div class="product-media-empty">
-          <span class="product-media-icon" aria-hidden="true">&#x1F4F8;</span>
-          <p class="product-media-title">Captures d'écran</p>
-          <p class="muted small">Bientôt visibles ici — on prépare les visuels.</p>
-        </div>`;
+      host.classList.add('hidden');
+      host.innerHTML = '';
       return;
     }
+    host.classList.remove('hidden');
     host.classList.add('product-media-gallery');
     host.innerHTML = shots.map((s, i) => `
       <button class="product-screenshot" data-index="${i}" type="button"

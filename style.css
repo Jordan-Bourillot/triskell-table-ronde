@@ -663,13 +663,13 @@ input, button { outline: none; }
   overflow: hidden;  /* nécessaire pour clipper le ruban diagonal */
 }
 
-/* Bandeau horizontal doré "PRESTATION HUMAINE" en haut de la card —
+/* Bandeau horizontal doré "SERVICE" en haut de la card —
    signal e-commerce universel (cf. "FEATURED" / "BESTSELLER" sur Amazon).
    Impossible à louper en scanning rapide.
    On override la regle .tile::before (qui est un trait gold opacity 0
    par defaut, puis 0.6 au hover). */
 .main[data-active-category="pro"] .tile.is-service::before {
-  content: '✦ PRESTATION HUMAINE ✦';
+  content: '✦ SERVICE ✦';
   position: absolute;
   top: 0;
   left: 0;
@@ -2956,6 +2956,11 @@ input, button { outline: none; }
 .tile[data-id="le-heraut"] .tile-icon img,
 .tile[data-id="alphapitch"] .tile-icon img {
   transform: scale(1.4);
+}
+/* Eliks Studio : le E SVG est trop grand dans le cercle (icône service
+   forcée en border-radius:50%), on le réduit pour qu'il respire. */
+.tile[data-id="eliks-studio"] .tile-icon img {
+  transform: scale(0.72);
 }
 .tile[data-id="pirate-life-mail"] .tile-icon img {
   filter:

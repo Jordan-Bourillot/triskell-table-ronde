@@ -21,10 +21,17 @@ const { json, preflight, authFromHeaders } = require('./_lib');
 // modifie LES DEUX endroits — sinon le client paiera le prix recalculé
 // serveur (qui prime), et un warning sera loggé en cas d'écart.
 const PRODUCT_PRICES_EUR = {
+  // Quotidien (paid premium)
   'suite-des-heros': 27,
   'delinote': 79,
   'studio-pdf': 39,
-  'bobeez': 27
+  'bobeez': 27,
+  // Pro (paid premium) — ajoutes pour que le bundle "Compléter ta Table"
+  // fonctionne aussi dans l'Atelier des Pros. Sinon le checkout retournait
+  // 'discount-not-configured' quand l'user picke des produits pro.
+  'le-denicheur': 129,
+  'ultimate-prompt-builder': 19,   // alias display : AlphaBeast
+  'pack-electricien-pro': 27
 };
 
 const DISCOUNTS = { 2: 15, 3: 25, 4: 35 };
