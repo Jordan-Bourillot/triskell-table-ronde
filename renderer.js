@@ -1298,12 +1298,105 @@
     }
 
     const frag = document.createDocumentFragment();
-    apps.forEach((app, i) => {
-      const tile = buildTile(app);
-      // Index pour cascade d'entree (CSS animation-delay calcule via var)
-      tile.style.setProperty('--tile-index', i);
-      frag.appendChild(tile);
-    });
+
+    // Dans l'Atelier des Pros (sauf mode Découverte), on segmente en sections
+    // selon le champ `proSection` (generaliste / batiment / ...). Les apps
+    // sans `proSection` tombent dans 'generaliste' par défaut. L'ordre des
+    // sections est figé ci-dessous — les sections inconnues apparaissent
+    // après, dans l'ordre où elles arrivent.
+    if (state.activeCategory === 'pro' && mode !== 'discover') {
+      const PRO_SECTIONS = [
+        { key: 'generaliste', label: 'Digital tous métiers' },
+        { key: 'batiment',    label: 'Spécial Bâtiment' }
+      ];
+      const grouped = new Map();
+      for (const app of apps) {
+        const section = app.proSection || 'generaliste';
+        if (!grouped.has(section)) grouped.set(section, []);
+        grouped.get(section).push(app);
+      }
+
+      // Mini-nav chips au-dessus de la grille : signal que plusieurs sections
+      // existent + lien direct (smooth scroll) vers chacune. Évite que les
+      // sections du bas (Bâtiment) soient invisibles pour qui ne scroll pas.
+      const sectionsToRender = [];
+      for (const { key, label } of PRO_SECTIONS) {
+        if (grouped.has(key) && grouped.get(key).length > 0) {
+          sectionsToRender.push({ key, label, apps: grouped.get(key) });
+          grouped.delete(key);
+        }
+      }
+      for (const [key, sectionApps] of grouped) {
+        sectionsToRender.push({
+          key,
+          label: key.charAt(0).toUpperCase() + key.slice(1),
+          apps: sectionApps
+        });
+      }
+      if (sectionsToRender.length > 1) {
+        const nav = document.createElement('div');
+        nav.className = 'pro-section-nav';
+        nav.innerHTML = sectionsToRender.map(({ key, label, apps: secApps }) => `
+          <button class="pro-nav-chip" data-section="${key}" type="button">
+            <span class="pro-nav-chip-label">${escapeHtml(label)}</span>
+            <span class="pro-nav-chip-count">${secApps.length}</span>
+          </button>
+        `).join('');
+        nav.addEventListener('click', (e) => {
+          const btn = e.target.closest('.pro-nav-chip');
+          if (!btn) return;
+          const target = els.grid.querySelector(
+            `.grid-section-header[data-section="${btn.dataset.section}"]`
+          );
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+        // Place la nav DIRECTEMENT après les onglets (avant home-row + grille)
+        // pour qu'elle soit immédiatement visible — le user sait des le premier
+        // regard qu'il y a 2 sections, sans avoir a scroller.
+        const oldNav = document.querySelector('.pro-section-nav');
+        if (oldNav) oldNav.remove();
+        const homeRow = document.getElementById('home-row');
+        const main = document.querySelector('.main');
+        if (homeRow && homeRow.parentNode === main) {
+          main.insertBefore(nav, homeRow);
+        } else {
+          els.grid.parentNode.insertBefore(nav, els.grid);
+        }
+      }
+
+      let globalIdx = 0;
+      const renderSection = (key, label, sectionApps) => {
+        if (!sectionApps || sectionApps.length === 0) return;
+        const header = document.createElement('div');
+        header.className = 'grid-section-header';
+        header.dataset.section = key;
+        header.innerHTML =
+          '<span class="grid-section-line"></span>' +
+          `<h2 class="grid-section-title">${escapeHtml(label)}</h2>` +
+          '<span class="grid-section-line"></span>';
+        frag.appendChild(header);
+        for (const app of sectionApps) {
+          const tile = buildTile(app);
+          tile.style.setProperty('--tile-index', globalIdx++);
+          frag.appendChild(tile);
+        }
+      };
+      for (const { key, label, apps: sectionApps } of sectionsToRender) {
+        renderSection(key, label, sectionApps);
+      }
+    } else {
+      // Pas de pro tab : on retire la nav si elle existe (changement d'onglet)
+      const oldNav = document.querySelector('.pro-section-nav');
+      if (oldNav) oldNav.remove();
+      apps.forEach((app, i) => {
+        const tile = buildTile(app);
+        // Index pour cascade d'entree (CSS animation-delay calcule via var)
+        tile.style.setProperty('--tile-index', i);
+        frag.appendChild(tile);
+      });
+    }
     els.grid.appendChild(frag);
 
     // Si une fiche produit est actuellement affichee, on la repaint aussi
@@ -1353,14 +1446,12 @@
         <span class="main-tab-glider" aria-hidden="true"></span>
         ${cats.map(c => {
           const isActive = c.id === state.activeCategory;
-          const count = state.apps.filter(a => (a.category || '') === c.id).length;
           return `
             <button type="button" role="tab"
                     class="main-tab${isActive ? ' is-active' : ''}"
                     data-cat="${escapeHtml(c.id)}"
                     aria-selected="${isActive ? 'true' : 'false'}">
               <span class="main-tab-label">${escapeHtml(c.label)}</span>
-              <span class="main-tab-count">${toRoman(count)}</span>
             </button>
           `;
         }).join('')}
