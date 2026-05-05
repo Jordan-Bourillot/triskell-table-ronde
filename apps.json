@@ -31,16 +31,18 @@
     }
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
-
   "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion'|'open-category', value: <productId|url|categoryId> }. Mettre announcement à null pour ne rien afficher.",
   "announcement": {
     "id": "atelier-des-pros-2026-05-04",
     "kind": "new",
     "title": "Nouvel onglet : L'Atelier des Pros",
     "message": "Le Dénicheur, Triskell Studio (sites web) et Eliks Studio (Growth Operator) — outils et services pensés pour ton activité.",
-    "cta": { "label": "Visiter l'Atelier", "action": "open-category", "value": "pro" }
+    "cta": {
+      "label": "Visiter l'Atelier",
+      "action": "open-category",
+      "value": "pro"
+    }
   },
-
   "apps": [
     {
       "id": "suite-des-heros",
@@ -105,10 +107,22 @@
         }
       ],
       "links": [
-        { "label": "Site officiel + démo", "url": "https://productivite.triskell-studio.fr" },
-        { "label": "Conditions générales de vente", "url": "https://productivite.triskell-studio.fr/cgv.html" },
-        { "label": "Politique de remboursement", "url": "https://productivite.triskell-studio.fr/politique-remboursement.html" },
-        { "label": "Mentions légales", "url": "https://productivite.triskell-studio.fr/mentions-legales.html" }
+        {
+          "label": "Site officiel + démo",
+          "url": "https://triskell-studio.fr/suite-des-heros"
+        },
+        {
+          "label": "Conditions générales de vente",
+          "url": "https://productivite.triskell-studio.fr/cgv.html"
+        },
+        {
+          "label": "Politique de remboursement",
+          "url": "https://productivite.triskell-studio.fr/politique-remboursement.html"
+        },
+        {
+          "label": "Mentions légales",
+          "url": "https://productivite.triskell-studio.fr/mentions-legales.html"
+        }
       ],
       "installer": {
         "kind": "zip-bundle",
@@ -116,30 +130,118 @@
         "installPath": "Triskell/SuiteDesHeros"
       },
       "screenshots": [
-        { "src": "assets/screenshots/suite-des-heros/rangeur.png",      "caption": "Le Maître Trieur — range tes fichiers" },
-        { "src": "assets/screenshots/suite-des-heros/renommeur.png",    "caption": "Le Baptiseur — renomme en masse" },
-        { "src": "assets/screenshots/suite-des-heros/doublons.png",     "caption": "Le Chasseur — traque les doublons" },
-        { "src": "assets/screenshots/suite-des-heros/pomodoro.png",     "caption": "Le Métronome — Pomodoro avec stats" },
-        { "src": "assets/screenshots/suite-des-heros/coffre.png",       "caption": "Le Gardien — coffre-fort AES-256" },
-        { "src": "assets/screenshots/suite-des-heros/desinstalleur.png","caption": "L'Épurateur — désinstalle proprement" },
-        { "src": "assets/screenshots/suite-des-heros/trancheur.png",    "caption": "Le Trancheur — découpe les gros fichiers" },
-        { "src": "assets/screenshots/suite-des-heros/archiviste.png",   "caption": "L'Archiviste — crée et ouvre les archives" },
-        { "src": "assets/screenshots/suite-des-heros/distillateur.png", "caption": "Le Distillateur — compresse vidéo / audio" },
-        { "src": "assets/screenshots/suite-des-heros/scribe.png",       "caption": "Le Scribe — fusionne et découpe les PDF" },
-        { "src": "assets/screenshots/suite-des-heros/convertisseur.png","caption": "L'Alchimiste — convertit tes images" }
+        {
+          "src": "assets/screenshots/suite-des-heros/rangeur.png",
+          "caption": "Le Maître Trieur — range tes fichiers"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/renommeur.png",
+          "caption": "Le Baptiseur — renomme en masse"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/doublons.png",
+          "caption": "Le Chasseur — traque les doublons"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/pomodoro.png",
+          "caption": "Le Métronome — Pomodoro avec stats"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/coffre.png",
+          "caption": "Le Gardien — coffre-fort AES-256"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/desinstalleur.png",
+          "caption": "L'Épurateur — désinstalle proprement"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/trancheur.png",
+          "caption": "Le Trancheur — découpe les gros fichiers"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/archiviste.png",
+          "caption": "L'Archiviste — crée et ouvre les archives"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/distillateur.png",
+          "caption": "Le Distillateur — compresse vidéo / audio"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/scribe.png",
+          "caption": "Le Scribe — fusionne et découpe les PDF"
+        },
+        {
+          "src": "assets/screenshots/suite-des-heros/convertisseur.png",
+          "caption": "L'Alchimiste — convertit tes images"
+        }
       ],
       "tools": [
-        { "id": "le-maitre-trieur",  "name": "Le Maître Trieur",  "exe": "LeMaitreTrieur.exe",  "tagline": "Range tes fichiers en un clic" },
-        { "id": "le-baptiseur",      "name": "Le Baptiseur",      "exe": "LeBaptiseur.exe",     "tagline": "Renomme 200 fichiers d'un coup" },
-        { "id": "le-chasseur",       "name": "Le Chasseur",       "exe": "LeChasseur.exe",      "tagline": "Traque et supprime les doublons" },
-        { "id": "le-metronome",      "name": "Le Métronome",      "exe": "LeMetronome.exe",     "tagline": "Pomodoro avec stats" },
-        { "id": "le-gardien",        "name": "Le Gardien",        "exe": "LeGardien.exe",       "tagline": "Coffre-fort chiffré AES-256" },
-        { "id": "lepurateur",        "name": "L'Épurateur",       "exe": "LEpurateur.exe",      "tagline": "Désinstalle proprement" },
-        { "id": "le-trancheur",      "name": "Le Trancheur",      "exe": "LeTrancheur.exe",     "tagline": "Découpe les gros fichiers" },
-        { "id": "larchiviste",       "name": "L'Archiviste",      "exe": "LArchiviste.exe",     "tagline": "Crée et ouvre tes archives" },
-        { "id": "le-distillateur",   "name": "Le Distillateur",   "exe": "LeDistillateur.exe",  "tagline": "Compresse vidéo et audio" },
-        { "id": "le-scribe",         "name": "Le Scribe",         "exe": "LeScribe.exe",        "tagline": "Fusionne et découpe les PDF" },
-        { "id": "lalchimiste",       "name": "L'Alchimiste",      "exe": "LAlchimiste.exe",     "tagline": "Convertit tes images" }
+        {
+          "id": "le-maitre-trieur",
+          "name": "Le Maître Trieur",
+          "exe": "LeMaitreTrieur.exe",
+          "tagline": "Range tes fichiers en un clic"
+        },
+        {
+          "id": "le-baptiseur",
+          "name": "Le Baptiseur",
+          "exe": "LeBaptiseur.exe",
+          "tagline": "Renomme 200 fichiers d'un coup"
+        },
+        {
+          "id": "le-chasseur",
+          "name": "Le Chasseur",
+          "exe": "LeChasseur.exe",
+          "tagline": "Traque et supprime les doublons"
+        },
+        {
+          "id": "le-metronome",
+          "name": "Le Métronome",
+          "exe": "LeMetronome.exe",
+          "tagline": "Pomodoro avec stats"
+        },
+        {
+          "id": "le-gardien",
+          "name": "Le Gardien",
+          "exe": "LeGardien.exe",
+          "tagline": "Coffre-fort chiffré AES-256"
+        },
+        {
+          "id": "lepurateur",
+          "name": "L'Épurateur",
+          "exe": "LEpurateur.exe",
+          "tagline": "Désinstalle proprement"
+        },
+        {
+          "id": "le-trancheur",
+          "name": "Le Trancheur",
+          "exe": "LeTrancheur.exe",
+          "tagline": "Découpe les gros fichiers"
+        },
+        {
+          "id": "larchiviste",
+          "name": "L'Archiviste",
+          "exe": "LArchiviste.exe",
+          "tagline": "Crée et ouvre tes archives"
+        },
+        {
+          "id": "le-distillateur",
+          "name": "Le Distillateur",
+          "exe": "LeDistillateur.exe",
+          "tagline": "Compresse vidéo et audio"
+        },
+        {
+          "id": "le-scribe",
+          "name": "Le Scribe",
+          "exe": "LeScribe.exe",
+          "tagline": "Fusionne et découpe les PDF"
+        },
+        {
+          "id": "lalchimiste",
+          "name": "L'Alchimiste",
+          "exe": "LAlchimiste.exe",
+          "tagline": "Convertit tes images"
+        }
       ]
     },
     {
@@ -206,16 +308,28 @@
         }
       ],
       "links": [
-        { "label": "Site officiel + démo", "url": "https://delinote.triskell-studio.fr" }
+        {
+          "label": "Site officiel + démo",
+          "url": "https://triskell-studio.fr/delinote"
+        }
       ],
       "installer": {
         "kind": "exe-installer",
         "productKey": "delinote"
       },
       "screenshots": [
-        { "src": "assets/screenshots/delinote/04-editor-hero.png",  "caption": "Éditeur Markdown avec aperçu en direct" },
-        { "src": "assets/screenshots/delinote/02-home-rich.png",    "caption": "Vue d'ensemble — toutes tes notes" },
-        { "src": "assets/screenshots/delinote/03-command-bar.png",  "caption": "Recherche instantanée Ctrl+K" }
+        {
+          "src": "assets/screenshots/delinote/04-editor-hero.png",
+          "caption": "Éditeur Markdown avec aperçu en direct"
+        },
+        {
+          "src": "assets/screenshots/delinote/02-home-rich.png",
+          "caption": "Vue d'ensemble — toutes tes notes"
+        },
+        {
+          "src": "assets/screenshots/delinote/03-command-bar.png",
+          "caption": "Recherche instantanée Ctrl+K"
+        }
       ]
     },
     {
@@ -282,14 +396,20 @@
         }
       ],
       "links": [
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/studio-pdf"
+        }
       ],
       "installer": {
         "kind": "exe-installer",
         "productKey": "studio-pdf"
       },
       "screenshots": [
-        { "src": "assets/screenshots/studio-pdf/main-view.png", "caption": "Écran d'accueil — Bertrand t'attend pour bosser tes PDF" }
+        {
+          "src": "assets/screenshots/studio-pdf/main-view.png",
+          "caption": "Écran d'accueil — Bertrand t'attend pour bosser tes PDF"
+        }
       ]
     },
     {
@@ -357,15 +477,24 @@
         }
       ],
       "links": [
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/bobeez"
+        }
       ],
       "installer": {
         "kind": "exe-installer",
         "productKey": "bobeez"
       },
       "screenshots": [
-        { "src": "assets/screenshots/bobeez/01-general.png", "caption": "Bobeez — vue générale" },
-        { "src": "assets/screenshots/bobeez/02-empty.png",   "caption": "Bobeez — état initial" }
+        {
+          "src": "assets/screenshots/bobeez/01-general.png",
+          "caption": "Bobeez — vue générale"
+        },
+        {
+          "src": "assets/screenshots/bobeez/02-empty.png",
+          "caption": "Bobeez — état initial"
+        }
       ]
     },
     {
@@ -389,13 +518,16 @@
         "Gratuit, sans compte Triskell obligatoire"
       ],
       "links": [
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/pirate-life-mail"
+        }
       ]
     },
     {
       "id": "le-denicheur",
       "name": "Le Dénicheur",
-      "tagline": "Trouve les créateurs YouTube, Twitch et Reddit qui n'ont pas encore monétisé leur audience",
+      "tagline": "Trouve sur 9 plateformes les créateurs qui n'ont pas encore monétisé leur audience",
       "category": "pro",
       "proSection": "generaliste",
       "tier": "premium",
@@ -407,9 +539,9 @@
       "buyUrl": "https://denicheur.triskell-studio.fr",
       "salesPitch": "Trouve les créateurs prêts à être abordés, là où personne ne pense à chercher.",
       "motto": "Pour qui veut prospecter sans cold-mailer 500 gens au pif.",
-      "description": "Le Dénicheur est un outil de prospection multi-plateforme. Tu lui donnes une niche (\"café spécialité\", \"poterie artisanale\", \"randonnée alpine\"…), il va parcourir YouTube, Twitch et Reddit, lit chaque profil, et détecte automatiquement ceux qui n'ont pas encore monétisé leur communauté — pas de boutique, pas de code promo, pas de Linktree. Tu repères en quelques minutes les créateurs prêts à être abordés, tu les ranges dans ton CRM intégré, et tu exportes tes prospects en CSV.",
+      "description": "Le Dénicheur est un outil de prospection multi-plateforme. Tu lui donnes une niche (\"café spécialité\", \"poterie artisanale\", \"randonnée alpine\"…), il va parcourir 9 plateformes (YouTube, Twitch, Reddit, Bluesky, Mastodon, Apple Podcasts, Dailymotion, Kick, GitHub), lit chaque profil, et détecte automatiquement ceux qui n'ont pas encore monétisé leur communauté — pas de boutique, pas de code promo, pas de Linktree. Score de pertinence par profil, dédoublonnage cross-plateforme. Tu repères en quelques minutes les créateurs prêts à être abordés, tu les ranges dans ton CRM intégré, et tu exportes tes prospects en CSV.",
       "features": [
-        "Recherche multi-plateformes : YouTube, Twitch et Reddit en simultané",
+        "Recherche multi-plateformes (9) : YouTube, Twitch, Reddit, Bluesky, Mastodon, Apple Podcasts, Dailymotion, Kick, GitHub en simultané",
         "Détection auto de monétisation (Amazon, Linktree, Patreon, Shopify, Gumroad, Ko-Fi, et 20+ autres patterns)",
         "Filtrage par niche + seuil d'abonnés max — tu cibles les créateurs sous-exploités",
         "CRM intégré : statuts (à contacter, contacté, a répondu, refus), notes, export CSV",
@@ -417,7 +549,10 @@
         "APIs officielles uniquement — aucun risque de bannissement"
       ],
       "links": [
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/le-denicheur"
+        }
       ],
       "installer": {
         "kind": "exe-installer",
@@ -454,8 +589,14 @@
         "Export complet de tes données si tu pars — aucune captivité"
       ],
       "links": [
-        { "label": "Voir le site de l'agence", "url": "https://triskell-studio.fr" },
-        { "label": "Nous écrire", "url": "mailto:contact@triskell-studio.fr?subject=Demande%20site%20web" }
+        {
+          "label": "Voir le site de l'agence",
+          "url": "https://triskell-studio.fr"
+        },
+        {
+          "label": "Nous écrire",
+          "url": "mailto:contact@triskell-studio.fr?subject=Demande%20site%20web"
+        }
       ]
     },
     {
@@ -488,8 +629,14 @@
         "Premier appel offert sous 48 h"
       ],
       "links": [
-        { "label": "Site Eliks Studio", "url": "https://eliks.triskell-studio.fr" },
-        { "label": "Réserver un appel offert", "url": "mailto:contact@triskell-studio.fr?subject=Appel%20offert%20Eliks%20Studio" }
+        {
+          "label": "Site Eliks Studio",
+          "url": "https://eliks.triskell-studio.fr"
+        },
+        {
+          "label": "Réserver un appel offert",
+          "url": "mailto:contact@triskell-studio.fr?subject=Appel%20offert%20Eliks%20Studio"
+        }
       ]
     },
     {
@@ -513,7 +660,10 @@
         "100 % local — tes drafts et tes tokens d'API restent sur ta machine"
       ],
       "links": [
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/alphacast"
+        }
       ]
     },
     {
@@ -581,9 +731,18 @@
         }
       ],
       "links": [
-        { "label": "Site officiel + téléchargement", "url": "https://prompt-builder.triskell-studio.fr" },
-        { "label": "Code source GitHub", "url": "https://github.com/Jordan-Bourillot/ultimate-prompt-builder" },
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Site officiel + téléchargement",
+          "url": "https://triskell-studio.fr/alphabeast"
+        },
+        {
+          "label": "Code source GitHub",
+          "url": "https://github.com/Jordan-Bourillot/ultimate-prompt-builder"
+        },
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/alphabeast"
+        }
       ],
       "installer": {
         "kind": "exe-installer",
@@ -659,9 +818,18 @@
         }
       ],
       "links": [
-        { "label": "Site officiel + téléchargement", "url": "https://prospect.triskell-studio.fr" },
-        { "label": "Code source GitHub", "url": "https://github.com/Jordan-Bourillot/alphapitch" },
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Site officiel + téléchargement",
+          "url": "https://triskell-studio.fr/alphapitch"
+        },
+        {
+          "label": "Code source GitHub",
+          "url": "https://github.com/Jordan-Bourillot/alphapitch"
+        },
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/alphapitch"
+        }
       ],
       "installer": {
         "kind": "exe-installer",
@@ -696,8 +864,14 @@
         "Mise à jour des prix matériaux à venir (régions / fournisseurs)"
       ],
       "links": [
-        { "label": "Ouvrir l'app", "url": "https://outils.triskell-studio.fr" },
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Ouvrir l'app",
+          "url": "https://outils.triskell-studio.fr"
+        },
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/outils-pro"
+        }
       ]
     },
     {
@@ -725,8 +899,14 @@
         "Paiement unique 27 € · pas d'abonnement"
       ],
       "links": [
-        { "label": "Acheter le pack (Stripe)", "url": "https://pack-elec.triskell-studio.fr" },
-        { "label": "Plus d'infos sur Triskell Studio", "url": "https://triskell-studio.fr" }
+        {
+          "label": "Acheter le pack (Stripe)",
+          "url": "https://pack-elec.triskell-studio.fr"
+        },
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/pack-electricien-pro"
+        }
       ]
     }
   ]
