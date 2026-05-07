@@ -7,8 +7,11 @@
 //    strippent les `background` CSS sur <body> ou <div>. Sans ça, certains
 //    clients rendaient l'email en blanc et le texte gris clair devenait
 //    illisible.
-//  - Logo Triskell inliné en base64 via _email_assets (marche même sur Gmail
-//    qui bloque les images externes par défaut).
+//  - Logo Triskell servi depuis https://app.triskell-studio.fr/assets/
+//    (l'inline base64 / data: URI ne marche PAS dans Gmail web depuis 2014 :
+//    Gmail proxie toutes les images par googleusercontent.com et strippe
+//    les data: URIs comme mesure anti-tracking. Une URL HTTPS publique
+//    passe le proxy sans souci).
 //  - Fallback police : 'Cinzel' (web font absent dans les emails) →
 //    Georgia → Times New Roman → serif.
 //  - Couleurs de texte renforcées (#f5f1e6 plutôt que #ecebf5,
@@ -17,7 +20,8 @@
 
 'use strict';
 
-const { LOGO_B64 } = require('./_email_assets');
+const LOGO_URL = process.env.EMAIL_LOGO_URL
+  || 'https://app.triskell-studio.fr/assets/triskell_mark.png';
 
 function emailText(code) {
   return `Bienvenue à la Table Ronde.
@@ -60,7 +64,7 @@ function emailHtml(code) {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center" style="padding-bottom:18px;">
-                    <img src="data:image/png;base64,${LOGO_B64}"
+                    <img src="${LOGO_URL}"
                          width="72" height="72" alt="Triskell"
                          style="display:block;width:72px;height:72px;border-radius:14px;border:0;outline:none;text-decoration:none;" />
                   </td>
