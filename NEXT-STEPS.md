@@ -7,7 +7,7 @@
 ### Identité Table Ronde
 - Logo triskèle 3 pales (sans texte) sur le login + le header
 - Couleurs Triskell Studio (indigo, violet, orange) + accent or pour les titres nobles
-- Vrais logos d'apps (cape Suite des Héros, lion DéliNote, blaireau Bertrand, ours Pirate Life Mail, coccinelle Bobeez)
+- Vrais logos d'apps (cape Suite des Héros, lion DéliNote, blaireau Bertrand, coccinelle Bobeez)
 - Vocabulaire de quête : Adoubé, À ta Table, En quête, Recruter, Maître Trieur…
 - Typographie noble (serif) sur les titres, lettrine dorée sur les `<h1>`
 - Numéro de version v0.1.0 visible en pastille à côté du brand
@@ -16,7 +16,7 @@
 - Tri intelligent des tuiles : "À jour" et "Adoubé" remontent, "En quête" en bas
 
 ### Catalogue & prix
-- 5 produits : Suite des Héros (27€/39€), DéliNote (29€), Studio PDF (39€), Bobeez (TBD), Pirate Life Mail (gratuit)
+- 4 produits : Suite des Héros (27€/39€), DéliNote (29€), Studio PDF (39€), Bobeez (TBD)
 - Prix sur tuile avec barré + note "Paiement unique · à vie"
 - Modale "Infos" enrichie : statut, prix, mention code promo, liste des outils inclus, bouton Désinstaller
 

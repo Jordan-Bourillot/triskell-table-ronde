@@ -1,6 +1,6 @@
 # La Table Ronde — Triskell Studio
 
-Le lieu où tes outils **Triskell Studio** se réunissent. Une seule application Windows pour découvrir, recruter, installer, convoquer et tenir à jour toute ta suite : Suite des Héros, DéliNote, Le Studio PDF, Bobeez, Pirate Life Mail, et tous les compagnons à venir.
+Le lieu où tes outils **Triskell Studio** se réunissent. Une seule application Windows pour découvrir, recruter, installer, convoquer et tenir à jour toute ta suite : Suite des Héros, DéliNote, Le Studio PDF, Bobeez, et tous les compagnons à venir.
 
 > **Modèle économique** : La Table Ronde est **gratuite** (capture email + remarketing). Chaque compagnon reste vendu séparément sur sa propre landing page. La Table détecte automatiquement ce que l'utilisateur a adoubé via son compte Triskell.
 

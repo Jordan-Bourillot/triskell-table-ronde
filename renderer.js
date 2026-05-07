@@ -5,6 +5,25 @@
 (function () {
 
   // ============================================================================
+  // ADMIN — Mode démo
+  // ============================================================================
+  // Adresses qui déclenchent la proposition "Mode démo (admin)" à chaque
+  // lancement. Le mode démo masque toutes les licences + installations pour
+  // que Jordan/Thomas voient le lanceur comme un nouveau client qui n'a rien
+  // acheté. Toutes les variantes (avec/sans points Gmail, casse) sont
+  // normalisées via toLowerCase() avant comparaison.
+  const ADMIN_EMAILS = new Set([
+    'jordan.bourillot.bzh@gmail.com',
+    'jordanbourillotbzh@gmail.com',
+    'thomas.bourillot@gmail.com',
+    'thomasbourillot@gmail.com'
+  ]);
+  function isAdminEmail(email) {
+    if (!email) return false;
+    return ADMIN_EMAILS.has(String(email).trim().toLowerCase());
+  }
+
+  // ============================================================================
   // ETAT
   // ============================================================================
   const state = {
@@ -20,7 +39,10 @@
     offline: false,    // true si licences viennent du cache
     prefs: { autoLaunch: false, telemetry: false, lastUsed: [] },
     categories: [],         // [{ id, label, subtitle, default }]
-    activeCategory: null    // id de la catégorie sélectionnée (onglet actif)
+    activeCategory: null,   // id de la catégorie sélectionnée (onglet actif)
+    demoMode: false,        // true quand un admin a activé la vue "client neuf"
+    _adminLicenses: null,   // sauvegarde pour restaurer en sortie de demo
+    _adminInstalls: null    // idem
   };
 
   const $ = (id) => document.getElementById(id);
@@ -451,6 +473,145 @@
     // vient d'aboutir ou MAJ via reinstall), on affiche les release notes
     // GitHub avec un petit delai pour ne pas masquer le rendu de la grille.
     setTimeout(() => maybeShowChangelog(), 800);
+
+    // Mode démo (admin) : si l'utilisateur connecté est Jordan ou Thomas, on
+    // propose de basculer en vue "client neuf" qui masque toutes les licences
+    // et installations. Délai > splash (3000ms) pour que la modale pop par
+    // dessus la grille (et pas pendant le splash ou le picker d'univers).
+    setTimeout(() => maybeShowDemoPrompt(), 4500);
+  }
+
+  // ============================================================================
+  // MODE DÉMO (admin) — Jordan & Thomas voient le lanceur comme un nouveau
+  // client qui n'a rien acheté : licences vidées, installs cachées. Bandeau
+  // orange en haut + bouton "Quitter" pour restaurer la vue admin.
+  // ============================================================================
+  function maybeShowDemoPrompt() {
+    const email = state.user && state.user.email;
+    if (!isAdminEmail(email)) return;
+
+    // On override le bouton Cancel du modal générique pour avoir 2 boutons
+    // explicites : "Activer le mode démo" (CTA) / "Continuer en vue admin"
+    // (Cancel). Restauré après fermeture pour ne pas polluer les autres modales.
+    if (!els.modalCancel) return;
+    const originalLabel = els.modalCancel.textContent;
+    const originalDisplay = els.modalCancel.style.display;
+    const cleanup = () => {
+      els.modalCancel.textContent = originalLabel;
+      els.modalCancel.style.display = originalDisplay;
+      els.modalCancel.onclick = null;
+    };
+    els.modalCancel.textContent = 'Continuer en vue admin';
+    els.modalCancel.style.display = '';
+    els.modalCancel.onclick = () => {
+      cleanup();
+      closeModal();
+    };
+
+    openModal({
+      title: 'Mode démo (admin)',
+      bodyHtml: `
+        <p style="margin:0 0 10px;">Connecté en tant que <strong style="color:var(--triskell-violet, var(--accent));">${escapeHtml(email)}</strong>.</p>
+        <p style="margin:0 0 12px;">Active le <strong>Mode démo</strong> pour voir le lanceur comme un nouveau client qui n'a aucun produit acheté.</p>
+        <ul class="muted small" style="margin:0 0 4px;line-height:1.55;padding-left:18px;">
+          <li>licences masquées (rien d'« Adoubé »)</li>
+          <li>installations masquées (aucun « Convoquer »)</li>
+          <li>chaque tuile affiche « Recruter » ou « Bientôt en vente »</li>
+          <li>tu peux sortir à tout moment via le bandeau orange en haut</li>
+        </ul>
+      `,
+      ctaLabel: 'Activer le mode démo',
+      onCta: () => {
+        cleanup();
+        enableDemoMode();
+        closeModal();
+      }
+    });
+  }
+
+  function enableDemoMode() {
+    if (state.demoMode) return;
+    state._adminLicenses = { ...(state.licenses || {}) };
+    state._adminInstalls = { ...(state.installs || {}) };
+    state.licenses = {};
+    state.installs = {};
+    state.demoMode = true;
+    showDemoBanner();
+    renderAccountPill();
+    render();
+    showToast({
+      kind: 'info',
+      title: 'Mode démo activé',
+      message: 'Tu vois le lanceur comme un nouveau client. Clique « Quitter » dans le bandeau pour revenir.',
+      timeout: 6000
+    });
+  }
+
+  function disableDemoMode() {
+    if (!state.demoMode) return;
+    if (state._adminLicenses) state.licenses = state._adminLicenses;
+    if (state._adminInstalls) state.installs = state._adminInstalls;
+    state._adminLicenses = null;
+    state._adminInstalls = null;
+    state.demoMode = false;
+    hideDemoBanner();
+    renderAccountPill();
+    render();
+    showToast({
+      kind: 'success',
+      title: 'Vue admin restaurée',
+      message: 'Tes licences et installations sont à nouveau visibles.',
+      timeout: 4000
+    });
+  }
+
+  function showDemoBanner() {
+    let bar = document.getElementById('demo-mode-banner');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'demo-mode-banner';
+      bar.style.cssText = [
+        'position:fixed',
+        'top:0','left:0','right:0',
+        'z-index:9000',
+        'background:linear-gradient(90deg, #f97316 0%, #d4b35a 60%, #a78bfa 100%)',
+        'color:#1a1325',
+        'font-weight:600',
+        'font-size:12.5px',
+        'letter-spacing:0.6px',
+        'text-transform:uppercase',
+        'padding:6px 18px',
+        'display:flex',
+        'align-items:center',
+        'justify-content:center',
+        'gap:14px',
+        'box-shadow:0 2px 14px rgba(0,0,0,0.35)',
+        'pointer-events:auto'
+      ].join(';');
+      bar.innerHTML = `
+        <span style="display:inline-flex;align-items:center;gap:8px;">
+          <span aria-hidden="true" style="font-size:14px;">●</span>
+          Mode démo actif — vue client (aucun produit acheté)
+        </span>
+        <button type="button" id="demo-mode-exit"
+          style="background:rgba(0,0,0,0.22);color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11.5px;letter-spacing:0.4px;text-transform:uppercase;">
+          Quitter
+        </button>
+      `;
+      document.body.appendChild(bar);
+      const exitBtn = document.getElementById('demo-mode-exit');
+      if (exitBtn) exitBtn.addEventListener('click', disableDemoMode);
+      // Décale le contenu pour ne pas que le bandeau couvre le header
+      document.body.style.paddingTop = '32px';
+    }
+    bar.style.display = 'flex';
+    document.body.style.paddingTop = '32px';
+  }
+
+  function hideDemoBanner() {
+    const bar = document.getElementById('demo-mode-banner');
+    if (bar) bar.style.display = 'none';
+    document.body.style.paddingTop = '';
   }
 
   // Affiche une bulle "Quoi de neuf" si la version installee differe de la
@@ -1157,8 +1318,16 @@
       setTimeout(async () => {
         const r = await window.triskell.licenses.fetch();
         if (r && r.ok) {
-          state.licenses = {};
-          for (const l of (r.licenses || [])) state.licenses[l.product_key] = true;
+          // En mode démo, on garde la vue "client neuf" : on stocke les
+          // nouvelles licences dans _adminLicenses (pour quand le user sortira
+          // du demo) sans toucher à state.licenses qui doit rester vide.
+          const fresh = {};
+          for (const l of (r.licenses || [])) fresh[l.product_key] = true;
+          if (state.demoMode) {
+            state._adminLicenses = fresh;
+          } else {
+            state.licenses = fresh;
+          }
           render();
           showToast({
             kind: 'success',

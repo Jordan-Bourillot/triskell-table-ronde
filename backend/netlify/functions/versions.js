@@ -24,7 +24,6 @@ exports.handler = async (event) => {
     'delinote':                process.env.DELINOTE_VERSION                || null,
     'studio-pdf':              process.env.STUDIO_PDF_VERSION              || null,
     'bobeez':                  process.env.BOBEEZ_VERSION                  || null,
-    'pirate-life-mail':        process.env.PLM_VERSION                     || null,
     // ID interne 'ultimate-prompt-builder' = display name AlphaBeast
     'ultimate-prompt-builder': process.env.ALPHABEAST_VERSION              || null,
     'alphapitch':              process.env.ALPHAPITCH_VERSION              || null

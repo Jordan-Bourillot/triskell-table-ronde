@@ -15,7 +15,6 @@ const KNOWN_PRODUCTS = new Set([
   'delinote',
   'studio-pdf',
   'bobeez',
-  'pirate-life-mail',
   'ultimate-prompt-builder',  // alias display : AlphaBeast — paye 19€
   'alphapitch'                // gratuit, license trackee pour MAJ auto (ex 'triskell-sales-tunnel')
 ]);

@@ -111,8 +111,6 @@ Pour les rendre vendables :
   besoin de les retirer (`stripe_session_id` commence par `test-manual-`)
 - **Profile sync** : faire pousser le `displayName` du Lanceur dans la table
   `users` Supabase (colonne à ajouter)
-- **Pirate Life Mail** : tu n'as encore rien donné comme `.exe` ou installeur
-  → reste en `comingSoon: true`
 
 ---
 

@@ -32,11 +32,6 @@ const PRODUCT_HINTS = {
     exeNames: ['Bobeez.exe'],
     programFilesNames: ['Bobeez'],
   },
-  'pirate-life-mail': {
-    folderInDocuments: [],
-    exeNames: ['Pirate Life Mail.exe', 'PirateLifeMail.exe'],
-    programFilesNames: ['Pirate Life Mail', 'PirateLifeMail'],
-  },
   // Display name : AlphaBeast (ID interne 'ultimate-prompt-builder' garde
   // pour ne pas casser les licences DB existantes).
   'ultimate-prompt-builder': {

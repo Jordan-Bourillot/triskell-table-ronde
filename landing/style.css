@@ -1146,7 +1146,7 @@ p { margin: 0 0 14px; }
   grid-row: auto;
 }
 /* Teaser full-width : sert pour les "en quête" en bas de section
-   (AlphaCast, Pirate Life Mail). Évite les rangées avec un trou. */
+   (AlphaCast). Évite les rangées avec un trou. */
 .tools-grid > .tool-card-teaser {
   grid-column: 1 / -1;
   grid-row: auto;

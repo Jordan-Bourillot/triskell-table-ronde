@@ -32,17 +32,7 @@
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
   "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion'|'open-category', value: <productId|url|categoryId> }. Mettre announcement à null pour ne rien afficher.",
-  "announcement": {
-    "id": "plm-pipeline-2026-05-05",
-    "kind": "new",
-    "title": "Pirate Life Mail rejoint l'Atelier des Pros",
-    "message": "Cockpit email intégré à Triskell Command — chaque vente Stripe déclenche automatiquement livraison, suivi J+3 et upsell J+7. Gratuit.",
-    "cta": {
-      "label": "Découvrir PLM",
-      "action": "open-product",
-      "value": "pirate-life-mail"
-    }
-  },
+  "announcement": null,
   "apps": [
     {
       "id": "suite-des-heros",
@@ -498,76 +488,6 @@
       ]
     },
     {
-      "id": "pirate-life-mail",
-      "name": "Pirate Life Mail",
-      "tagline": "Cockpit email de Triskell Command — séquences post-achat automatisées",
-      "category": "pro",
-      "proSection": "generaliste",
-      "tier": "free",
-      "demo": true,
-      "demoLabel": "Démo pro · Cadeau",
-      "icon": "assets/apps/pirate-life-mail.png",
-      "installed": false,
-      "exePath": null,
-      "price": 0,
-      "priceNote": "Gratuit · local · Windows",
-      "salesPitch": "Chaque vente Stripe → livraison automatique en moins de 30s. Suivi J+3 et upsell J+7 inclus.",
-      "motto": "Pour qui en a marre d'envoyer les emails de livraison à la main.",
-      "description": "Pirate Life Mail est le maillon email de Triskell Command. Quand un client achète sur ton tunnel Stripe, Triskell Command dépose une commande dans la queue de PLM. PLM la ramasse, charge le template HTML correspondant (livraison, suivi J+3, upsell J+7), insère les variables (prénom, produit, lien de téléchargement) et envoie via ton compte IMAP/SMTP habituel — en moins de 30 secondes, sans intervention.\n\n3 templates inclus et éditables. Log pipeline en temps réel depuis la systray. Et Pirate Life Mail est aussi un client mail complet (multi-comptes, offline, recherche instantanée, raccourcis Vim) pour ton quotidien.",
-      "features": [
-        {
-          "title": "Livraison immédiate post-achat",
-          "detail": "Achat Stripe confirmé → email de livraison parti en moins de 30s. Template delivery-v1 : prénom, produit, lien de téléchargement. Zéro action manuelle."
-        },
-        {
-          "title": "Suivi J+3 et upsell J+7 automatiques",
-          "detail": "Triskell Command programme les séquences. PLM les envoie au bon moment, même si tu n'es pas devant ton PC. Délai configurable en secondes."
-        },
-        {
-          "title": "Templates HTML éditables",
-          "detail": "Fichiers JSON dans %APPDATA%\\PirateLifeMail\\pipeline\\templates\\. Variables {{customer.name}}, {{product.name}}, {{variables.download_link}} et plus. Modifie dans n'importe quel éditeur, actif immédiatement."
-        },
-        {
-          "title": "Log pipeline en temps réel",
-          "detail": "Fenêtre dédiée accessible depuis la systray → Pipeline Triskell. Qui a reçu quoi, quand, statut (envoyé / échec). Les erreurs sont notifiées Windows."
-        },
-        {
-          "title": "Client mail complet inclus",
-          "detail": "Multi-comptes IMAP/SMTP, lecture HTML WebView2, recherche instantanée, raccourcis Vim (J/K, R, F, S…), systray, auto-fetch configurable. Pas un stub."
-        },
-        {
-          "title": "100 % local — aucun cloud",
-          "detail": "La queue IPC est un dossier fichiers (%APPDATA%\\PirateLifeMail\\pipeline\\pending\\). Rien ne passe par les serveurs Triskell. Compatible avec tout SMTP."
-        }
-      ],
-      "personas": [
-        {
-          "icon": "⚡",
-          "name": "Le solopreneur Triskell",
-          "description": "qui vend des produits digitaux via Stripe et veut automatiser 100 % de la relation post-achat sans payer un outil supplémentaire."
-        },
-        {
-          "icon": "🔧",
-          "name": "L'artisan qui utilise Triskell Command",
-          "description": "qui veut que ses clients reçoivent une confirmation pro et un suivi sans qu'il ait à y penser après chaque vente."
-        }
-      ],
-      "links": [
-        {
-          "label": "Page de présentation",
-          "url": "https://triskell-studio.fr/pirate-life-mail"
-        },
-        {
-          "label": "Obtenir l'accès (email)",
-          "url": "mailto:contact@triskell-studio.fr?subject=Pirate%20Life%20Mail%20%E2%80%94%20acc%C3%A8s%20d%C3%A9mo"
-        }
-      ],
-      "installer": {
-        "kind": "exe-installer",
-        "productKey": "pirate-life-mail"
-      }
-    },
-    {
       "id": "le-denicheur",
       "name": "Le Dénicheur",
       "tagline": "Trouve sur 9 plateformes les créateurs qui n'ont pas encore monétisé leur audience",
@@ -729,11 +649,11 @@
       "tagline": "De 2 h/jour à 10 min/jour pour tes réseaux — sans avoir l'air d'une IA",
       "category": "pro",
       "proSection": "generaliste",
-      "tier": "webapp",
-      "kind": "webapp",
+      "tier": "service",
+      "kind": "service",
       "icon": "assets/apps/alphacast.png",
-      "priceFrom": "Gratuit · Pro à 29 €/mois",
-      "priceNote": "SaaS web + mobile · essai gratuit · annulable à tout moment",
+      "priceFrom": "Gratuit · Pro 29 € · Team 79 € · Agency 199 €/mois",
+      "priceNote": "SaaS web + mobile · 4 formules · essai gratuit sans CB · annulable à tout moment",
       "service": {
         "url": "https://reseaux.triskell-studio.fr",
         "contactEmail": "contact@triskell-studio.fr",
@@ -801,10 +721,10 @@
       ],
       "pricing": {
         "tiers": [
-          { "name": "Gratuit", "price": "0 €", "summary": "1 espace · 2 comptes sociaux · 20 posts/mois" },
-          { "name": "Pro", "price": "29 €/mois", "summary": "10 comptes sociaux · 300 posts/mois · import de voix" },
-          { "name": "Équipe", "price": "79 €/mois", "summary": "3 espaces · 1 500 posts/mois · planification de séries" },
-          { "name": "Agence", "price": "199 €/mois", "summary": "Illimité · marque blanche · support prioritaire" }
+          { "name": "Free", "price": "0 €/mois", "summary": "1 workspace · 2 comptes sociaux · 20 posts/mois · sans CB" },
+          { "name": "Pro", "price": "29 €/mois", "summary": "10 comptes sociaux · 300 posts/mois · import de voix personnelle", "highlight": true, "highlightLabel": "Plus populaire" },
+          { "name": "Team", "price": "79 €/mois", "summary": "3 workspaces · 1 500 posts/mois · planification de séries" },
+          { "name": "Agency", "price": "199 €/mois", "summary": "Illimité · white-label · support prioritaire" }
         ]
       },
       "links": [
@@ -994,11 +914,11 @@
       "proSection": "batiment",
       "tagline": "Calculateurs chantier pour artisans — carrelage, placo, peinture, béton",
       "category": "pro",
-      "tier": "webapp",
-      "kind": "webapp",
+      "tier": "premium",
       "icon": "assets/apps/outils-batiment.png",
-      "priceFrom": "9 € · paiement unique",
-      "priceNote": "Web app PWA · accessible navigateur + mobile · à vie",
+      "price": 17,
+      "priceNote": "Paiement unique · accès à vie · Web app PWA installable navigateur + mobile",
+      "buyUrl": "https://outils-pro.triskell-studio.fr",
       "service": {
         "url": "https://outils.triskell-studio.fr",
         "contactEmail": "contact@triskell-studio.fr",
@@ -1040,12 +960,12 @@
       "buyUrl": "https://pack-elec.triskell-studio.fr",
       "salesPitch": "Tes devis envoyés en 10 minutes au lieu d'une heure.",
       "motto": "Pour qui en a marre de mettre des prix au pif et de relancer ses clients à la main.",
-      "description": "Pack Électricien Pro, c'est un kit complet de 33 modèles Word et Excel rédigés à la main pour les électriciens : devis détaillés (16 articles : objet, prix, paiement, garanties, indemnité forfaitaire 40 €), factures, CGV conformes 2026, relances automatiques, suivi de chantiers, checklists, emails de prospection.\n\nEn bonus inclus à vie : Triskell Outils Pro (la web app calculateurs chantier — normalement 9 €, offerte ici). Téléchargement immédiat après paiement, accès au pack pendant 30 jours via lien signé HMAC.\n\nPaiement unique 27 €, garantie satisfait ou remboursé 14 jours.",
+      "description": "Pack Électricien Pro, c'est un kit complet de 33 modèles Word et Excel rédigés à la main pour les électriciens : devis détaillés (16 articles : objet, prix, paiement, garanties, indemnité forfaitaire 40 €), factures, CGV conformes 2026, relances automatiques, suivi de chantiers, checklists, emails de prospection.\n\nEn bonus inclus à vie : Triskell Outils Pro (la web app calculateurs chantier — normalement 17 €, offerte ici). Téléchargement immédiat après paiement, accès au pack pendant 30 jours via lien signé HMAC.\n\nPaiement unique 27 €, garantie satisfait ou remboursé 14 jours.",
       "features": [
         "33 modèles Word & Excel : devis, factures, CGV, relances, suivi, checklists",
         "Devis détaillés avec 16 articles type (clauses paiement, garanties, indemnités)",
         "CGV électricien conformes 2026 — prêtes à signer",
-        "Bundle inclus : Triskell Outils Pro à vie (9 € offerts)",
+        "Bundle inclus : Triskell Outils Pro à vie (17 € offerts)",
         "Téléchargement immédiat post-paiement, lien signé HMAC valable 30 jours",
         "Garantie satisfait ou remboursé 14 jours",
         "Paiement unique 27 € · pas d'abonnement"
