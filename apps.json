@@ -22,7 +22,7 @@
       "pro": "Récupère tous les outils qu'il te manque pour ton activité, à prix d'allié"
     },
     "icon": "assets/triskell_mark.png",
-    "comingSoon": false,
+    "comingSoon": true,
     "discounts": {
       "_comment": "Pourcentage de remise sur le prix individuel total selon le nombre d'outils choisis. Marges proportionnelles, jamais incohérent.",
       "2": 15,
@@ -33,14 +33,14 @@
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
   "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion'|'open-category', value: <productId|url|categoryId> }. Mettre announcement à null pour ne rien afficher.",
   "announcement": {
-    "id": "atelier-des-pros-2026-05-04",
+    "id": "plm-pipeline-2026-05-05",
     "kind": "new",
-    "title": "Nouvel onglet : L'Atelier des Pros",
-    "message": "Le Dénicheur, Triskell Studio (sites web) et Eliks Studio (Growth Operator) — outils et services pensés pour ton activité.",
+    "title": "Pirate Life Mail rejoint l'Atelier des Pros",
+    "message": "Cockpit email intégré à Triskell Command — chaque vente Stripe déclenche automatiquement livraison, suivi J+3 et upsell J+7. Gratuit.",
     "cta": {
-      "label": "Visiter l'Atelier",
-      "action": "open-category",
-      "value": "pro"
+      "label": "Découvrir PLM",
+      "action": "open-product",
+      "value": "pirate-life-mail"
     }
   },
   "apps": [
@@ -500,29 +500,72 @@
     {
       "id": "pirate-life-mail",
       "name": "Pirate Life Mail",
-      "tagline": "Client mail nouvelle génération, gratuit",
-      "category": "quotidien",
+      "tagline": "Cockpit email de Triskell Command — séquences post-achat automatisées",
+      "category": "pro",
+      "proSection": "generaliste",
       "tier": "free",
+      "demo": true,
+      "demoLabel": "Démo pro · Cadeau",
       "icon": "assets/apps/pirate-life-mail.png",
       "installed": false,
       "exePath": null,
-      "comingSoon": true,
-      "salesPitch": "Tes mails, ta machine, ton silence. Sans pub, sans tracker, sans IA qui lit par-dessus ton épaule.",
-      "motto": "Pour qui veut juste un client mail propre, et basta.",
-      "description": "Pirate Life Mail est un client email léger et offline-first, qui regroupe toutes tes boîtes (Gmail, Outlook, Yahoo, IMAP) dans une interface unique et propre. Pas de pub, pas de tracker, pas de scan de tes mails par une IA. Gratuit pour toujours.",
+      "price": 0,
+      "priceNote": "Gratuit · local · Windows",
+      "salesPitch": "Chaque vente Stripe → livraison automatique en moins de 30s. Suivi J+3 et upsell J+7 inclus.",
+      "motto": "Pour qui en a marre d'envoyer les emails de livraison à la main.",
+      "description": "Pirate Life Mail est le maillon email de Triskell Command. Quand un client achète sur ton tunnel Stripe, Triskell Command dépose une commande dans la queue de PLM. PLM la ramasse, charge le template HTML correspondant (livraison, suivi J+3, upsell J+7), insère les variables (prénom, produit, lien de téléchargement) et envoie via ton compte IMAP/SMTP habituel — en moins de 30 secondes, sans intervention.\n\n3 templates inclus et éditables. Log pipeline en temps réel depuis la systray. Et Pirate Life Mail est aussi un client mail complet (multi-comptes, offline, recherche instantanée, raccourcis Vim) pour ton quotidien.",
       "features": [
-        "Multi-comptes (Gmail, Outlook, Yahoo, IMAP standard)",
-        "100 % offline — tu peux lire et écrire sans connexion, ça envoie au prochain réseau",
-        "Aucune pub, aucun tracker, aucune analyse des emails",
-        "Recherche instantanée sur tes archives",
-        "Gratuit, sans compte Triskell obligatoire"
+        {
+          "title": "Livraison immédiate post-achat",
+          "detail": "Achat Stripe confirmé → email de livraison parti en moins de 30s. Template delivery-v1 : prénom, produit, lien de téléchargement. Zéro action manuelle."
+        },
+        {
+          "title": "Suivi J+3 et upsell J+7 automatiques",
+          "detail": "Triskell Command programme les séquences. PLM les envoie au bon moment, même si tu n'es pas devant ton PC. Délai configurable en secondes."
+        },
+        {
+          "title": "Templates HTML éditables",
+          "detail": "Fichiers JSON dans %APPDATA%\\PirateLifeMail\\pipeline\\templates\\. Variables {{customer.name}}, {{product.name}}, {{variables.download_link}} et plus. Modifie dans n'importe quel éditeur, actif immédiatement."
+        },
+        {
+          "title": "Log pipeline en temps réel",
+          "detail": "Fenêtre dédiée accessible depuis la systray → Pipeline Triskell. Qui a reçu quoi, quand, statut (envoyé / échec). Les erreurs sont notifiées Windows."
+        },
+        {
+          "title": "Client mail complet inclus",
+          "detail": "Multi-comptes IMAP/SMTP, lecture HTML WebView2, recherche instantanée, raccourcis Vim (J/K, R, F, S…), systray, auto-fetch configurable. Pas un stub."
+        },
+        {
+          "title": "100 % local — aucun cloud",
+          "detail": "La queue IPC est un dossier fichiers (%APPDATA%\\PirateLifeMail\\pipeline\\pending\\). Rien ne passe par les serveurs Triskell. Compatible avec tout SMTP."
+        }
+      ],
+      "personas": [
+        {
+          "icon": "⚡",
+          "name": "Le solopreneur Triskell",
+          "description": "qui vend des produits digitaux via Stripe et veut automatiser 100 % de la relation post-achat sans payer un outil supplémentaire."
+        },
+        {
+          "icon": "🔧",
+          "name": "L'artisan qui utilise Triskell Command",
+          "description": "qui veut que ses clients reçoivent une confirmation pro et un suivi sans qu'il ait à y penser après chaque vente."
+        }
       ],
       "links": [
         {
-          "label": "Plus d'infos sur Triskell Studio",
+          "label": "Page de présentation",
           "url": "https://triskell-studio.fr/pirate-life-mail"
+        },
+        {
+          "label": "Obtenir l'accès (email)",
+          "url": "mailto:contact@triskell-studio.fr?subject=Pirate%20Life%20Mail%20%E2%80%94%20acc%C3%A8s%20d%C3%A9mo"
         }
-      ]
+      ],
+      "installer": {
+        "kind": "exe-installer",
+        "productKey": "pirate-life-mail"
+      }
     },
     {
       "id": "le-denicheur",
@@ -642,24 +685,92 @@
     {
       "id": "le-heraut",
       "name": "AlphaCast",
-      "tagline": "Publie une fois, atteins toutes tes audiences — Instagram, TikTok, LinkedIn, X et plus",
+      "tagline": "De 2 h/jour à 10 min/jour pour tes réseaux — sans avoir l'air d'une IA",
       "category": "pro",
       "proSection": "generaliste",
-      "tier": "premium",
+      "tier": "webapp",
+      "kind": "webapp",
       "icon": "assets/apps/alphacast.png",
-      "comingSoon": true,
-      "salesPitch": "Tu écris une fois, AlphaCast publie partout — au bon format, au bon moment.",
-      "motto": "Pour qui veut gérer ses réseaux sans payer 80 €/mois à 4 outils différents.",
-      "description": "AlphaCast est ton porte-voix multi-plateformes. Tu écris ton message une fois, tu choisis les réseaux (Instagram, TikTok, LinkedIn, X, Facebook, YouTube Shorts), et il publie partout au bon moment, dans le bon format, avec les bons hashtags. Calendrier éditorial intégré, programmation à la semaine, statistiques unifiées. Plus besoin d'une stack à 80 €/mois pour gérer ses réseaux : tout est centralisé, tout reste sur ta machine.",
+      "priceFrom": "Gratuit · Pro à 29 €/mois",
+      "priceNote": "SaaS web + mobile · essai gratuit · annulable à tout moment",
+      "service": {
+        "url": "https://reseaux.triskell-studio.fr",
+        "contactEmail": "contact@triskell-studio.fr",
+        "ctaPrimaryLabel": "Ouvrir AlphaCast",
+        "ctaSecondaryLabel": "Voir les tarifs"
+      },
+      "salesPitch": "Une source. Tous les réseaux. Ta voix — calibrée par ton corpus, pas par un LLM générique.",
+      "motto": "Pour qui veut publier partout sans publier comme tout le monde.",
+      "description": "AlphaCast est un SaaS de gestion et publication multi-réseaux pensé pour les créateurs solo et les petites équipes. Tu colles une source (article, notes brutes, vidéo, URL), AlphaCast génère plusieurs angles dans ta voix — capturée à partir de tes posts passés via voice profiling + RAG — formatés pour chaque plateforme avec ses contraintes propres (limite de caractères, découpe en thread sur X, conventions hashtags). Validation au swipe sur mobile, publication immédiate ou planifiée, suivi des performances automatique.\n\nLa différence : un détecteur d'AI-slop régénère le draft tant qu'il sonne LLM, et une boucle d'apprentissage tourne chaque nuit (z-score performance par compte × plateforme) pour extraire 3 patterns actionnables par semaine et te proposer le recyclage de tes top performers sous un nouvel angle. Côté vidéo, le pipeline transcrit (Whisper), score les meilleurs moments, recadre en 9:16 et brûle des sous-titres karaoke avant de pousser sur YouTube Shorts.\n\nLinkedIn / X / Bluesky / YouTube Shorts en publication directe. Instagram / Threads / TikTok / Facebook en génération uniquement (publication ouverte une fois les approbations Meta/TikTok obtenues — copie manuelle dispo entre-temps).",
       "features": [
-        "Publication multi-plateformes — Instagram, TikTok, LinkedIn, X, Facebook, YouTube Shorts",
-        "Calendrier éditorial avec drag & drop pour caler ta semaine en 5 minutes",
-        "Adaptation auto du format (carré, vertical, horizontal) selon la plateforme",
-        "Statistiques unifiées : vues, likes, conversions, ROI par plateforme",
-        "Bibliothèque de hashtags par niche, suggérés selon le contenu",
-        "100 % local — tes drafts et tes tokens d'API restent sur ta machine"
+        {
+          "title": "Multi-plateforme natif",
+          "detail": "LinkedIn, X (avec auto-split en thread), Bluesky, YouTube Shorts en publication directe. Chaque réseau traité avec ses règles : longueur, hashtags, ton, format média."
+        },
+        {
+          "title": "Voice profiling + RAG sur ton corpus",
+          "detail": "Importe 20 à 50 de tes posts passés. AlphaCast indexe ton style, ton ton, tes tics d'écriture, et s'en sert à chaque génération via embeddings + retrieval."
+        },
+        {
+          "title": "Détecteur d'AI-slop avec régénération",
+          "detail": "Un classifieur scanne chaque draft pour les tics LLM (mots interdits, formules génériques, jargon corporate). Si le score dérape, le pipeline régénère automatiquement (max 2 retries)."
+        },
+        {
+          "title": "Boucle d'apprentissage hebdo",
+          "detail": "Cron nightly à 03 h 30 (Europe/Paris) : z-score par (workspace × plateforme), top decile flaggé. Haiku extrait 3 patterns actionnables top vs weak. Bouton recycler en 1 clic."
+        },
+        {
+          "title": "Pipeline vidéo → Shorts",
+          "detail": "Probe FFmpeg → extraction audio → Whisper → score-moments Haiku → cut → reframe 9:16 → sous-titres ASS karaoke (3-5 mots, ≤2,5 s) → upload YouTube Shorts."
+        },
+        {
+          "title": "Mobile Expo + streaming",
+          "detail": "App mobile (iOS/Android) avec swipe-approve, push notifications Expo. Génération en streaming SSE côté web — tu vois le draft s'écrire en direct."
+        },
+        {
+          "title": "Content series multi-angles",
+          "detail": "Une source → N angles × M plateformes en fan-out, avec auto_schedule et daily_cap (défaut 1 post/jour) pour étaler la diffusion."
+        },
+        {
+          "title": "100 % EU + RLS Postgres",
+          "detail": "Hébergement européen (Railway + Vercel + Cloudflare R2). Row-Level Security activée sur toute la base : ton workspace est isolé techniquement, pas juste par filtre app."
+        }
       ],
+      "personas": [
+        {
+          "icon": "✍️",
+          "name": "Le créateur solo",
+          "description": "qui publie sur 3-4 réseaux et passe 2 h par jour à reformatter son post LinkedIn pour X et Bluesky. AlphaCast réduit ça à 10 min."
+        },
+        {
+          "icon": "🏢",
+          "name": "La petite équipe / startup",
+          "description": "qui veut un calendrier éditorial multi-plateforme partagé, avec voix de marque cohérente même quand 3 personnes rédigent."
+        },
+        {
+          "icon": "🎬",
+          "name": "Le créateur vidéo",
+          "description": "qui veut tirer 5 Shorts d'un long-form YouTube sans monter à la main : pipeline Whisper + score moments + reframe + subs karaoke."
+        },
+        {
+          "icon": "🏛️",
+          "name": "L'agence sociale media",
+          "description": "qui gère 10+ comptes clients et veut une marque blanche, des comptes sociaux illimités et un support prioritaire (formule Agence)."
+        }
+      ],
+      "pricing": {
+        "tiers": [
+          { "name": "Gratuit", "price": "0 €", "summary": "1 espace · 2 comptes sociaux · 20 posts/mois" },
+          { "name": "Pro", "price": "29 €/mois", "summary": "10 comptes sociaux · 300 posts/mois · import de voix" },
+          { "name": "Équipe", "price": "79 €/mois", "summary": "3 espaces · 1 500 posts/mois · planification de séries" },
+          { "name": "Agence", "price": "199 €/mois", "summary": "Illimité · marque blanche · support prioritaire" }
+        ]
+      },
       "links": [
+        {
+          "label": "Ouvrir AlphaCast",
+          "url": "https://reseaux.triskell-studio.fr"
+        },
         {
           "label": "Plus d'infos sur Triskell Studio",
           "url": "https://triskell-studio.fr/alphacast"
@@ -845,8 +956,8 @@
       "tier": "webapp",
       "kind": "webapp",
       "icon": "assets/apps/outils-batiment.png",
-      "priceFrom": "9 €/mois",
-      "priceNote": "Web app PWA · accessible navigateur + mobile",
+      "priceFrom": "9 € · paiement unique",
+      "priceNote": "Web app PWA · accessible navigateur + mobile · à vie",
       "service": {
         "url": "https://outils.triskell-studio.fr",
         "contactEmail": "contact@triskell-studio.fr",
@@ -888,12 +999,12 @@
       "buyUrl": "https://pack-elec.triskell-studio.fr",
       "salesPitch": "Tes devis envoyés en 10 minutes au lieu d'une heure.",
       "motto": "Pour qui en a marre de mettre des prix au pif et de relancer ses clients à la main.",
-      "description": "Pack Électricien Pro, c'est un kit complet de 33 modèles Word et Excel rédigés à la main pour les électriciens : devis détaillés (16 articles : objet, prix, paiement, garanties, indemnité forfaitaire 40 €), factures, CGV conformes 2026, relances automatiques, suivi de chantiers, checklists, emails de prospection.\n\nEn bonus inclus à vie : Triskell Outils Pro (la web app calculateurs chantier — normalement 9 €/mois, soit 108 €/an de valeur). Téléchargement immédiat après paiement, accès au pack pendant 30 jours via lien signé HMAC.\n\nPaiement unique 27 €, garantie satisfait ou remboursé 14 jours.",
+      "description": "Pack Électricien Pro, c'est un kit complet de 33 modèles Word et Excel rédigés à la main pour les électriciens : devis détaillés (16 articles : objet, prix, paiement, garanties, indemnité forfaitaire 40 €), factures, CGV conformes 2026, relances automatiques, suivi de chantiers, checklists, emails de prospection.\n\nEn bonus inclus à vie : Triskell Outils Pro (la web app calculateurs chantier — normalement 9 €, offerte ici). Téléchargement immédiat après paiement, accès au pack pendant 30 jours via lien signé HMAC.\n\nPaiement unique 27 €, garantie satisfait ou remboursé 14 jours.",
       "features": [
         "33 modèles Word & Excel : devis, factures, CGV, relances, suivi, checklists",
         "Devis détaillés avec 16 articles type (clauses paiement, garanties, indemnités)",
         "CGV électricien conformes 2026 — prêtes à signer",
-        "Bundle inclus : Triskell Outils Pro à vie (108 €/an de valeur)",
+        "Bundle inclus : Triskell Outils Pro à vie (9 € offerts)",
         "Téléchargement immédiat post-paiement, lien signé HMAC valable 30 jours",
         "Garantie satisfait ou remboursé 14 jours",
         "Paiement unique 27 € · pas d'abonnement"
@@ -908,6 +1019,118 @@
           "url": "https://triskell-studio.fr/pack-electricien-pro"
         }
       ]
+    },
+    {
+      "id": "clik-clik",
+      "name": "Clik Clik !",
+      "tagline": "Auto-clic intelligent — détecte un texte ou un point coloré à l'écran et clique pour toi",
+      "category": "quotidien",
+      "tier": "premium",
+      "icon": "assets/apps/clik-clik.png",
+      "price": 9,
+      "priceNote": "Paiement unique · à vie · 100 % local",
+      "installed": false,
+      "exePath": null,
+      "buyUrl": "https://clikclik.triskell-studio.fr",
+      "salesPitch": "L'app clique pour toi quand le texte ou le signal coloré que tu attends apparaît à l'écran.",
+      "motto": "Pour qui en a marre de surveiller un build, un agent IA ou une pop-up qui se déclenche à des heures aléatoires.",
+      "description": "Clik Clik ! est un compagnon de bureau ultra-léger qui surveille en continu une partie de ton écran et clique automatiquement quand un mot, une phrase ou un point coloré apparaît. Tu définis ce que tu veux qu'il regarde — un bouton « Continuer », « Toujours autoriser », « OK », « Allow once » — il scanne en boucle via Windows OCR (intégré à Windows 10/11, zéro install) et clique au bon endroit dès qu'il voit la cible.\n\nDeux couches de surveillance disponibles. La couche texte gère une liste prioritaire : tu empiles plusieurs cibles (ex : « Toujours autoriser » > « Allow once » > « Continuer »), la première trouvée à l'écran gagne. La couche notification est pensée pour les agents IA type Claude Code : quand un point coloré apparaît dans une sous-zone, l'app clique dessus, tape un message dans le champ texte que tu as tracé, et valide — typiquement « continue sauf si tu ne peux plus rien faire ». Anti-boucle intégré : si trois réponses successives sont quasi identiques, le mode notification se met en pause tout seul.\n\nChaque clic est télégraphié : la souris se déplace en animation douce vers la cible, un réticule orange s'affiche pendant une seconde — tu vois exactement où le clic va se produire. Touche F8 = arrêt d'urgence, fonctionne même app en arrière-plan.",
+      "features": [
+        {
+          "title": "Détection texte par OCR — Windows OCR par défaut",
+          "detail": "Aucun moteur à installer si la langue française est dans Windows. Tesseract supporté en alternative. Détection insensible à la police, au thème, à la mise en page."
+        },
+        {
+          "title": "Liste prioritaire de cibles",
+          "detail": "Empile plusieurs textes (ex : Toujours autoriser, Allow once, Continuer). Glisse-les dans l'ordre de priorité avec ▲▼. La première vue à l'écran gagne."
+        },
+        {
+          "title": "Mode notification — points colorés",
+          "detail": "Surveille une sous-zone pour un point bleu ou marron. Quand il apparaît, clique dessus, focus le champ texte que tu as tracé, écrit ton message, valide (Entrée ou Ctrl+Entrée). Pensé pour Claude Code, ChatGPT, Cursor."
+        },
+        {
+          "title": "Clic télégraphié visible",
+          "detail": "Avant chaque clic auto, la souris se déplace doucement vers la cible et un réticule orange s'affiche 1 seconde — tu vois exactement où l'app va cliquer, pas de surprise."
+        },
+        {
+          "title": "Cadre de surveillance affiché",
+          "detail": "Pendant la surveillance, jusqu'à 3 cadres colorés s'affichent à l'écran : orange pour la zone principale, bleu pour la sous-zone des points, vert pour le champ texte. Click-through, hors barre des tâches."
+        },
+        {
+          "title": "Anti-boucle automatique",
+          "detail": "Si trois réponses consécutives de l'agent sont très similaires (Jaccard > 0,82), le mode notification se met en pause — pas de spam infini quand l'IA est coincée."
+        },
+        {
+          "title": "Suivi de fenêtre + remise au premier plan",
+          "detail": "Si une fenêtre passe par-dessus la zone surveillée, Clik Clik ramène la cible devant. Si la fenêtre bouge, le cadre suit."
+        },
+        {
+          "title": "Mode sombre / mode clair",
+          "detail": "Toggle dans le header, palette officielle Triskell, barre de titre Windows synchronisée via DWM."
+        },
+        {
+          "title": "F8 = arrêt d'urgence global",
+          "detail": "Coupe la surveillance instantanément même si une autre app a le focus. Aucun risque de cliqueur fou qui s'emballe."
+        }
+      ],
+      "personas": [
+        {
+          "icon": "🤖",
+          "name": "L'utilisateur d'agent IA",
+          "description": "qui lance Claude Code / Cursor / Aider sur des tâches longues et veut qu'on relance automatiquement quand l'agent demande la permission de continuer."
+        },
+        {
+          "icon": "🛠️",
+          "name": "Le dev qui babysitte un build",
+          "description": "qui doit cliquer « OK » sur 50 popups d'installation, ou valider une permission qui revient toutes les 10 minutes pendant un déploiement."
+        },
+        {
+          "icon": "🎮",
+          "name": "Le joueur idle / AFK",
+          "description": "qui veut automatiser une routine simple dans un jeu (récolter, valider une box, fermer une pub) sans installer un cheat lourd."
+        },
+        {
+          "icon": "🧓",
+          "name": "Le proche moins à l'aise",
+          "description": "qui veut qu'on auto-clique « Mettre à jour » ou « Accepter les conditions » à sa place — interface 100 % en français parlant, sans jargon."
+        }
+      ],
+      "links": [
+        {
+          "label": "Acheter Clik Clik (Stripe)",
+          "url": "https://clikclik.triskell-studio.fr"
+        },
+        {
+          "label": "Plus d'infos sur Triskell Studio",
+          "url": "https://triskell-studio.fr/clik-clik"
+        }
+      ],
+      "installer": {
+        "kind": "exe-installer",
+        "productKey": "clik-clik"
+      }
+    },
+    {
+      "id": "teddy-mail",
+      "name": "Teddy Mail",
+      "tagline": "Ton client mail desktop sobre, sans pub, sans tracking.",
+      "category": "quotidien",
+      "tier": "free",
+      "icon": "assets/apps/teddy-mail.png",
+      "featured": false,
+      "featuredLabel": "",
+      "price": null,
+      "priceOriginal": null,
+      "priceNote": "Gratuit",
+      "installed": true,
+      "exePath": "C:\\Users\\jorda\\AppData\\Local\\Teddy Mail\\teddy-mail-shell.exe",
+      "buyUrl": "",
+      "salesPitch": "Un client mail qui te respecte. Pas de pub, pas de tracking, pas d'abonnement. Multi-comptes IMAP, dark mode, raccourcis clavier — tout ce qu'il faut, rien de plus.",
+      "motto": "Pour qui en a marre des clients mail bavards.",
+      "description": "",
+      "features": [],
+      "personas": [],
+      "links": []
     }
   ]
 }

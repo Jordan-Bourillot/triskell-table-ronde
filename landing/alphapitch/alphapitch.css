@@ -1,0 +1,8 @@
+/* AlphaPitch — plus de mockup fake. Le hero showcase est dans product.css.
+   On garde uniquement la variante "gratuit" du badge pricing. */
+
+.pricing-badge-free {
+  background: linear-gradient(135deg, rgba(135, 197, 153, 0.30), rgba(135, 197, 153, 0.10));
+  border-color: rgba(135, 197, 153, 0.45);
+  color: #87c599;
+}

@@ -2658,6 +2658,16 @@
     }
     const res = await window.triskell.launch.product(app.id);
     if (!res.ok) {
+      // Si l'install a ete purgee cote main (exe disparu, install fantome
+      // d'un installer annule...), on resync le state local pour que la
+      // tuile repasse en "Installer" sans attendre un refresh global.
+      if (res.error === 'not-installed') {
+        try {
+          const fresh = await window.triskell.installs.list();
+          state.installs = fresh || {};
+          render();
+        } catch (_) { /* best-effort */ }
+      }
       showToast({
         kind: 'error',
         title: 'Lancement impossible',
@@ -2692,6 +2702,13 @@
         closeModal();
         const res = await window.triskell.launch.tool(app.id, toolId);
         if (!res.ok) {
+          if (res.error === 'not-installed') {
+            try {
+              const fresh = await window.triskell.installs.list();
+              state.installs = fresh || {};
+              render();
+            } catch (_) { /* best-effort */ }
+          }
           showToast({
             kind: 'error',
             title: 'Lancement impossible',
@@ -2920,7 +2937,8 @@
   }
 
   function humanizeLaunchError(res) {
-    if (res.error === 'not-installed') return 'Cet outil n\'est pas encore installé.';
+    if (res.error === 'not-installed') return 'Cet outil n\'est pas encore installé. Clique sur Installer pour le récupérer.';
+    if (res.error === 'tool-missing')  return 'Cet outil est manquant dans le dossier d\'install. Réinstalle le pack pour le récupérer.';
     if (res.error === 'not-found')     return `Le fichier .exe est introuvable : ${res.exePath || ''}`;
     if (res.error === 'spawn-failed')  return `Erreur de lancement : ${res.message || ''}`;
     return 'Lancement impossible.';

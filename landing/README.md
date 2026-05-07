@@ -1,4 +1,4 @@
-# Landing app.triskell-studio.fr
+# Landing triskell-studio.fr (apex)
 
 Page statique qui présente **La Table Ronde** (le hub Triskell Studio) et propose son téléchargement.
 
@@ -13,7 +13,7 @@ Page statique qui présente **La Table Ronde** (le hub Triskell Studio) et propo
 ### Option 1 — drag-and-drop (le plus rapide)
 1. Compte sur [netlify.com](https://netlify.com).
 2. Drag-and-drop ce dossier `landing/` sur le dashboard.
-3. Domain → Add custom domain → `app.triskell-studio.fr`.
+3. Domain → Add custom domain → `triskell-studio.fr` (primary) + `app.triskell-studio.fr` (alias, redirige auto vers le primary).
 4. Configurer le CNAME chez ton registrar de domaine.
 
 ### Option 2 — déploiement automatique depuis Git
@@ -32,7 +32,7 @@ Pour remplacer le placeholder visuel :
 
 - Bouton télécharger → résout vers le dernier `.exe` publié sur
   `github.com/Jordan-Bourillot/triskell-lanceur/releases/latest`
-- Footer → `triskell-studio.fr` (à ajuster si la racine bouge)
+- Footer → `sites.triskell-studio.fr` (Studio = activité création de sites, sous-domaine)
 
 ## Modifier le contenu
 

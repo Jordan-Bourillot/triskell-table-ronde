@@ -1,0 +1,295 @@
+/* AlphaCast — pulse "en quête" sur les icônes + variante eyebrow + badge soon.
+   Plus de mockup fake ; le hero showcase est dans product.css. */
+
+/* Pulse animation sur l'icône brand (petite) */
+.ac-icon-coming { position: relative; }
+.ac-icon-pulse {
+  position: absolute;
+  inset: -8px;
+  border-radius: 22px;
+  background: transparent;
+  border: 2px solid rgba(167, 139, 250, 0.4);
+  animation: ac-pulse 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+@keyframes ac-pulse {
+  0%   { opacity: 1; transform: scale(1);    border-color: rgba(167, 139, 250, 0.5); }
+  70%  { opacity: 0; transform: scale(1.15); border-color: rgba(167, 139, 250, 0); }
+  100% { opacity: 0; transform: scale(1.15); border-color: rgba(167, 139, 250, 0); }
+}
+
+/* Pulse XL sur le hero showcase (grande icône) */
+.ac-showcase-pulse { position: relative; }
+.ac-icon-pulse-xl {
+  inset: -16px;
+  border-radius: 60px;
+  border: 2px solid rgba(167, 139, 250, 0.5);
+  animation-duration: 3.2s;
+}
+
+.product-eyebrow-soon {
+  background: rgba(167, 139, 250, 0.10);
+  border-color: rgba(167, 139, 250, 0.30);
+  color: #c4c8ff;
+}
+
+.pricing-badge-soon {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.30), rgba(167, 139, 250, 0.10));
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #c4c8ff;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BETA — Top banner + eyebrow + section programme testeurs
+   ════════════════════════════════════════════════════════════ */
+
+/* Top banner sticky en haut du body */
+.ac-beta-banner {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  background: linear-gradient(90deg, #7C3AED 0%, #C084FC 50%, #F0ABFC 100%);
+  background-size: 200% 100%;
+  color: #1a0f2e;
+  text-align: center;
+  padding: 11px 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  animation: ac-banner-shine 8s linear infinite;
+  position: relative;
+  z-index: 100;
+}
+@keyframes ac-banner-shine {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.ac-beta-banner__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1100px;
+}
+.ac-beta-banner__pulse {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #1a0f2e;
+  box-shadow: 0 0 0 0 rgba(26, 15, 46, 0.5);
+  animation: ac-pulse-banner 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes ac-pulse-banner {
+  0%   { box-shadow: 0 0 0 0 rgba(26, 15, 46, 0.55); transform: scale(1); }
+  60%  { box-shadow: 0 0 0 12px rgba(26, 15, 46, 0); transform: scale(1.2); }
+  100% { box-shadow: 0 0 0 0 rgba(26, 15, 46, 0); transform: scale(1); }
+}
+.ac-beta-banner__label strong { font-weight: 800; letter-spacing: 0.04em; }
+.ac-beta-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(26, 15, 46, 0.18);
+  border: 1px solid rgba(26, 15, 46, 0.3);
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ac-beta-banner:hover .ac-beta-banner__cta {
+  background: rgba(26, 15, 46, 0.28);
+}
+@media (max-width: 700px) {
+  .ac-beta-banner { font-size: 0.82rem; padding: 9px 12px; }
+  .ac-beta-banner__inner { gap: 8px; flex-direction: column; }
+}
+
+/* Variante eyebrow BETA (différente de la version "soon") */
+.product-eyebrow-beta {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.22), rgba(167, 139, 250, 0.10));
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #d4ccff;
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.2), 0 6px 20px rgba(124, 58, 237, 0.15);
+}
+
+/* ── Section "Programme Testeurs Beta" ── */
+.ac-beta-program {
+  text-align: center;
+  position: relative;
+}
+.ac-beta-program__sub {
+  max-width: 760px;
+  margin: 0 auto 40px;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.ac-beta-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 0 auto 40px;
+  max-width: 1100px;
+  text-align: left;
+}
+@media (max-width: 900px) {
+  .ac-beta-cards { grid-template-columns: 1fr; max-width: 480px; }
+}
+
+.ac-beta-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.ac-beta-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.4);
+  box-shadow: 0 14px 40px rgba(124, 58, 237, 0.18);
+}
+.ac-beta-card__medal {
+  font-size: 38px;
+  line-height: 1;
+}
+.ac-beta-card__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+}
+.ac-beta-card__desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.55;
+  flex: 1;
+}
+.ac-beta-card__reward {
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ac-beta-card__reward-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+}
+.ac-beta-card__reward-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.35;
+}
+
+/* Variations par tier */
+.ac-beta-card--bronze .ac-beta-card__reward {
+  background: rgba(205, 127, 50, 0.10);
+  border-color: rgba(205, 127, 50, 0.30);
+}
+.ac-beta-card--bronze .ac-beta-card__reward-label { color: #E0A875; }
+
+.ac-beta-card--silver .ac-beta-card__reward {
+  background: rgba(192, 192, 192, 0.10);
+  border-color: rgba(192, 192, 192, 0.32);
+}
+.ac-beta-card--silver .ac-beta-card__reward-label { color: #D8D8D8; }
+
+.ac-beta-card--gold {
+  border-color: rgba(212, 175, 55, 0.35);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+.ac-beta-card--gold .ac-beta-card__reward {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(212, 175, 55, 0.06));
+  border-color: rgba(212, 175, 55, 0.4);
+}
+.ac-beta-card--gold .ac-beta-card__reward-label { color: #F4D03F; }
+
+/* Bloc email signalement */
+.ac-beta-report {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  max-width: 760px;
+  margin: 0 auto 30px;
+  padding: 28px 32px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(167, 139, 250, 0.06) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 16px;
+  text-align: left;
+}
+.ac-beta-report__icon {
+  font-size: 42px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.ac-beta-report__body { flex: 1; }
+.ac-beta-report__title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+.ac-beta-report__desc {
+  margin: 0 0 12px;
+  color: rgba(255, 255, 255, 0.72);
+}
+.ac-beta-report__email {
+  display: inline-block;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  letter-spacing: 0.01em;
+  transition: background 0.18s, transform 0.12s;
+}
+.ac-beta-report__email:hover {
+  background: rgba(167, 139, 250, 0.2);
+  transform: translateY(-1px);
+}
+.ac-beta-report__hint {
+  margin: 14px 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.55;
+}
+.ac-beta-report__hint em {
+  font-style: italic;
+  color: rgba(167, 139, 250, 0.95);
+}
+
+@media (max-width: 700px) {
+  .ac-beta-report { flex-direction: column; gap: 14px; padding: 22px 20px; }
+  .ac-beta-report__email { font-size: 1.1rem; }
+}
+
+.ac-beta-program__note {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid rgba(167, 139, 250, 0.3);
+  border-radius: 4px;
+  text-align: left;
+}

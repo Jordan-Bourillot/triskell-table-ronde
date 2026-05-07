@@ -1,0 +1,176 @@
+/* ────────────────────────────────────────────────────────────────────────
+   suite.css — Spécifique à la Suite des Héros
+   Hérite de ../style.css + ../delinote/product.css
+   Ajoute : mosaïque hero (4 tuiles décalées) + grid des 11 héros
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ===== HERO MOSAÏQUE (4 tuiles décalées en escalier) ===== */
+.suite-mosaic {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.85;
+  perspective: 1400px;
+}
+.mosaic-tile {
+  position: absolute;
+  margin: 0;
+  width: 60%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid rgba(212, 179, 90, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 30px rgba(124, 127, 233, 0.10);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+}
+.mosaic-tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mosaic-tile figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  font-family: var(--font-quest);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  color: var(--gold-soft);
+  font-variation-settings: "opsz" 24;
+}
+
+/* Position en escalier — 4 tuiles, du fond vers l'avant */
+.mosaic-tile-1 { top: 2%;  left: 0;    transform: rotate(-4deg); z-index: 1; }
+.mosaic-tile-2 { top: 8%;  right: 0;   transform: rotate(3.5deg); z-index: 2; }
+.mosaic-tile-3 { bottom: 6%; left: 6%; transform: rotate(2deg);   z-index: 3; }
+.mosaic-tile-4 { bottom: 0; right: 8%; transform: rotate(-2.5deg); z-index: 4; }
+
+.suite-mosaic:hover .mosaic-tile-1 { transform: rotate(-5deg) translateY(-4px); }
+.suite-mosaic:hover .mosaic-tile-2 { transform: rotate(4.5deg) translateY(-4px); }
+.suite-mosaic:hover .mosaic-tile-3 { transform: rotate(2.5deg) translateY(-4px); }
+.suite-mosaic:hover .mosaic-tile-4 { transform: rotate(-3deg) translateY(-4px); }
+
+@media (max-width: 720px) {
+  .suite-mosaic { aspect-ratio: 1 / 1.1; }
+  .mosaic-tile { width: 70%; }
+}
+
+/* ===== GRID DES 11 HÉROS ===== */
+.heros-grid {
+  margin-top: 48px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 1024px) { .heros-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .heros-grid { grid-template-columns: 1fr; } }
+
+.hero-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
+}
+.hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 179, 90, 0.5), transparent);
+  opacity: 0.4;
+  z-index: 2;
+}
+.hero-card:hover {
+  border-color: rgba(212, 179, 90, 0.4);
+  transform: translateY(-3px);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(212, 179, 90, 0.15);
+}
+.hero-card:hover .hero-shot img {
+  transform: scale(1.04);
+}
+
+.hero-shot {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(212, 179, 90, 0.06), transparent 80%);
+  border-bottom: 1px solid var(--border);
+  aspect-ratio: 16 / 10;
+}
+.hero-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.4s ease;
+}
+.hero-shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(11, 13, 16, 0.4) 100%);
+  pointer-events: none;
+}
+
+.hero-body {
+  padding: 18px 20px 20px;
+}
+.hero-num {
+  display: inline-block;
+  font-family: var(--font-quest);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2.4px;
+  color: var(--gold-soft);
+  margin-bottom: 8px;
+  font-variation-settings: "opsz" 12;
+}
+.hero-card h3 {
+  font-family: var(--font-quest);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  font-variation-settings: "opsz" 36;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+.hero-card p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+}
+.hero-card p strong {
+  color: var(--gold-soft);
+  font-weight: 500;
+}
+
+/* Variante highlight (Le Gardien — coffre AES) */
+.hero-card-highlight {
+  border-color: rgba(167, 139, 250, 0.35);
+  background:
+    linear-gradient(180deg,
+      rgba(124, 127, 233, 0.08) 0%,
+      rgba(124, 127, 233, 0.02) 30%,
+      var(--bg-card) 70%);
+}
+.hero-card-highlight::before {
+  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.6), transparent);
+}
+.hero-card-highlight .hero-num { color: #c4c8ff; }

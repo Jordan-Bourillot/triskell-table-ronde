@@ -1,0 +1,56 @@
+/* Pack Électricien Pro — vraies previews PDF empilées en éventail.
+   Plus de mockup CSS : on affiche les vrais documents. */
+.pe-real-stack {
+  position: relative;
+  height: 100%;
+  min-height: 460px;
+  perspective: 1400px;
+}
+
+.pe-real-doc {
+  position: absolute;
+  margin: 0;
+  width: 62%;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff; /* fond blanc PDF */
+  border: 1px solid rgba(212, 179, 90, 0.30);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 30px rgba(124, 127, 233, 0.08);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+}
+.pe-real-doc img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pe-real-doc figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 14px;
+  background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+  font-family: var(--font-quest);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  color: var(--gold-soft);
+  font-variation-settings: "opsz" 24;
+}
+
+/* Position en éventail */
+.pe-real-doc-1 { top: 0;       left: 16%; transform: rotate(-4deg); z-index: 3; }
+.pe-real-doc-2 { top: 12%;     right: 0;  transform: rotate(4deg);  z-index: 2; }
+.pe-real-doc-3 { bottom: 0;    left: 0;   transform: rotate(-6deg); z-index: 1; }
+
+.pe-real-stack:hover .pe-real-doc-1 { transform: rotate(-5deg) translateY(-6px); }
+.pe-real-stack:hover .pe-real-doc-2 { transform: rotate(5deg)  translateY(-6px); }
+.pe-real-stack:hover .pe-real-doc-3 { transform: rotate(-7deg) translateY(-6px); }
+
+@media (max-width: 720px) {
+  .pe-real-stack { min-height: 380px; }
+  .pe-real-doc { width: 75%; }
+}

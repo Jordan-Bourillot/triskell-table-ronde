@@ -1,6 +1,69 @@
 [build]
   publish = "."
 
+# ─── Redirections legacy ──────────────────────────────────────────────
+# Préserve les anciens liens externes vers les pages du Site officiel
+# après son passage sur sites.triskell-studio.fr (SEO + partages).
+[[redirects]]
+  from = "/parrainage"
+  to   = "https://sites.triskell-studio.fr/parrainage"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/parrainage.html"
+  to   = "https://sites.triskell-studio.fr/parrainage"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/carte"
+  to   = "https://sites.triskell-studio.fr/carte"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/carte.html"
+  to   = "https://sites.triskell-studio.fr/carte"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/guide"
+  to   = "https://sites.triskell-studio.fr/guide"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/guide.html"
+  to   = "https://sites.triskell-studio.fr/guide"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/cgu"
+  to   = "https://sites.triskell-studio.fr/cgu"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/mentions-legales"
+  to   = "https://sites.triskell-studio.fr/mentions-legales"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/compte"
+  to   = "https://sites.triskell-studio.fr/compte"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/success*"
+  to   = "https://sites.triskell-studio.fr/success:splat"
+  status = 301
+  force  = true
+
 [[headers]]
   for = "/*"
   [headers.values]

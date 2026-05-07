@@ -106,6 +106,19 @@ function runExeInstaller(exePath) {
   });
 }
 
+// NSIS/InnoSetup peuvent finir d'ecrire les fichiers apres la fermeture de
+// l'UI. On poll quelques secondes pour laisser le filesystem se stabiliser
+// avant de declarer l'install ratee.
+async function waitForExe(exePath, { timeoutMs = 8000, intervalMs = 400 } = {}) {
+  if (!exePath) return false;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (fs.existsSync(exePath)) return true;
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+  return fs.existsSync(exePath);
+}
+
 // Aplati un dossier extrait : si le ZIP contient un seul sous-dossier
 // (typiquement "SuiteDesHeros-v1.0/"), on remonte son contenu d'un cran.
 function flattenIfSingleFolder(dir) {
@@ -187,13 +200,25 @@ async function installProduct({ product, apiBase, sessionToken, onProgress }) {
     await runExeInstaller(tmpFile);
     try { fs.unlinkSync(tmpFile); } catch (_) {}
 
-    // Pour les .exe-installer, c'est le produit qui choisit ou s'installer.
-    // Pour V1 on stocke juste un marqueur ; le mainExe sera detecte plus tard
-    // (chemin classique dans %ProgramFiles%) ou configure manuellement.
+    // Verification post-install : NSIS/Inno renvoient code 0 meme apres
+    // annulation/erreur (cf. runExeInstaller). On valide donc en regardant
+    // que l'exe attendu existe vraiment sur disque, sinon on refuse
+    // d'enregistrer l'install (sinon la tuile passe a "Convoquer" et le
+    // clic suivant donne "Lancement impossible").
     const mainExe = resolveLocalUserPath(tokenInfo.expectedExePath);
+    if (!mainExe) {
+      throw new Error('install incomplete: backend has not provided expectedExePath');
+    }
+    onProgress({ phase: 'install', percent: 90,
+      message: 'Vérification de l\'installation...', detail: '' });
+    const found = await waitForExe(mainExe);
+    if (!found) {
+      throw new Error('install incomplete: ' + mainExe + ' not found after installer exit (annulation ou erreur ?)');
+    }
+
     onProgress({ phase: 'done', percent: 100,
       message: `${product.name} a rejoint ta Table`, detail: '' });
-    return { installPath: mainExe ? path.dirname(mainExe) : null, mainExe, version, kind };
+    return { installPath: path.dirname(mainExe), mainExe, version, kind };
   }
 
   throw new Error(`installer kind inconnu: ${kind}`);

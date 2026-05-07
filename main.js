@@ -443,6 +443,12 @@ ipcMain.handle('launch:product', async (_evt, productId) => {
   if (product.tools && product.tools.length > 0) {
     const inst = store.getInstalls()[productId];
     if (!inst) return { ok: false, error: 'not-installed' };
+    // Le dossier a pu etre supprime (desinstall manuelle) : on nettoie le
+    // store pour que la tuile repasse en "Installer" au prochain refresh.
+    if (!inst.installPath || !fs.existsSync(inst.installPath)) {
+      store.removeInstall(productId);
+      return { ok: false, error: 'not-installed' };
+    }
     shell.openPath(inst.installPath);
     return { ok: true };
   }
@@ -450,6 +456,14 @@ ipcMain.handle('launch:product', async (_evt, productId) => {
   // Sinon : un seul exe a lancer.
   const inst = store.getInstalls()[productId];
   if (!inst || !inst.mainExe) return { ok: false, error: 'not-installed' };
+  // L'.exe a pu disparaitre (desinstall manuelle, install fantome heritee
+  // d'un installer annule, antivirus...). Avant de tenter spawn, on verifie
+  // sa presence ; si absent on purge l'entree du store pour que la tuile
+  // repasse en "Installer" automatiquement.
+  if (!fs.existsSync(inst.mainExe)) {
+    store.removeInstall(productId);
+    return { ok: false, error: 'not-installed' };
+  }
   const result = spawnExe(inst.mainExe);
   if (result && result.ok) store.recordLaunch(productId);
   return result;
@@ -467,6 +481,16 @@ ipcMain.handle('launch:tool', async (_evt, { productId, toolId }) => {
   if (!inst) return { ok: false, error: 'not-installed' };
 
   const exePath = path.join(inst.installPath, tool.exe);
+  if (!fs.existsSync(exePath)) {
+    // Si le dossier d'install n'existe meme plus, on purge tout l'install
+    // du produit ; sinon on signale juste l'outil manquant (les autres
+    // outils du bundle peuvent etre OK).
+    if (!inst.installPath || !fs.existsSync(inst.installPath)) {
+      store.removeInstall(productId);
+      return { ok: false, error: 'not-installed' };
+    }
+    return { ok: false, error: 'tool-missing' };
+  }
   const result = spawnExe(exePath);
   if (result && result.ok) store.recordLaunch(productId, toolId);
   return result;

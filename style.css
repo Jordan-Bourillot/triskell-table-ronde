@@ -1179,6 +1179,45 @@ input, button { outline: none; }
   border-color: rgba(212, 179, 90, 0.45);
 }
 
+/* Bundles "En quête" — au repos la card reste visible, au survol elle se grise
+   et affiche "Bientôt disponible". Signal clair que la fonctionnalité bundle
+   n'est pas encore activée, sans masquer la card (l'utilisateur garde la
+   notion qu'un bundle existe). */
+.bundle-card.bundle-soon { cursor: not-allowed; }
+.bundle-card.bundle-soon > * {
+  transition: filter 220ms ease, opacity 220ms ease;
+}
+.bundle-card.bundle-soon:hover > * {
+  filter: grayscale(0.95) brightness(0.55);
+  opacity: 0.85;
+}
+.bundle-card.bundle-soon::after {
+  content: 'Bientôt disponible';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif, 'Cinzel', 'Cormorant Garamond', serif);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-soft, #d4b35a);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  background: rgba(15, 18, 24, 0.45);
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+  z-index: 3;
+}
+.bundle-card.bundle-soon:hover::after { opacity: 1; }
+:root[data-theme='light'] .bundle-card.bundle-soon::after {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--gold, #b8860b);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8);
+}
+
 .bundle-actions {
   display: flex;
   align-items: center;

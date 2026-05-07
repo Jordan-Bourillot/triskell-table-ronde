@@ -1,0 +1,14 @@
+/* Outils Pro — plus de mockup phone fake.
+   On garde la variante "orbis bonus" pour la mention Pack Élec dans pricing. */
+
+.pricing-orbis-bonus {
+  background: linear-gradient(135deg, rgba(212, 179, 90, 0.12), rgba(212, 179, 90, 0.04));
+  border-color: rgba(212, 179, 90, 0.35);
+}
+.pricing-orbis-bonus .pricing-orbis-title { color: var(--gold); }
+.pricing-orbis-bonus a {
+  color: var(--gold-soft);
+  border-bottom: 1px solid rgba(212, 179, 90, 0.4);
+  text-decoration: none;
+}
+.pricing-orbis-bonus a:hover { color: var(--gold); }

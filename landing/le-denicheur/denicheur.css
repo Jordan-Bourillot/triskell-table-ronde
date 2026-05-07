@@ -1,0 +1,63 @@
+/* ────────────────────────────────────────────────────────────────────────
+   denicheur.css — Spécifique Le Dénicheur
+   Combo cards Dénicheur + AlphaPitch (le hero showcase est dans product.css)
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ===== COMBO CARDS (Dénicheur + AlphaPitch) ===== */
+.combo-cards {
+  margin-top: 48px;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.combo-card {
+  flex: 1;
+  min-width: 240px;
+  padding: 28px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.combo-card:hover {
+  border-color: rgba(212, 179, 90, 0.4);
+  transform: translateY(-2px);
+}
+.combo-num {
+  display: inline-block;
+  font-family: var(--font-quest);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2.4px;
+  color: var(--gold-soft);
+  margin-bottom: 12px;
+  font-variation-settings: "opsz" 12;
+}
+.combo-card h3 {
+  font-family: var(--font-quest);
+  font-size: 17px;
+  font-weight: 500;
+  margin: 0 0 10px;
+  color: var(--text);
+  font-variation-settings: "opsz" 36;
+}
+.combo-card p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+}
+.combo-arrow {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-quest);
+  font-size: 32px;
+  color: var(--gold-soft);
+  font-variation-settings: "opsz" 100;
+}
+@media (max-width: 880px) {
+  .combo-cards { flex-direction: column; }
+  .combo-arrow { transform: rotate(90deg); justify-content: center; padding: 4px 0; }
+}
