@@ -2141,8 +2141,20 @@
   // Renvoie null si pas de discount configure pour ce count (< 2 par ex).
   function computeBundlePrice(apps, discounts) {
     const count = apps.length;
-    const discount = discounts && discounts[String(count)];
-    if (typeof discount !== 'number') return null;
+    if (!discounts) return null;
+    let discount = discounts[String(count)];
+    if (typeof discount !== 'number') {
+      // Fallback : si le count depasse le plus haut palier defini (ex. 5 ou 6
+      // apps manquantes alors que la table s'arrete a 4), on applique la
+      // remise du palier max. Sinon la carte disparait silencieusement quand
+      // une nouvelle app premium est ajoutee a une categorie.
+      const maxKey = Math.max(...Object.keys(discounts)
+        .filter(k => /^\d+$/.test(k)).map(Number));
+      if (Number.isFinite(maxKey) && count > maxKey) {
+        discount = discounts[String(maxKey)];
+      }
+      if (typeof discount !== 'number') return null;
+    }
     const total = apps.reduce((s, a) => s + (a.price || 0), 0);
     const bundle = Math.round(total * (1 - discount / 100));
     return { count, total, discount, bundle, savings: total - bundle };
@@ -2725,10 +2737,11 @@
           host.appendChild(makeBtn('Bientôt en vente', 'btn-disabled', null, true));
         }
         host.appendChild(makeBtn('Voir la fiche', 'btn-info', () => showProductPage(app)));
-        // Mention garantie : on l'affiche seulement quand il y a un vrai
-        // tunnel d'achat (Recruter), pas pour "M'intéresser" ni "Bientôt en
-        // vente" (le user ne paie pas encore -> pas de friction à diminuer).
-        if (isRealBuyButton) {
+        // Mention garantie : on l'affiche quand il y a un vrai tunnel d'achat
+        // (Recruter) OU quand le produit est en early access (le user laisse
+        // son email = engagement, la garantie le rassure). Pas pour les autres
+        // "M'intéresser" ni "Bientôt en vente".
+        if (isRealBuyButton || app.earlyAccess) {
           const note = document.createElement('span');
           note.className = 'tile-guarantee';
           note.innerHTML = '<span class="tile-guarantee-icon" aria-hidden="true">✓</span> Garantie 14 jours · satisfait ou remboursé';

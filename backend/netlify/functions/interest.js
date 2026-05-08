@@ -14,7 +14,7 @@ const { supabase, json, preflight, authFromHeaders } = require('./_lib');
 
 const KNOWN_PRODUCTS = new Set([
   'suite-des-heros', 'delinote', 'studio-pdf', 'bobeez',
-  'le-denicheur',
+  'teddy-mail', 'le-denicheur',
   'le-heraut',                // alias display : AlphaCast (comingSoon)
   'ultimate-prompt-builder',  // alias display : AlphaBeast
   'alphapitch'                // ex 'triskell-sales-tunnel'

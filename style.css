@@ -2981,6 +2981,7 @@ input, button { outline: none; }
 .tile[data-id="eliks-studio"] .tile-icon img {
   transform: scale(0.72);
 }
+
 /* Tuile "Populaire" — petit ruban en haut à droite, halo discret */
 /* HERO TILE : la tuile featured prend 2×2 dans la grille → layout interne
    plus généreux (icône XL, titre Cinzel grand, tagline visible en entier,

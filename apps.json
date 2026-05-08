@@ -32,7 +32,17 @@
   },
   "promoNote": "Code promo accepté à la caisse Stripe (champ \"Ajouter un code promo\")",
   "_announcement_doc": "Annonce affichée dans le bandeau d'accueil. Pour pousser une nouvelle annonce, change l'id (sinon les utilisateurs qui ont déjà cliqué X ne la reverront pas). kind ∈ { 'new', 'update', 'promo', 'info' }. cta optionnel : { label, action: 'open-product'|'open-url'|'open-completion'|'open-category', value: <productId|url|categoryId> }. Mettre announcement à null pour ne rien afficher.",
-  "announcement": null,
+  "announcement": {
+    "id": "teddy-mail-early-access-2026-05-07",
+    "kind": "new",
+    "title": "Teddy Mail en early access",
+    "message": "Le client mail desktop de Triskell : 100 % local, multi-comptes IMAP/OAuth, threading JWZ, schedule send, 6 thèmes. 19 € à vie au lieu de 39 € pendant l'early access — upgrade V1.0 incluse.",
+    "cta": {
+      "label": "Découvrir Teddy Mail",
+      "action": "open-product",
+      "value": "teddy-mail"
+    }
+  },
   "apps": [
     {
       "id": "suite-des-heros",
@@ -488,6 +498,71 @@
       ]
     },
     {
+      "id": "teddy-mail",
+      "name": "Teddy Mail",
+      "tagline": "Client mail desktop sobre, privacy-first, ultra-léger. 100 % local, zéro tracking.",
+      "category": "quotidien",
+      "tier": "premium",
+      "icon": "assets/apps/teddy-mail.png",
+      "featured": false,
+      "featuredLabel": "",
+      "price": 19,
+      "priceOriginal": 39,
+      "priceNote": "Early access · paiement unique · à vie · upgrade V1.0 incluse",
+      "installed": true,
+      "exePath": "C:\\Users\\jorda\\AppData\\Local\\Teddy Mail\\teddy-mail-shell.exe",
+      "buyUrl": "",
+      "buyUrlPlaceholder": true,
+      "earlyAccess": true,
+      "salesPitch": "Un client mail qui te respecte. Pas de pub, pas de tracking, pas d'abonnement. Multi-comptes IMAP/OAuth, dark mode, raccourcis clavier — tout ce qu'il faut, rien de plus.",
+      "motto": "Pour qui en a marre des clients mail bavards.",
+      "description": "Teddy Mail est un client mail desktop natif (Tauri + Rust + React) construit autour d'une obsession : que ton mail t'obéisse, pas l'inverse. Multi-comptes IMAP avec OAuth Gmail et Outlook, store local chiffré SQLCipher, recherche instantanée FTS5, threading JWZ, et 6 thèmes (clair, sombre, sépia, solarized, contraste, nocturne) pour adapter l'app à ton éclairage du jour.\n\nDeux vues au choix : la Classique (3 panneaux à la Outlook/Thunderbird) ou l'Atelier (single-pane éditoriale, hero card et clusters par catégorie en masonry). Composer markdown avec toolbar (B/I/code/lists/quote/link), templates avec variables et auto-expand, schedule send avec presets, snooze avec countdown, vacation responder, drag-drop pièces jointes 25 Mo, undo send 5/10/30s. Trackers neutralisés au render avec compteur. Binaire 10 Mo, ~50 Mo RAM. Auto-update signé minisign.\n\nStatut V0.5.1 : UI feature-complete et rust-core linké au shell desktop. La sync IMAP/SMTP réelle (lecture/envoi sur tes vrais comptes) arrive en V0.6 — accès lifetime inclus dans l'early access.",
+      "features": [
+        {
+          "title": "Multi-comptes IMAP + OAuth Gmail/Outlook",
+          "detail": "Ajoute autant de comptes que tu veux. Connexion IMAP/SMTP standard ou OAuth PKCE pour Gmail et Outlook. Photo de profil, nom affiché et couleur d'accent par compte."
+        },
+        {
+          "title": "Deux vues : Classique ou Atelier",
+          "detail": "La Classique pour qui vient d'Outlook/Thunderbird (3 panneaux). L'Atelier pour qui veut une vue éditoriale apaisée (single-pane, hero card, clusters par catégorie, salutation contextuelle au temps qu'il fait)."
+        },
+        {
+          "title": "Compose puissant",
+          "detail": "Markdown toolbar + Cmd+B/I/K, templates avec variables, slash auto-expand /dispo, schedule send (presets et datetime custom), drag-drop attachments avec preview, auto-save 2s, warn pièce jointe oubliée, undo send 5/10/30s."
+        },
+        {
+          "title": "Lecture intelligente",
+          "detail": "Threading JWZ, Reply / Reply All / Forward / Quick reply inline avec suggestions contextuelles, Find in mail (Cmd+F) avec navigation, markdown rendering pour mails plain-text, engagements détectés FR/EN, trackers neutralisés au render avec compteur."
+        },
+        {
+          "title": "Recherche et organisation",
+          "detail": "Search DSL (from:, has:, is:, before:, after:) + fuzzy matching. Save search as view (CRUD), labels colorés, snooze avec countdown, multi-select bulk archive/snooze/delete, command palette Cmd+K. 4 profils clavier (teddy, gmail, outlook, mutt)."
+        },
+        {
+          "title": "100 % local, ultra-léger",
+          "detail": "Store SQLCipher chiffré, FTS5 pour la recherche. Aucun cloud Triskell, ton mail ne passe que par tes propres serveurs IMAP/SMTP. Binaire Tauri 10 Mo, ~50 Mo RAM, auto-update signé minisign via GitHub Releases."
+        }
+      ],
+      "personas": [
+        {
+          "icon": "🧘",
+          "name": "Le minimaliste digital",
+          "description": "qui en a assez des clients mail bavards (Outlook, Thunderbird), des webmails qui chargent 80 Mo de JS, et veut juste un mail rapide, sobre, sans pub, sans tracking, qui démarre en 0,5 s."
+        },
+        {
+          "icon": "🔐",
+          "name": "Le privacy-conscious",
+          "description": "qui ne veut pas que ses mails passent par un cloud tiers (Spike, Newton, Superhuman). Avec Teddy, le store est local et chiffré (SQLCipher), les trackers sont bloqués au render, rien ne fuit."
+        }
+      ],
+      "links": [
+        {
+          "label": "Demander l'early access",
+          "url": "mailto:contact@triskell-studio.fr?subject=Teddy%20Mail%20%E2%80%94%20early%20access%2019%E2%82%AC"
+        }
+      ]
+    },
+    {
       "id": "le-denicheur",
       "name": "Le Dénicheur",
       "tagline": "Trouve sur 9 plateformes les créateurs qui n'ont pas encore monétisé leur audience",
@@ -521,47 +596,6 @@
         "kind": "exe-installer",
         "productKey": "le-denicheur"
       }
-    },
-    {
-      "id": "artisia-studio",
-      "name": "Artisia Studio",
-      "tagline": "Outils numériques sur-mesure pour professionnels — desktop, web, hybride. L'IA quand elle sert, jamais avant",
-      "category": "pro",
-      "proSection": "generaliste",
-      "tier": "service",
-      "kind": "service",
-      "icon": "assets/apps/artisia-studio.svg",
-      "priceFrom": "Sur devis · Diagnostic offert",
-      "priceNote": "Forfait fixe après diagnostic · pas d'horaire · pas d'abonnement",
-      "service": {
-        "url": "https://artisia.triskell-studio.fr",
-        "contactEmail": "contact@triskell-studio.fr",
-        "ctaPrimaryLabel": "Voir Artisia Studio",
-        "ctaSecondaryLabel": "Réserver un diagnostic"
-      },
-      "salesPitch": "On forge des outils sur-mesure, ajustés à votre métier — pas à un cahier des charges générique.",
-      "motto": "Pour qui en a marre de plier son métier au logiciel des autres.",
-      "description": "Artisia Studio est l'atelier sur-mesure de Triskell. On conçoit des applications desktop, web ou hybrides taillées pour un métier précis — pas un SaaS générique de plus. La phase de diagnostic est offerte : on passe une journée à comprendre votre activité, et on vous remet une note écrite avec périmètre, prix forfaitaire et délai. Pas de tarif horaire, pas de régie, pas de dépendance : à la livraison, le code source et l'infrastructure tournent à votre nom.\n\nCe qui nous distingue, et qu'on assume contre la mode : on ne déploie de l'IA que là où elle produit un gain mesurable. Si une règle métier de dix lignes suffit, c'est dix lignes qu'on écrit. Si un LLM change la donne, on l'intègre proprement — avec garde-fous, supervision et coût par usage explicité. Aucune décision technique ne devrait reposer sur un buzzword.\n\nTrois modèles commerciaux selon votre besoin : forfait classique (l'outil reste interne), marque blanche (vous le distribuez sous votre nom), royalties partagées (modèle de commission si vous le revendez). Tarification toujours sur devis, prix fixé en fin de diagnostic.",
-      "features": [
-        "Diagnostic offert — une journée sur place ou en visio, note écrite remise",
-        "Desktop, web, hybride — selon ce que le métier exige réellement",
-        "Prix forfaitaire fixé en fin de diagnostic — pas de régie, pas de dérive",
-        "Code source, données et infrastructure à votre nom à la livraison",
-        "L'IA déployée seulement quand elle apporte un gain mesurable",
-        "Marque blanche disponible — on s'efface derrière votre nom",
-        "Modèle de royalties possible si vous revendez l'outil",
-        "Un seul interlocuteur du diagnostic à la livraison"
-      ],
-      "links": [
-        {
-          "label": "Voir le site Artisia Studio",
-          "url": "https://artisia.triskell-studio.fr"
-        },
-        {
-          "label": "Réserver un diagnostic offert",
-          "url": "mailto:contact@triskell-studio.fr?subject=Diagnostic%20Artisia%20Studio"
-        }
-      ]
     },
     {
       "id": "triskell-studio-sites",
@@ -649,11 +683,11 @@
       "tagline": "De 2 h/jour à 10 min/jour pour tes réseaux — sans avoir l'air d'une IA",
       "category": "pro",
       "proSection": "generaliste",
-      "tier": "service",
-      "kind": "service",
+      "tier": "webapp",
+      "kind": "webapp",
       "icon": "assets/apps/alphacast.png",
-      "priceFrom": "Gratuit · Pro 29 € · Team 79 € · Agency 199 €/mois",
-      "priceNote": "SaaS web + mobile · 4 formules · essai gratuit sans CB · annulable à tout moment",
+      "priceFrom": "Gratuit · Pro à 29 €/mois",
+      "priceNote": "SaaS web + mobile · essai gratuit · annulable à tout moment",
       "service": {
         "url": "https://reseaux.triskell-studio.fr",
         "contactEmail": "contact@triskell-studio.fr",
@@ -721,10 +755,10 @@
       ],
       "pricing": {
         "tiers": [
-          { "name": "Free", "price": "0 €/mois", "summary": "1 workspace · 2 comptes sociaux · 20 posts/mois · sans CB" },
-          { "name": "Pro", "price": "29 €/mois", "summary": "10 comptes sociaux · 300 posts/mois · import de voix personnelle", "highlight": true, "highlightLabel": "Plus populaire" },
-          { "name": "Team", "price": "79 €/mois", "summary": "3 workspaces · 1 500 posts/mois · planification de séries" },
-          { "name": "Agency", "price": "199 €/mois", "summary": "Illimité · white-label · support prioritaire" }
+          { "name": "Gratuit", "price": "0 €", "summary": "1 espace · 2 comptes sociaux · 20 posts/mois" },
+          { "name": "Pro", "price": "29 €/mois", "summary": "10 comptes sociaux · 300 posts/mois · import de voix" },
+          { "name": "Équipe", "price": "79 €/mois", "summary": "3 espaces · 1 500 posts/mois · planification de séries" },
+          { "name": "Agence", "price": "199 €/mois", "summary": "Illimité · marque blanche · support prioritaire" }
         ]
       },
       "links": [
@@ -914,11 +948,13 @@
       "proSection": "batiment",
       "tagline": "Calculateurs chantier pour artisans — carrelage, placo, peinture, béton",
       "category": "pro",
-      "tier": "premium",
+      "tier": "webapp",
+      "kind": "webapp",
       "icon": "assets/apps/outils-batiment.png",
-      "price": 17,
-      "priceNote": "Paiement unique · accès à vie · Web app PWA installable navigateur + mobile",
-      "buyUrl": "https://outils-pro.triskell-studio.fr",
+      "price": 9,
+      "priceNote": "Paiement unique · à vie · web app PWA accessible navigateur + mobile",
+      "buyUrl": "",
+      "buyUrlPlaceholder": true,
       "service": {
         "url": "https://outils.triskell-studio.fr",
         "contactEmail": "contact@triskell-studio.fr",
@@ -960,12 +996,12 @@
       "buyUrl": "https://pack-elec.triskell-studio.fr",
       "salesPitch": "Tes devis envoyés en 10 minutes au lieu d'une heure.",
       "motto": "Pour qui en a marre de mettre des prix au pif et de relancer ses clients à la main.",
-      "description": "Pack Électricien Pro, c'est un kit complet de 33 modèles Word et Excel rédigés à la main pour les électriciens : devis détaillés (16 articles : objet, prix, paiement, garanties, indemnité forfaitaire 40 €), factures, CGV conformes 2026, relances automatiques, suivi de chantiers, checklists, emails de prospection.\n\nEn bonus inclus à vie : Triskell Outils Pro (la web app calculateurs chantier — normalement 17 €, offerte ici). Téléchargement immédiat après paiement, accès au pack pendant 30 jours via lien signé HMAC.\n\nPaiement unique 27 €, garantie satisfait ou remboursé 14 jours.",
+      "description": "Pack Électricien Pro, c'est un kit complet de 33 modèles Word et Excel rédigés à la main pour les électriciens : devis détaillés (16 articles : objet, prix, paiement, garanties, indemnité forfaitaire 40 €), factures, CGV conformes 2026, relances automatiques, suivi de chantiers, checklists, emails de prospection.\n\nEn bonus inclus à vie : Triskell Outils Pro (la web app calculateurs chantier — normalement 9 €, offerte ici). Téléchargement immédiat après paiement, accès au pack pendant 30 jours via lien signé HMAC.\n\nPaiement unique 27 €, garantie satisfait ou remboursé 14 jours.",
       "features": [
         "33 modèles Word & Excel : devis, factures, CGV, relances, suivi, checklists",
         "Devis détaillés avec 16 articles type (clauses paiement, garanties, indemnités)",
         "CGV électricien conformes 2026 — prêtes à signer",
-        "Bundle inclus : Triskell Outils Pro à vie (17 € offerts)",
+        "Bundle inclus : Triskell Outils Pro à vie (9 € offerts)",
         "Téléchargement immédiat post-paiement, lien signé HMAC valable 30 jours",
         "Garantie satisfait ou remboursé 14 jours",
         "Paiement unique 27 € · pas d'abonnement"
@@ -1070,28 +1106,6 @@
         "kind": "exe-installer",
         "productKey": "clik-clik"
       }
-    },
-    {
-      "id": "teddy-mail",
-      "name": "Teddy Mail",
-      "tagline": "Ton client mail desktop sobre, sans pub, sans tracking.",
-      "category": "quotidien",
-      "tier": "free",
-      "icon": "assets/apps/teddy-mail.png",
-      "featured": false,
-      "featuredLabel": "",
-      "price": null,
-      "priceOriginal": null,
-      "priceNote": "Gratuit",
-      "installed": true,
-      "exePath": "C:\\Users\\jorda\\AppData\\Local\\Teddy Mail\\teddy-mail-shell.exe",
-      "buyUrl": "",
-      "salesPitch": "Un client mail qui te respecte. Pas de pub, pas de tracking, pas d'abonnement. Multi-comptes IMAP, dark mode, raccourcis clavier — tout ce qu'il faut, rien de plus.",
-      "motto": "Pour qui en a marre des clients mail bavards.",
-      "description": "",
-      "features": [],
-      "personas": [],
-      "links": []
     }
   ]
 }

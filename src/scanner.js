@@ -32,6 +32,11 @@ const PRODUCT_HINTS = {
     exeNames: ['Bobeez.exe'],
     programFilesNames: ['Bobeez'],
   },
+  'teddy-mail': {
+    folderInDocuments: [],
+    exeNames: ['Teddy Mail.exe', 'teddy-mail-shell.exe', 'TeddyMail.exe'],
+    programFilesNames: ['Teddy Mail', 'TeddyMail'],
+  },
   // Display name : AlphaBeast (ID interne 'ultimate-prompt-builder' garde
   // pour ne pas casser les licences DB existantes).
   'ultimate-prompt-builder': {
