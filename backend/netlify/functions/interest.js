@@ -39,7 +39,7 @@ exports.handler = async (event) => {
 
   // Insert idempotent — on ignore l'erreur si la paire (user, product) existe deja.
   const { error } = await sb
-    .from('product_interest')
+    .from('lanceur_product_interest')
     .upsert(
       { user_id: session.sub, product_key: productKey, source: 'launcher' },
       { onConflict: 'user_id,product_key', ignoreDuplicates: true }

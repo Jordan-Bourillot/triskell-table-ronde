@@ -55,7 +55,7 @@ exports.handler = async (event) => {
 
   // 1. Cree (ou retrouve) l'utilisateur.
   const { data: user, error: upsertErr } = await sb
-    .from('users')
+    .from('lanceur_users')
     .upsert({ email }, { onConflict: 'email' })
     .select('id, email')
     .single();
@@ -75,7 +75,7 @@ exports.handler = async (event) => {
 
   if (stripeSessionId) {
     const { data: existing } = await sb
-      .from('licenses')
+      .from('lanceur_licenses')
       .select('id')
       .eq('stripe_session_id', stripeSessionId)
       .maybeSingle();
@@ -85,7 +85,7 @@ exports.handler = async (event) => {
   }
 
   const { data: license, error: licErr } = await sb
-    .from('licenses')
+    .from('lanceur_licenses')
     .insert(insertPayload)
     .select('id')
     .single();

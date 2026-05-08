@@ -34,9 +34,9 @@ exports.handler = async (event) => {
 
   // Suppression (cascade les licenses + login_codes via FK ou query separe).
   // On nettoie d'abord les login_codes (pas de FK sur user_id, juste email).
-  await sb.from('login_codes').delete().eq('email', session.email);
+  await sb.from('lanceur_login_codes').delete().eq('email', session.email);
 
-  const { error } = await sb.from('users').delete().eq('id', session.sub);
+  const { error } = await sb.from('lanceur_users').delete().eq('id', session.sub);
   if (error) {
     console.error('delete-account: failed', error);
     return json(500, { error: 'server-error', message: error.message });

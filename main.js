@@ -220,6 +220,13 @@ ipcMain.handle('auth:login', async (_evt, email) => {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: data.error || 'server-error' };
+    // Voie founder/dev : le backend a ouvert la session directement.
+    // On stocke le token et on signale au renderer de sauter l'ecran du code.
+    if (data.skipCode && data.token && data.user) {
+      store.setSession({ token: data.token, user: data.user });
+      maybeShowSurprise('login');
+      return { ok: true, autoLogin: true, user: data.user };
+    }
     return { ok: true, expiresIn: data.expiresIn };
   } catch (err) {
     return { ok: false, error: 'network', message: err.message };

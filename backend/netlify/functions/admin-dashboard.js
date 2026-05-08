@@ -32,24 +32,24 @@ exports.handler = async (event) => {
     interestsCountRes,
     codes24hRes
   ] = await Promise.all([
-    sb.from('users').select('id', { count: 'exact', head: true }),
-    sb.from('licenses').select('id', { count: 'exact', head: true }),
-    sb.from('licenses').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    sb.from('product_interest').select('id', { count: 'exact', head: true }),
-    sb.from('login_codes').select('id', { count: 'exact', head: true }).gte('created_at', since24hIso)
+    sb.from('lanceur_users').select('id', { count: 'exact', head: true }),
+    sb.from('lanceur_licenses').select('id', { count: 'exact', head: true }),
+    sb.from('lanceur_licenses').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    sb.from('lanceur_product_interest').select('id', { count: 'exact', head: true }),
+    sb.from('lanceur_login_codes').select('id', { count: 'exact', head: true }).gte('created_at', since24hIso)
   ]);
 
   // --- Listes recentes ---
   const [usersList, licensesList, interestsList] = await Promise.all([
-    sb.from('users')
+    sb.from('lanceur_users')
       .select('id, email, created_at, last_login_at')
       .order('created_at', { ascending: false })
       .limit(30),
-    sb.from('licenses')
+    sb.from('lanceur_licenses')
       .select('id, product_key, status, stripe_session_id, purchased_at, user_id')
       .order('purchased_at', { ascending: false })
       .limit(30),
-    sb.from('product_interest')
+    sb.from('lanceur_product_interest')
       .select('id, product_key, created_at, user_id')
       .order('created_at', { ascending: false })
       .limit(200)
@@ -63,7 +63,7 @@ exports.handler = async (event) => {
   let userById = {};
   if (userIds.size > 0) {
     const { data: usersForLookup } = await sb
-      .from('users')
+      .from('lanceur_users')
       .select('id, email')
       .in('id', Array.from(userIds));
     for (const u of (usersForLookup || [])) userById[u.id] = u.email;
@@ -82,8 +82,8 @@ exports.handler = async (event) => {
 
   // --- Serie 30j : nouveaux users / licences par jour ---
   const [series30dUsers, series30dLicenses] = await Promise.all([
-    sb.from('users').select('created_at').gte('created_at', since30dIso),
-    sb.from('licenses').select('purchased_at').gte('purchased_at', since30dIso)
+    sb.from('lanceur_users').select('created_at').gte('created_at', since30dIso),
+    sb.from('lanceur_licenses').select('purchased_at').gte('purchased_at', since30dIso)
   ]);
   const dayKey = (iso) => iso ? iso.slice(0, 10) : '';
   const usersByDay = {};

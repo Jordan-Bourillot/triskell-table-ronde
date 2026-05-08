@@ -127,7 +127,7 @@ exports.handler = async (event) => {
     // 1. Verifie que l'utilisateur a une licence active sur ce produit.
     const sb = supabase();
     const { data: licenses, error } = await sb
-      .from('licenses')
+      .from('lanceur_licenses')
       .select('id, stripe_session_id, purchased_at')
       .eq('user_id', session.sub)
       .eq('product_key', productKey)

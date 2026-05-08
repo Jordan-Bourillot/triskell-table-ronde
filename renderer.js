@@ -279,6 +279,17 @@
         setLoginError(humanizeAuthError(res.error) + (res.message ? ` (${res.message})` : ''));
         return;
       }
+      // Founder/dev whitelist : la session est deja ouverte cote main, on
+      // saute l'ecran du code et on enchaine sur l'animation triumph.
+      if (res.autoLogin) {
+        state.user = res.user;
+        const logo = document.querySelector('.login-logo');
+        if (logo) logo.classList.add('triumph');
+        await new Promise(r => setTimeout(r, 900));
+        hideLogin();
+        enterApp();
+        return;
+      }
       showLoginCodeStep(email);
     });
 

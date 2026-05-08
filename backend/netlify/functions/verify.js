@@ -55,7 +55,7 @@ exports.handler = async (event) => {
 
   // On prend le dernier code non consomme, non expire, pour cet email.
   const { data: rows, error } = await sb
-    .from('login_codes')
+    .from('lanceur_login_codes')
     .select('id, code_hash, attempts, consumed_at, expires_at')
     .eq('email', email)
     .is('consumed_at', null)
@@ -75,24 +75,24 @@ exports.handler = async (event) => {
 
   if (row.attempts >= MAX_ATTEMPTS) {
     // Trop d'echecs : on consomme la ligne pour forcer un nouveau code.
-    await sb.from('login_codes').update({ consumed_at: nowIso }).eq('id', row.id);
+    await sb.from('lanceur_login_codes').update({ consumed_at: nowIso }).eq('id', row.id);
     return json(401, { error: 'too-many-attempts' });
   }
 
   if (row.code_hash !== hashCode(code)) {
-    await sb.from('login_codes')
+    await sb.from('lanceur_login_codes')
       .update({ attempts: row.attempts + 1 })
       .eq('id', row.id);
     return json(401, { error: 'wrong-code' });
   }
 
   // Code valide -> on le consomme pour eviter le rejouer.
-  await sb.from('login_codes').update({ consumed_at: nowIso }).eq('id', row.id);
+  await sb.from('lanceur_login_codes').update({ consumed_at: nowIso }).eq('id', row.id);
 
   // On detecte si c'est une PREMIERE connexion (pour envoyer le mail
   // de bienvenue) en cherchant le user existant avant l'upsert.
   const { data: existing } = await sb
-    .from('users')
+    .from('lanceur_users')
     .select('id, email, created_at')
     .eq('email', email)
     .maybeSingle();
@@ -100,14 +100,14 @@ exports.handler = async (event) => {
   let user;
   let isFirstLogin = false;
   if (existing) {
-    const { data: u } = await sb.from('users')
+    const { data: u } = await sb.from('lanceur_users')
       .update({ last_login_at: nowIso })
       .eq('id', existing.id)
       .select('id, email')
       .single();
     user = u;
   } else {
-    const { data: u, error: insErr } = await sb.from('users')
+    const { data: u, error: insErr } = await sb.from('lanceur_users')
       .insert({ email, last_login_at: nowIso })
       .select('id, email')
       .single();
@@ -118,12 +118,12 @@ exports.handler = async (event) => {
       // de welcome email (l'autre verify s'en chargera).
       if (insErr.code === '23505') {
         const { data: raceUser } = await sb
-          .from('users').select('id, email').eq('email', email).single();
+          .from('lanceur_users').select('id, email').eq('email', email).single();
         if (!raceUser) {
           console.error('verify: race fallback failed', insErr);
           return json(500, { error: 'server-error' });
         }
-        const { data: u2 } = await sb.from('users')
+        const { data: u2 } = await sb.from('lanceur_users')
           .update({ last_login_at: nowIso })
           .eq('id', raceUser.id)
           .select('id, email')
@@ -158,13 +158,13 @@ exports.handler = async (event) => {
 // la creation par un mail de bienvenue declenche depuis un debug).
 async function upsertUser(sb, email, nowIso) {
   const { data: existing } = await sb
-    .from('users')
+    .from('lanceur_users')
     .select('id, email')
     .eq('email', email)
     .maybeSingle();
 
   if (existing) {
-    const { data: u } = await sb.from('users')
+    const { data: u } = await sb.from('lanceur_users')
       .update({ last_login_at: nowIso })
       .eq('id', existing.id)
       .select('id, email')
@@ -172,14 +172,14 @@ async function upsertUser(sb, email, nowIso) {
     return u || existing;
   }
 
-  const { data: u, error: insErr } = await sb.from('users')
+  const { data: u, error: insErr } = await sb.from('lanceur_users')
     .insert({ email, last_login_at: nowIso })
     .select('id, email')
     .single();
   if (insErr) {
     if (insErr.code === '23505') {
       const { data: raceUser } = await sb
-        .from('users').select('id, email').eq('email', email).single();
+        .from('lanceur_users').select('id, email').eq('email', email).single();
       return raceUser || null;
     }
     console.error('upsertUser: insert failed', insErr);

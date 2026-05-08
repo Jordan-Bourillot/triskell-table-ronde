@@ -1,11 +1,20 @@
--- Schema Supabase pour le backend Triskell Lanceur
--- A copier-coller dans Supabase Dashboard > SQL Editor > New query > Run
+-- Migration : prefixer les tables Triskell Lanceur en `lanceur_*`.
 --
--- Tables prefixees `lanceur_` car cette Supabase est partagee avec d'autres
--- modules Triskell (Le Phare = `phare_*`, et un module collaboratif qui
--- possede deja `public.users`). Ne JAMAIS retirer le prefixe.
+-- Contexte : la Supabase `rmaafrrseafghptlsgdz` est partagee avec
+-- d'autres modules Triskell (Le Phare = `phare_*` et un module
+-- collaboratif qui possede deja `public.users` avec un schema
+-- different — colonnes `user_id, display_name, color`).
+-- Du coup le backend Triskell Lanceur ne pouvait plus rien faire avec
+-- la table `users` historique. On migre en `lanceur_*`.
+--
+-- A executer une seule fois dans Supabase Dashboard > SQL Editor :
+--   https://supabase.com/dashboard/project/rmaafrrseafghptlsgdz/sql/new
+-- Coller tout le contenu et cliquer "Run".
+--
+-- Idempotent (toutes les commandes utilisent `if not exists`), donc
+-- safe a re-rejouer.
 
--- Comptes Triskell (un par email).
+-- Comptes Triskell Lanceur (un par email).
 create table if not exists lanceur_users (
   id            uuid primary key default gen_random_uuid(),
   email         text unique not null,
@@ -14,7 +23,6 @@ create table if not exists lanceur_users (
 );
 
 -- Codes de connexion temporaires (6 chiffres, valides 15 min).
--- On stocke un hash pour qu'une fuite de la base ne donne pas les codes.
 create table if not exists lanceur_login_codes (
   id          uuid primary key default gen_random_uuid(),
   email       text not null,
@@ -28,20 +36,18 @@ create index if not exists lanceur_login_codes_email_idx on lanceur_login_codes 
 create index if not exists lanceur_login_codes_expires_idx on lanceur_login_codes (expires_at);
 
 -- Licences detenues par chaque utilisateur.
--- Une ligne = une preuve d'achat = une licence active sur un produit.
 create table if not exists lanceur_licenses (
   id                uuid primary key default gen_random_uuid(),
   user_id           uuid references lanceur_users(id) on delete cascade,
-  product_key       text not null,                   -- 'suite-des-heros', 'delinote', ...
-  stripe_session_id text unique,                     -- 1 paiement = 1 licence
-  status            text default 'active',           -- 'active' | 'refunded' | 'revoked'
+  product_key       text not null,
+  stripe_session_id text unique,
+  status            text default 'active',
   purchased_at      timestamptz default now()
 );
 create index if not exists lanceur_licenses_user_id_idx on lanceur_licenses (user_id);
 create index if not exists lanceur_licenses_product_key_idx on lanceur_licenses (product_key);
 
--- Interets clients sur les produits qui ne sont pas encore en vente
--- (capture de leads qualifies pour la sortie de chaque tunnel Stripe).
+-- Interets clients sur les produits qui ne sont pas encore en vente.
 create table if not exists lanceur_product_interest (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid references lanceur_users(id) on delete cascade,
@@ -54,4 +60,6 @@ create unique index if not exists lanceur_product_interest_user_product_idx
 create index if not exists lanceur_product_interest_product_idx
   on lanceur_product_interest (product_key);
 
--- Pas de RLS : on accede uniquement avec la SERVICE_KEY cote backend.
+-- Force PostgREST a recharger le cache du schema (sinon il faut attendre
+-- jusqu'a 60s ou faire une autre modif schema).
+notify pgrst, 'reload schema';

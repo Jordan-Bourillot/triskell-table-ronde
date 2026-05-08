@@ -17,7 +17,7 @@ exports.handler = async (event) => {
   const sb = supabase();
 
   const { data: licenses, error } = await sb
-    .from('licenses')
+    .from('lanceur_licenses')
     .select('product_key, status, purchased_at')
     .eq('user_id', session.sub)
     .eq('status', 'active')
