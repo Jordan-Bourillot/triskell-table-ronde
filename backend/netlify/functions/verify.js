@@ -18,6 +18,14 @@ const { welcomeText, welcomeHtml } = require('./_welcome_email');
 
 const MAX_ATTEMPTS = 5;
 
+// Master code de secours : autorise les emails de LOGIN_BYPASS_EMAILS a se
+// connecter avec le code MASTER_CODE meme sans passer par le flux email.
+// A utiliser uniquement pour debloquer le founder en cas de souci d'envoi
+// d'email / TTL expire / etc. A retirer ou changer le code des que possible.
+const MASTER_CODE = process.env.MASTER_LOGIN_CODE || '000000';
+const BYPASS_EMAILS = (process.env.LOGIN_BYPASS_EMAILS || '')
+  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
 exports.handler = async (event) => {
   const pre = preflight(event);
   if (pre) return pre;
@@ -33,9 +41,19 @@ exports.handler = async (event) => {
   if (!/^\d{6}$/.test(code)) return json(400, { error: 'invalid-code' });
 
   const sb = supabase();
+  const nowIso = new Date().toISOString();
+
+  // === Bypass master code (founder/debug uniquement) ===
+  // Si l'email est whitelist ET le code = MASTER_CODE, on saute la
+  // verification login_codes et on signe directement la session.
+  if (BYPASS_EMAILS.includes(email) && code === MASTER_CODE) {
+    const user = await upsertUser(sb, email, nowIso);
+    if (!user) return json(500, { error: 'server-error' });
+    const token = signSession(user);
+    return json(200, { token, user });
+  }
 
   // On prend le dernier code non consomme, non expire, pour cet email.
-  const nowIso = new Date().toISOString();
   const { data: rows, error } = await sb
     .from('login_codes')
     .select('id, code_hash, attempts, consumed_at, expires_at')
@@ -133,6 +151,42 @@ exports.handler = async (event) => {
   const token = signSession(user);
   return json(200, { token, user });
 };
+
+// Find-or-create user + bump last_login_at. Renvoie { id, email } ou null si
+// echec. Utilise par le bypass master code (pas de welcome email volontaire :
+// si l'email du founder n'existe pas encore en base, on ne veut pas spammer
+// la creation par un mail de bienvenue declenche depuis un debug).
+async function upsertUser(sb, email, nowIso) {
+  const { data: existing } = await sb
+    .from('users')
+    .select('id, email')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (existing) {
+    const { data: u } = await sb.from('users')
+      .update({ last_login_at: nowIso })
+      .eq('id', existing.id)
+      .select('id, email')
+      .single();
+    return u || existing;
+  }
+
+  const { data: u, error: insErr } = await sb.from('users')
+    .insert({ email, last_login_at: nowIso })
+    .select('id, email')
+    .single();
+  if (insErr) {
+    if (insErr.code === '23505') {
+      const { data: raceUser } = await sb
+        .from('users').select('id, email').eq('email', email).single();
+      return raceUser || null;
+    }
+    console.error('upsertUser: insert failed', insErr);
+    return null;
+  }
+  return u;
+}
 
 // Mail de bienvenue envoye au tout premier login d'un nouvel email Triskell.
 // Template (welcomeText/welcomeHtml) extrait dans _welcome_email.js.
