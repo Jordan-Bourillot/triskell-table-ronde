@@ -1,7 +1,7 @@
 // Triskell Lanceur - main process
 'use strict';
 
-const { app, BrowserWindow, ipcMain, shell, dialog, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, Notification, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -85,6 +85,14 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Bascule le fetch global du main process sur le moteur reseau Chromium
+  // d'Electron. Le fetch natif Node (undici) n'utilise pas le magasin de
+  // certificats Windows, donc il rejette les antivirus a inspection HTTPS
+  // (Avast, Bitdefender, ESET, Kaspersky...) qui injectent leur propre cert
+  // racine. net.fetch passe par Chromium qui, lui, fait confiance au store
+  // Windows et accepte donc le MITM benin de l'antivirus.
+  globalThis.fetch = (input, init) => net.fetch(input, init);
+
   store.init(app.getPath('userData'));
   createWindow();
   setupAutoUpdate();
