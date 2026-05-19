@@ -1,6 +1,15 @@
 [build]
   publish = "."
 
+# ─── MODE "BIENTÔT" — tout le trafic public est redirigé vers la page d'attente.
+# Pour réactiver le site complet : commenter ce bloc et restaurer index.html
+# depuis _index-full.html.bak.
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200
+  force  = true
+
 # ─── Redirections legacy ──────────────────────────────────────────────
 # Préserve les anciens liens externes vers les pages du Site officiel
 # après son passage sur sites.triskell-studio.fr (SEO + partages).

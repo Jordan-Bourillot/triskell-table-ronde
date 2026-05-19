@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Triskell Studio — L'écosystème d'outils desktop pour les pros et les passionnés</title>
+  <meta name="description" content="Triskell Studio réunit la suite des Héros, DéliNote, Studio PDF, Bobeez, Le Dénicheur, AlphaBeast et tous les outils Triskell dans une seule application Windows. Dark, fait main, en local. Téléchargement gratuit." />
+  <meta property="og:title" content="Triskell Studio — La Table Ronde" />
+  <meta property="og:description" content="Tous tes outils Triskell ont leur place à la Table. Outils desktop pour le quotidien, l'Atelier des Pros et le Bâtiment. Local, sans pub, sans tracker." />
+  <meta property="og:image" content="https://triskell-studio.fr/og.svg" />
+  <meta property="og:url" content="https://triskell-studio.fr" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://triskell-studio.fr/og.svg" />
+  <link rel="icon" href="assets/triskell_mark.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav">
+    <a class="brand" href="/">
+      <img src="assets/triskell_mark.png" alt="" class="brand-logo"
+           onerror="this.style.display='none';" />
+      <span class="brand-name">Triskell</span>
+      <span class="brand-sub">Studio</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#manifeste">Manifeste</a>
+      <a href="#ecosysteme">Écosystème</a>
+      <a href="#comment">Comment ça marche</a>
+      <a href="https://sites.triskell-studio.fr">Sites web</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-content">
+        <span class="hero-eyebrow">⚜ Studio Bretonnant ⚜</span>
+
+        <h1>
+          Un studio,<br>
+          <span class="accent">treize compagnons,</span><br>
+          une seule Table.
+        </h1>
+
+        <p class="lede">
+          Triskell Studio fait des <strong>outils desktop indépendants pour Windows</strong> — pour ton
+          quotidien, ton activité de pro, ton chantier. Pas d'abonnement, pas de cloud forcé, pas de
+          tracker. Tout est rassemblé dans <strong>La Table Ronde</strong>, l'app gratuite qui te
+          connecte à toutes tes licences Triskell.
+        </p>
+
+        <div class="cta-row">
+          <a id="download-btn" class="btn-primary"
+             href="https://github.com/Jordan-Bourillot/triskell-table-ronde/releases/latest"
+             data-fallback="https://github.com/Jordan-Bourillot/triskell-table-ronde/releases/latest">
+            <span class="dl-icon" aria-hidden="true">⬇</span>
+            Télécharger La Table Ronde
+            <span class="dl-meta" id="download-meta">.exe — Windows 64 bits</span>
+          </a>
+          <a class="btn-ghost" href="#ecosysteme">Voir tous les outils →</a>
+        </div>
+
+        <div class="reassurance-row">
+          <span><span class="check">✓</span> Local. Pas de cloud.</span>
+          <span><span class="check">✓</span> Pas de tracker.</span>
+          <span><span class="check">✓</span> Pas d'abonnement.</span>
+          <span><span class="check">✓</span> Garantie 14 jours.</span>
+        </div>
+
+        <p class="smartscreen-hint">
+          <a href="#smartscreen">⚠ Windows va probablement afficher un avertissement — voici pourquoi</a>
+        </p>
+      </div>
+
+      <!-- Vrai screenshot du Lanceur en cours d'utilisation -->
+      <div class="hero-mockup">
+        <figure class="hero-real-shot">
+          <img src="assets/screenshots/lanceur/main.png"
+               alt="La Table Ronde — l'app Triskell en action" />
+        </figure>
+        <div class="hero-real-glow" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- ============ STATS — proof par les chiffres ============ -->
+    <section class="stats">
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-num">13</span>
+          <span class="stat-label">outils & services</span>
+        </div>
+        <div class="stat-sep" aria-hidden="true"></div>
+        <div class="stat">
+          <span class="stat-num">100<i>%</i></span>
+          <span class="stat-label">local sur ta machine</span>
+        </div>
+        <div class="stat-sep" aria-hidden="true"></div>
+        <div class="stat">
+          <span class="stat-num">0<i>€</i></span>
+          <span class="stat-label">abonnement, jamais</span>
+        </div>
+        <div class="stat-sep" aria-hidden="true"></div>
+        <div class="stat">
+          <span class="stat-num">14<i>j</i></span>
+          <span class="stat-label">satisfait ou remboursé</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MANIFESTE ============ -->
+    <section class="manifesto" id="manifeste">
+      <p class="manifesto-eyebrow">— Pourquoi Triskell —</p>
+      <h2>Tu en as marre des freewares pleins de pubs<br>et des SaaS qui te rackettent à <em>9 €/mois</em>.</h2>
+      <p class="manifesto-text">
+        Triskell Studio est né d'un constat simple : on n'a plus de logiciels. On loue des fonctionnalités
+        à des plateformes qui regardent par-dessus notre épaule, lisent nos fichiers, et nous coupent
+        l'accès si on arrête de payer. Triskell renverse ça. Tu achètes une fois, tu utilises à vie.
+        Tes données restent sur ta machine. Pas de connexion, pas de compte, pas de surveillance.
+      </p>
+
+      <div class="pillars">
+        <div class="pillar">
+          <span class="pillar-icon">⚓</span>
+          <h3>100 % en local</h3>
+          <p>
+            Tes fichiers ne quittent jamais ton PC. Aucune télémétrie. Tu peux couper ton wifi,
+            tout marche pareil. Tes contrats, tes notes, tes photos — chez toi, point final.
+          </p>
+        </div>
+        <div class="pillar">
+          <span class="pillar-icon">⚒</span>
+          <h3>Paiement unique, mises à jour à vie</h3>
+          <p>
+            Pas d'abonnement. Tu paies une fois, tu reçois toutes les versions futures, gratuitement,
+            tant que le produit existe. Et si l'envie te dit, tu désinstalles : pas de pénalité.
+          </p>
+        </div>
+        <div class="pillar">
+          <span class="pillar-icon">⚔</span>
+          <h3>Fait main, par un studio breton</h3>
+          <p>
+            Pas d'IA générique qui pond du code à la chaîne. Chaque outil est conçu pour faire UNE
+            chose et la faire bien. Si t'écris à <a href="mailto:contact@triskell-studio.fr">contact@triskell-studio.fr</a>,
+            c'est un humain qui te répond.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ÉCOSYSTÈME ============ -->
+    <section class="section" id="ecosysteme">
+      <h2>L'écosystème Triskell</h2>
+      <p class="section-sub">
+        La Table Ronde est gratuite. Tu paies uniquement les outils que tu invites — paiement unique,
+        pas d'abonnement, garantie satisfait ou remboursé 14 jours.
+      </p>
+
+      <!-- ===== Outils du quotidien ===== -->
+      <div class="tools-section">
+        <div class="tools-section-head">
+          <h3 class="tools-section-title">Les outils du quotidien</h3>
+        </div>
+        <p class="tools-section-sub">Tes compagnons pour la vie de tous les jours.</p>
+
+        <div class="tools-grid">
+          <!-- VEDETTE : DéliNote (premium 79€, plus polish) -->
+          <a href="/delinote" class="tool-card tool-card-large">
+            <span class="tool-vedette-badge">★ Vedette</span>
+            <div class="tool-icon"><img src="assets/apps/delinote.png" alt="" /></div>
+            <h3>DéliNote</h3>
+            <p>Notes Markdown 100% locales. Recherche instantanée Ctrl+K, coffre-fort AES-256, zéro cloud forcé. L'app de notes pour les gens qui détestent les apps de notes.</p>
+            <div class="tool-meta">
+              <span class="tool-tag tag-available">Disponible</span>
+              <span class="tool-price">79 €</span>
+            </div>
+          </a>
+
+          <a href="/suite-des-heros" class="tool-card">
+            <div class="tool-icon"><img src="assets/apps/suite-des-heros.png" alt="" /></div>
+            <h3>La Suite des Héros</h3>
+            <p>11 micro-outils desktop. Ranger, renommer, compresser, fusionner, coffre-fort chiffré.</p>
+            <div class="tool-meta">
+              <span class="tool-tag tag-available">Disponible</span>
+              <span class="tool-price">27 €</span>
+            </div>
+          </a>
+
+          <a href="/studio-pdf" class="tool-card">
+            <div class="tool-icon"><img src="assets/apps/studio-pdf.png" alt="" /></div>
+            <h3>Le Studio PDF</h3>
+            <p>Fusion, split, OCR multilingue, signature, compression. Sans filigrane, sans upload.</p>
+            <div class="tool-meta">
+              <span class="tool-tag tag-available">Disponible</span>
+              <span class="tool-price">39 €</span>
+            </div>
+          </a>
+
+          <a href="/bobeez" class="tool-card tool-card-wide">
+            <div class="tool-icon"><img src="assets/apps/bobeez.png" alt="" /></div>
+            <div class="tool-card-wide-body">
+              <h3>Bobeez</h3>
+              <p>Gestionnaire d'images desktop. Vue calendrier, carte GPS, tri swipe plein écran, édition non destructive.</p>
+              <div class="tool-meta">
+                <span class="tool-tag tag-available">Disponible</span>
+                <span class="tool-price">27 €</span>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- ===== L'Atelier des Pros ===== -->
+      <div class="tools-section">
+        <div class="tools-section-head">
+          <h3 class="tools-section-title">L'Atelier des Pros</h3>
+        </div>
+        <p class="tools-section-sub">Outils et services pour ton activité — prospection, contenu, IA, sites web.</p>
+
+        <div class="tools-grid">
+          <!-- VEDETTE : Le Dénicheur (premium 129€, le plus polish des pros) -->
+          <a href="/le-denicheur" class="tool-card tool-card-large">
+            <span class="tool-vedette-badge">★ Vedette</span>
+            <div class="tool-icon"><img src="assets/apps/le-denicheur.png" alt="" /></div>
+            <h3>Le Dénicheur</h3>
+            <p>Trouve les créateurs sur 9 plateformes (YouTube, Twitch, Reddit, Bluesky, Mastodon, Apple Podcasts, Dailymotion, Kick, GitHub) qui n'ont pas encore monétisé leur audience. Score de pertinence par profil, dédoublonnage cross-plateforme, CRM intégré, export CSV. L'arme secrète des growth-hackers indépendants.</p>
+            <div class="tool-meta">
+              <span class="tool-tag tag-available">Disponible</span>
+              <span class="tool-price">129 €</span>
+            </div>
+          </a>
+
+          <a href="/alphabeast" class="tool-card">
+            <div class="tool-icon"><img src="assets/apps/alphabeast.png" alt="" /></div>
+            <h3>AlphaBeast</h3>
+            <p>Combine ton prompt avec 16 Mega Prompts brandés (Honnêteté brutale, Anti-slop, Pre-mortem…) et envoie à Claude, GPT, Gemini, Mistral ou Grok.</p>
+            <div class="tool-meta">
+              <span class="tool-tag tag-available">Disponible</span>
+              <span class="tool-price">19 €</span>
+            </div>
+          </a>
+
+          <a href="/alphapitch" class="tool-card">
+            <div class="tool-icon"><img src="assets/apps/alphapitch.png" alt="" /></div>
+            <h3>AlphaPitch</h3>
+            <p>Génère le bon message de prospection en 4 clics — par produit, par cible, par canal. Templates rédigés à la main.</p>
+            <div class="tool-meta">
+              <span class="tool-tag tag-available">Disponible</span>
+              <span class="tool-price">Gratuit</span>
+            </div>
+          </a>
+
+          <!-- SERVICES horizontaux (3 cols chacun, format "bandeau" doré) -->
+          <a href="https://sites.triskell-studio.fr" class="tool-card tool-card-wide tool-card-service" target="_blank" rel="noopener">
+            <div class="tool-icon"><img src="assets/apps/triskell-studio-sites.png" alt="" /></div>
+            <div class="tool-card-wide-body">
+              <h3>Triskell Studio <span class="service-badge">Service</span></h3>
+              <p>Ton site web livré en 48 h — création + hébergement + maintenance, tout compris. 0 € de création, 0 € d'engagement.</p>
+              <div class="tool-meta">
+                <span class="tool-tag tag-available">Disponible</span>
+                <span class="tool-price">À partir de 49,97 €/mois</span>
+              </div>
+            </div>
+          </a>
+
+          <a href="https://eliks.triskell-studio.fr" class="tool-card tool-card-wide tool-card-service" target="_blank" rel="noopener">
+            <div class="tool-icon"><img src="assets/apps/eliks-studio.svg" alt="" /></div>
+            <div class="tool-card-wide-body">
+              <h3>Eliks Studio <span class="service-badge">Service</span></h3>
+              <p>Growth Operator pour Instagram, TikTok, LinkedIn, YouTube et X. On transforme tes réseaux en machine à ventes — payés à la commission, zéro fixe.</p>
+              <div class="tool-meta">
+                <span class="tool-tag tag-available">Disponible</span>
+                <span class="tool-price">Commission pure</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- TEASER full-width — Beta ouverte -->
+          <a href="/alphacast" class="tool-card tool-card-teaser">
+            <div class="tool-icon"><img src="assets/apps/alphacast.png" alt="" /></div>
+            <div class="tool-card-mini-body">
+              <h3>AlphaCast <span class="tool-tag tag-beta" style="margin-left:8px;vertical-align:middle">Beta ouverte</span></h3>
+              <p>Publie une fois, atteins toutes tes audiences. Instagram, TikTok, LinkedIn, X, Facebook, YouTube Shorts — un seul tableau de bord pour tout planifier. Rejoins la beta et gagne des récompenses bronze, silver ou gold.</p>
+            </div>
+            <span class="tool-price" style="white-space:nowrap">Gratuit en beta</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ===== Spécial Bâtiment ===== -->
+      <div class="tools-section">
+        <div class="tools-section-head">
+          <h3 class="tools-section-title">Spécial Bâtiment</h3>
+        </div>
+        <p class="tools-section-sub">Outils pensés pour les artisans du BTP — chiffrer un chantier vite et juste.</p>
+
+        <div class="tools-grid">
+          <a href="/outils-pro" class="tool-card tool-card-wide">
+            <div class="tool-icon"><img src="assets/apps/outils-batiment.png" alt="" /></div>
+            <div class="tool-card-wide-body">
+              <h3>Triskell Outils Pro</h3>
+              <p>Calculateurs chantier pour artisans (carrelage, placo, peinture, béton, faïence, plinthes…). Web app PWA — installable mobile + desktop, fonctionne hors ligne.</p>
+              <div class="tool-meta">
+                <span class="tool-tag tag-available">Disponible</span>
+                <span class="tool-price">9 €/mois</span>
+              </div>
+            </div>
+          </a>
+
+          <a href="/pack-electricien-pro" class="tool-card tool-card-wide">
+            <div class="tool-icon"><img src="assets/apps/pack-electricien-pro.png" alt="" /></div>
+            <div class="tool-card-wide-body">
+              <h3>Pack Électricien Pro</h3>
+              <p>33 modèles devis/factures/CGV + Triskell Outils Pro offert à vie (108 €/an de valeur). Téléchargement immédiat, garantie 14 j.</p>
+              <div class="tool-meta">
+                <span class="tool-tag tag-available">Disponible</span>
+                <span class="tool-price">27 €</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Teaser bas de section -->
+      <p class="tools-future">
+        Et ça ne s'arrête pas là. De nouveaux compagnons s'invitent à la Table régulièrement.
+        Chaque outil que tu adoubes apparaît automatiquement à ta Table — une seule app pour tout faire.
+      </p>
+    </section>
+
+    <!-- ============ MODÈLE ÉCONOMIQUE TRANSPARENT ============ -->
+    <section class="section pricing-philosophy">
+      <p class="manifesto-eyebrow">— Le deal, sans entourloupe —</p>
+      <h2>Comment Triskell gagne sa vie<br>(et pourquoi pas avec un abonnement).</h2>
+      <p class="section-sub">
+        On t'explique exactement comment l'argent circule. Pas de pitch business confus.
+      </p>
+
+      <div class="philosophy-cols">
+        <article class="philosophy-card">
+          <div class="philosophy-num">01</div>
+          <h3>La Table Ronde est gratuite</h3>
+          <p>
+            Le hub qui te connecte aux outils ne coûte rien et ne coûtera jamais rien. Aucune pub
+            dedans, aucun tracker, aucune freemium-feature à dégrader. Si demain Triskell ferme,
+            l'app continue de marcher en local — tes licences existantes sont à toi pour de bon.
+          </p>
+        </article>
+
+        <article class="philosophy-card">
+          <div class="philosophy-num">02</div>
+          <h3>Tu paies les outils, une seule fois</h3>
+          <p>
+            27 € pour la Suite des Héros, 79 € pour DéliNote, 19 € pour AlphaBeast. Tu paies, tu
+            possèdes, tu utilises à vie. Toutes les versions futures sont gratuites tant qu'on
+            développe le produit. Aucun abonnement caché, aucune carte qui se débite tous les mois.
+          </p>
+        </article>
+
+        <article class="philosophy-card">
+          <div class="philosophy-num">03</div>
+          <h3>Les services sont à la commission ou au mois</h3>
+          <p>
+            Triskell Studio (sites web) et Eliks Studio (Growth Operator) sont des prestations
+            humaines : on travaille pour toi, donc forcément on facture. Le modèle est honnête —
+            commission pure pour Eliks (zéro fixe), mensualité claire pour les sites web (sans
+            engagement).
+          </p>
+        </article>
+
+        <article class="philosophy-card philosophy-card-highlight">
+          <div class="philosophy-num">04</div>
+          <h3>Pas de capital, pas de pression</h3>
+          <p>
+            Triskell est un studio indépendant breton, sans investisseurs. On ne doit pas
+            "scaler à 100 M€ d'ARR" pour rendre des comptes à des VC. Du coup, on construit le
+            produit qu'on veut utiliser nous-mêmes, à notre rythme. Si tu paies, tu finances
+            directement le prochain outil.
+          </p>
+        </article>
+      </div>
+
+      <p class="philosophy-signature">
+        <em>"Je préfère être petit et fier de ce que je livre, plutôt que gros et obligé de mettre
+        de la pub dans mes propres apps."</em>
+        <br>
+        <span class="philosophy-author">— Jordan Bourillot · Fondateur</span>
+      </p>
+    </section>
+
+    <!-- ============ SMARTSCREEN ============ -->
+    <section class="section section-smartscreen" id="smartscreen">
+      <div class="ss-grid">
+        <div class="ss-text">
+          <span class="badge badge-warn">Avant de paniquer</span>
+          <h2>Windows va dire « Éditeur inconnu » — c'est <span class="accent">normal</span>.</h2>
+          <p class="ss-lede">
+            La Table Ronde est un nouveau logiciel développé par un studio indépendant français.
+            Pour qu'un logiciel Windows soit reconnu sans avertissement, il faut acheter un
+            <strong>certificat de signature de code</strong> (~250 €/an). On préfère pour l'instant
+            réinvestir cet argent dans le produit plutôt que dans un sticker Microsoft.
+          </p>
+          <p class="ss-lede">
+            <strong>L'écran rouge SmartScreen ne veut PAS dire que l'app est dangereuse</strong> —
+            il veut juste dire « cet éditeur n'a pas encore payé ». Voilà comment passer outre :
+          </p>
+        </div>
+
+        <ol class="ss-steps">
+          <li>
+            <span class="ss-num">1</span>
+            <div>
+              <strong>Au lancement de l'installeur</strong>
+              <p class="muted small">Windows affiche : « Windows a protégé votre PC »</p>
+            </div>
+          </li>
+          <li>
+            <span class="ss-num">2</span>
+            <div>
+              <strong>Clique sur « Informations complémentaires »</strong>
+              <p class="muted small">Le petit lien gris en bas du message.</p>
+            </div>
+          </li>
+          <li>
+            <span class="ss-num">3</span>
+            <div>
+              <strong>Puis « Exécuter quand même »</strong>
+              <p class="muted small">Le bouton apparaît une fois les infos déroulées.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <p class="ss-trust">
+        Encore un doute ?
+        <a href="https://www.virustotal.com/gui/home/upload" target="_blank" rel="noopener">
+          Tu peux scanner l'.exe sur VirusTotal
+        </a>
+        — 70+ antivirus le valideront proprement.
+      </p>
+    </section>
+
+    <!-- ============ COMMENT ÇA MARCHE ============ -->
+    <section class="section" id="comment">
+      <h2>Comment ça marche</h2>
+      <p class="section-sub">Quatre étapes, deux minutes, tu es à la Table.</p>
+      <ol class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <h3>Télécharge La Table Ronde</h3>
+          <p>Une seule app Windows légère. Pas de compte requis pour installer. ~95 Mo, gratuit pour toujours.</p>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <h3>Connecte-toi avec ton email</h3>
+          <p>Code à 6 chiffres reçu par mail. Pas de mot de passe à retenir, pas de compte tiers.</p>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <h3>Fais entrer tes compagnons</h3>
+          <p>Chaque outil que tu as adoubé (Suite des Héros, DéliNote, AlphaBeast…) s'installe à ta Table en un clic.</p>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <h3>Tout reste à jour, tout seul</h3>
+          <p>La Table et chaque compagnon se mettent à jour en arrière-plan. Pas de pop-ups intrusifs.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section faq">
+      <p class="manifesto-eyebrow">— Questions qui reviennent —</p>
+      <h2>Avant de cliquer.</h2>
+
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Pourquoi Windows uniquement ?</summary>
+          <p>
+            Triskell est seul à coder, donc il faut choisir. Windows représente ~75% des desktops
+            en France, c'est le marché le plus rentable au démarrage. macOS et Linux sont à l'étude
+            une fois la suite mature côté Windows. Si tu es sur macOS et que tu en as marre
+            d'attendre, écris-nous : ça aide à prioriser.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Comment je récupère mes licences si je change de PC ?</summary>
+          <p>
+            Tu te connectes avec ton email sur le nouveau PC. La Table Ronde retrouve toutes tes
+            licences automatiquement, et tu réinstalles chaque outil en un clic. Pas de clé série
+            à conserver, pas de DRM hardware, pas de limite de machines.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Vos données restent vraiment locales ?</summary>
+          <p>
+            Oui. Aucune télémétrie, aucun tracker, aucune analytics dans aucun produit Triskell.
+            Les seuls appels réseau sont : (1) la vérification de tes licences au login, (2) le
+            check des mises à jour, (3) le téléchargement initial des installeurs. Tes fichiers,
+            tes notes, tes photos ne quittent jamais ta machine.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Que se passe-t-il si Triskell ferme demain ?</summary>
+          <p>
+            Tes outils déjà installés continuent de marcher (tout est local, pas de serveur
+            requis pour les utiliser). Tes licences restent valables ad vitam. Le code source de
+            certains outils est public sur GitHub, donc même sans nous, ils peuvent vivre. C'est
+            volontaire : on veut que tu t'engages avec nous parce qu'on est bons, pas parce que
+            tu es coincé.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>La garantie 14 jours, c'est sérieux ?</summary>
+          <p>
+            Oui. Tu télécharges, tu testes, tu utilises. Dans les 14 jours, si l'outil ne te
+            convient pas, tu réponds à un email et on te rembourse — sans question ni motif à
+            justifier. C'est plus simple à gérer pour nous qu'un client mécontent qui parle.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Pourquoi DéliNote à 79 € quand Notion est gratuit ?</summary>
+          <p>
+            Notion est gratuit parce que tu es le produit. Tes notes alimentent leur IA, tes
+            workspaces sont scannés pour optimiser leur funnel commercial. DéliNote ne fait
+            aucun appel réseau, ne lit pas tes notes, ne te connaît pas. Si tu valorises ça à
+            79 € (ou à 0 €, c'est ton choix), nos chemins se croiseront.
+          </p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Et l'IA dans tout ça ?</summary>
+          <p>
+            On utilise l'IA quand elle apporte une vraie valeur (AlphaBeast, AlphaPitch). Mais tu
+            apportes <strong>ta</strong> clé API (Anthropic, OpenAI, Gemini). Tes prompts ne
+            passent jamais par nos serveurs. Tu paies l'IA au provider de ton choix, pas à
+            Triskell. Aucune feature "powered by AI" n'est imposée — chaque outil reste
+            utilisable sans IA.
+          </p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ============ CTA FINAL ============ -->
+    <section class="section section-cta">
+      <h2>Prêt à dresser la Table ?</h2>
+      <p class="section-sub">
+        Téléchargement gratuit. Tu paies uniquement les compagnons que tu invites.
+      </p>
+      <a class="btn-primary" href="https://github.com/Jordan-Bourillot/triskell-table-ronde/releases/latest">
+        <span class="dl-icon" aria-hidden="true">⬇</span>
+        Télécharger pour Windows
+      </a>
+      <p class="muted small" style="margin-top: 22px;">macOS et Linux à l'étude.</p>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer-cols">
+      <div class="footer-col footer-col-brand">
+        <a class="footer-brand" href="/">
+          <img src="assets/triskell_mark.png" alt="" class="footer-logo" />
+          <div>
+            <span class="footer-brand-name">Triskell</span>
+            <span class="footer-brand-sub">Studio</span>
+          </div>
+        </a>
+        <p class="footer-tagline">
+          Studio bretonnant indépendant. Outils desktop pour pros et passionnés.
+          Local, fait main, sans abonnement.
+        </p>
+        <p class="footer-place">📍 Bretagne, France 🍻</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Outils</h4>
+        <a href="/suite-des-heros">Suite des Héros</a>
+        <a href="/delinote">DéliNote</a>
+        <a href="/studio-pdf">Le Studio PDF</a>
+        <a href="/bobeez">Bobeez</a>
+        <a href="/le-denicheur">Le Dénicheur</a>
+        <a href="/alphabeast">AlphaBeast</a>
+        <a href="/alphapitch">AlphaPitch</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Atelier des Pros</h4>
+        <a href="https://sites.triskell-studio.fr">Triskell Studio (sites)</a>
+        <a href="https://eliks.triskell-studio.fr">Eliks Studio</a>
+        <a href="/outils-pro">Triskell Outils Pro</a>
+        <a href="/pack-electricien-pro">Pack Électricien Pro</a>
+        <a href="/alphacast">AlphaCast (beta)</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Studio</h4>
+        <a href="#manifeste">Manifeste</a>
+        <a href="mailto:contact@triskell-studio.fr">Contact</a>
+        <a href="https://github.com/Jordan-Bourillot">GitHub</a>
+        <a href="https://triskell-studio.fr/cgu">CGU</a>
+        <a href="https://triskell-studio.fr/mentions-legales">Mentions légales</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span class="muted">© 2026 Triskell Studio · Tous droits réservés</span>
+      <span class="muted">Conçu et développé en Bretagne</span>
+    </div>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
