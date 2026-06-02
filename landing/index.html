@@ -503,7 +503,7 @@
 
       <div class="countdown" id="countdown" aria-label="Compte à rebours avant le lancement officiel">
         <div class="countdown-item">
-          <span class="countdown-value" id="cd-days">11</span>
+          <span class="countdown-value" id="cd-days">21</span>
           <span class="countdown-label">Jours</span>
         </div>
         <div class="countdown-item">
@@ -615,10 +615,10 @@
       window.addEventListener('mousemove', onMove, { passive: true });
     })();
 
-    // --- Countdown J-11 → lancement officiel ---
+    // --- Countdown → lancement officiel ---
     (function () {
-      // Aujourd'hui 2026-05-17. Lancement officiel : 2026-05-28 00:00 Europe/Paris.
-      var target = new Date('2026-05-28T00:00:00+02:00').getTime();
+      // Lancement officiel : 2026-06-24 00:00 Europe/Paris.
+      var target = new Date('2026-06-24T00:00:00+02:00').getTime();
 
       var elD = document.getElementById('cd-days');
       var elH = document.getElementById('cd-hours');
