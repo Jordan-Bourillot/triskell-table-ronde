@@ -462,6 +462,20 @@
       background-position: 120% 0;
     }
 
+    .meanwhile-featured {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      margin-top: 4px; padding: 16px 42px; border-radius: 20px;
+      text-decoration: none; color: #fff;
+      background: linear-gradient(120deg, var(--grad-1) 0%, var(--grad-2) 45%, var(--grad-3) 100%);
+      box-shadow: 0 14px 38px rgba(99,102,241,.32);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .meanwhile-featured:hover { transform: translateY(-3px); box-shadow: 0 20px 48px rgba(99,102,241,.45); }
+    .mf-badge { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; font-weight: 700; opacity: .92; }
+    .mf-name { font-size: 25px; font-weight: 800; }
+    .mf-desc { font-size: 13px; opacity: .92; }
+    .meanwhile-also { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); opacity: .7; margin-top: 8px; }
+
     /* ---------- Shared ---------- */
 
     @keyframes rise {
@@ -522,12 +536,17 @@
 
       <div class="meanwhile">
         <span class="meanwhile-label">En attendant, retrouvez-nous sur</span>
+        <a class="meanwhile-featured" href="https://pixel-pros.fr" rel="noopener">
+          <span class="mf-badge">Notre nouveau service</span>
+          <span class="mf-name">pixel-pros.fr</span>
+          <span class="mf-desc">Votre site web pro, en ligne en 24h</span>
+        </a>
+        <span class="meanwhile-also">et aussi</span>
         <div class="meanwhile-links">
           <a href="https://studio-wow.fr"      rel="noopener">studio-wow.fr</a>
           <a href="https://rankus-studio.fr"   rel="noopener">rankus-studio.fr</a>
           <a href="https://lagriffe-studio.fr" rel="noopener">lagriffe-studio.fr</a>
           <a href="https://eliks-studio.fr"    rel="noopener">eliks-studio.fr</a>
-          <a href="https://pixel-pros.fr"      rel="noopener">pixel-pros.fr</a>
         </div>
       </div>
     </div>
