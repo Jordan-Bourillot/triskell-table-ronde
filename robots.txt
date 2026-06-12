@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://triskell-studio.fr/sitemap.xml
