@@ -298,87 +298,6 @@
       animation: rise 800ms cubic-bezier(.2,.8,.2,1) 1500ms forwards;
     }
 
-    /* ---------- Countdown ---------- */
-
-    .countdown {
-      margin-top: 48px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 14px;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: rise 800ms cubic-bezier(.2,.8,.2,1) 1800ms forwards;
-    }
-    .countdown-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 18px 22px;
-      min-width: 92px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      backdrop-filter: blur(8px);
-      position: relative;
-      isolation: isolate;
-      overflow: hidden;
-      transition: transform 200ms ease, border-color 200ms ease;
-    }
-    .countdown-item::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg,
-        rgba(129,140,248,.10) 0%,
-        rgba(167,139,250,.06) 50%,
-        rgba(251,146,60,.08) 100%);
-      opacity: .55;
-      z-index: -1;
-    }
-    .countdown-item:hover {
-      transform: translateY(-3px);
-      border-color: var(--grad-2);
-    }
-    .countdown-value {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: clamp(32px, 5vw, 46px);
-      line-height: 1;
-      letter-spacing: -.02em;
-      font-variant-numeric: tabular-nums;
-      background: linear-gradient(
-        90deg,
-        var(--grad-1) 0%,
-        var(--grad-2) 50%,
-        var(--grad-3) 100%
-      );
-      background-size: 220% 100%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: gradientShift 8s linear infinite;
-    }
-    .countdown-label {
-      margin-top: 10px;
-      font-size: 10px;
-      letter-spacing: .25em;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 500;
-    }
-    .countdown-item.seconds .countdown-value {
-      animation: gradientShift 8s linear infinite, secPulse 1s ease-in-out infinite;
-    }
-    @keyframes secPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: .75; transform: scale(.97); }
-    }
-    @media (max-width: 480px) {
-      .countdown-item { min-width: 70px; padding: 14px 14px; border-radius: 14px; }
-      .countdown-label { font-size: 9px; letter-spacing: .2em; }
-    }
-
     .tagline .dot {
       display: inline-block;
       width: 8px;
@@ -515,25 +434,6 @@
       </h1>
       <p class="tagline">Une nouvelle version arrive. Merci de votre patience<span class="dot"></span></p>
 
-      <div class="countdown" id="countdown" aria-label="Compte à rebours avant le lancement officiel">
-        <div class="countdown-item">
-          <span class="countdown-value" id="cd-days">21</span>
-          <span class="countdown-label">Jours</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-value" id="cd-hours">00</span>
-          <span class="countdown-label">Heures</span>
-        </div>
-        <div class="countdown-item">
-          <span class="countdown-value" id="cd-mins">00</span>
-          <span class="countdown-label">Minutes</span>
-        </div>
-        <div class="countdown-item seconds">
-          <span class="countdown-value" id="cd-secs">00</span>
-          <span class="countdown-label">Secondes</span>
-        </div>
-      </div>
-
       <div class="meanwhile">
         <span class="meanwhile-label">En attendant, retrouvez-nous sur</span>
         <a class="meanwhile-featured" href="https://pixel-pros.fr" rel="noopener">
@@ -634,35 +534,6 @@
       window.addEventListener('mousemove', onMove, { passive: true });
     })();
 
-    // --- Countdown → lancement officiel ---
-    (function () {
-      // Lancement officiel : 2026-06-24 00:00 Europe/Paris.
-      var target = new Date('2026-06-24T00:00:00+02:00').getTime();
-
-      var elD = document.getElementById('cd-days');
-      var elH = document.getElementById('cd-hours');
-      var elM = document.getElementById('cd-mins');
-      var elS = document.getElementById('cd-secs');
-      if (!elD || !elH || !elM || !elS) return;
-
-      function pad(n) { return n < 10 ? '0' + n : '' + n; }
-
-      function tick() {
-        var diff = target - Date.now();
-        if (diff < 0) diff = 0;
-        var d = Math.floor(diff / 86400000);
-        var h = Math.floor((diff / 3600000) % 24);
-        var m = Math.floor((diff / 60000) % 60);
-        var s = Math.floor((diff / 1000) % 60);
-        elD.textContent = pad(d);
-        elH.textContent = pad(h);
-        elM.textContent = pad(m);
-        elS.textContent = pad(s);
-      }
-
-      tick();
-      setInterval(tick, 1000);
-    })();
   </script>
 </body>
 </html>
