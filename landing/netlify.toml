@@ -1,14 +1,17 @@
 [build]
   publish = "."
 
-# ─── MODE "BIENTÔT" — tout le trafic public est redirigé vers la page d'attente.
-# Pour réactiver le site complet : commenter ce bloc et restaurer index.html
-# depuis _index-full.html.bak.
+# ─── MODE "OUVERTURE PARTIELLE" (12/06/2026, décision Jordan) ─────────
+# force=false : les pages qui EXISTENT (fiches produit, /geo/, sitemap,
+# robots) sont servies ; tout le reste retombe sur la page d'attente.
+# La home reste la page « Bientôt » (avec son noindex).
+# Pour tout ouvrir un jour : restaurer index.html depuis
+# _index-full.html.bak. Pour tout refermer : remettre force = true.
 [[redirects]]
   from = "/*"
   to   = "/index.html"
   status = 200
-  force  = true
+  force  = false
 
 # ─── Redirections legacy ──────────────────────────────────────────────
 # Préserve les anciens liens externes vers les pages du Site officiel
