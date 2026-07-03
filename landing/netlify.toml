@@ -1,6 +1,103 @@
 [build]
   publish = "."
 
+# ─── Pages fantômes (03/07/2026) ──────────────────────────────────────
+# Ces adresses n'ont JAMAIS eu de page dans ce dépôt : elles retombaient
+# sur la page d'attente (même titre que l'accueil → cartes « titre en
+# double » au Phare). Un renvoi propre vers l'accueil dit à Google que
+# ce ne sont pas des pages. ⚠️ Netlify applique la PREMIÈRE règle qui
+# matche : ces renvois doivent rester AVANT la règle « /* » ci-dessous.
+# Le jour de la réouverture complète du site : créer de vraies pages
+# /mentions-legales et /cgu (contenu à écrire avec Jordan) et retirer
+# leurs renvois d'ici.
+[[redirects]]
+  from = "/productivite"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/pirate-life-mail"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/mentions-legales"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/mentions-legales.html"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/cgu"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/cgu.html"
+  to   = "/"
+  status = 301
+  force  = true
+
+# ─── Anciens liens du Site officiel (nettoyés le 03/07/2026) ──────────
+# Ils pointaient vers sites.triskell-studio.fr, mais ce domaine renvoie
+# désormais vers lagriffe-studio.fr (autre marque) où ces pages sont en
+# erreur 404. On ramène ces vieux liens vers l'accueil Triskell.
+[[redirects]]
+  from = "/parrainage"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/parrainage.html"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/carte"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/carte.html"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/guide"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/guide.html"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/compte"
+  to   = "/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/success*"
+  to   = "/"
+  status = 301
+  force  = true
+
 # ─── MODE "OUVERTURE PARTIELLE" (12/06/2026, décision Jordan) ─────────
 # force=false : les pages qui EXISTENT (fiches produit, /geo/, sitemap,
 # robots) sont servies ; tout le reste retombe sur la page d'attente.
@@ -12,69 +109,6 @@
   to   = "/index.html"
   status = 200
   force  = false
-
-# ─── Redirections legacy ──────────────────────────────────────────────
-# Préserve les anciens liens externes vers les pages du Site officiel
-# après son passage sur sites.triskell-studio.fr (SEO + partages).
-[[redirects]]
-  from = "/parrainage"
-  to   = "https://sites.triskell-studio.fr/parrainage"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/parrainage.html"
-  to   = "https://sites.triskell-studio.fr/parrainage"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/carte"
-  to   = "https://sites.triskell-studio.fr/carte"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/carte.html"
-  to   = "https://sites.triskell-studio.fr/carte"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/guide"
-  to   = "https://sites.triskell-studio.fr/guide"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/guide.html"
-  to   = "https://sites.triskell-studio.fr/guide"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/cgu"
-  to   = "https://sites.triskell-studio.fr/cgu"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/mentions-legales"
-  to   = "https://sites.triskell-studio.fr/mentions-legales"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/compte"
-  to   = "https://sites.triskell-studio.fr/compte"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/success*"
-  to   = "https://sites.triskell-studio.fr/success:splat"
-  status = 301
-  force  = true
 
 [[headers]]
   for = "/*"
